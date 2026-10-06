@@ -87,9 +87,12 @@ export function HostsTable({ query = '', compact = false, onAddServer }: {
   // One row per account (its alias block) plus the user's own git blocks. The
   // managed "active switch" block (Host github.com -> active key) is what the
   // Active status means, so it isn't listed separately.
+  // Order is stable - provider, then the order accounts were added, then the
+  // user's own blocks - so switching accounts never moves rows around.
   const gitRank = (h: HostEntry) => {
-    const account = accountOf(h);
-    return account ? (account.active ? 0 : 1) : 2;
+    const provider = providerOf(h);
+    const i = provider?.accounts.findIndex((a) => a.alias === h.alias) ?? -1;
+    return i >= 0 ? i : Number.MAX_SAFE_INTEGER;
   };
   const gitHosts = visible
     .filter((h) => !h.isPattern && h.gitProvider && (!h.managed || accountOf(h)))
