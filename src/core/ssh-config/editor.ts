@@ -77,8 +77,24 @@ function validatePatterns(patterns: string): string {
  * formatting where the key survives, removed keys are dropped, new keys are
  * appended after the last directive. Comment lines inside the body are kept.
  */
+/**
+ * Keys are single words and values single lines; otherwise a value such as
+ * "x\nProxyCommand ..." would write directives the user never saw in the form.
+ */
+function cleanOptions(options: HostOption[]): HostOption[] {
+  return options
+    .filter((o) => o.key && o.key.trim())
+    .map((o) => {
+      const key = o.key.trim();
+      const value = String(o.value ?? '');
+      if (!/^[A-Za-z][A-Za-z0-9]*$/.test(key)) throw new Error(`Invalid option name: ${key}`);
+      if (/[\r\n\0]/.test(value)) throw new Error(`The value of ${key} must be a single line.`);
+      return { key, value };
+    });
+}
+
 function applyOptions(block: Block, options: HostOption[], indent: string): void {
-  const clean = options.filter((o) => o.key && o.key.trim()).map((o) => ({ key: o.key.trim(), value: String(o.value ?? '') }));
+  const clean = cleanOptions(options);
   const byKey = new Map<string, HostOption[]>();
   for (const o of clean) {
     const k = o.key.toLowerCase();
@@ -121,7 +137,7 @@ export function addHost(model: ConfigModel, input: HostInput): number {
     kind: 'Host',
     header: parseDirective(`Host ${p}`),
     leading: commentLines(input.comment ?? ''),
-    body: input.options.filter((o) => o.key && o.key.trim()).map((o) => makeDirective(o.key.trim(), o.value, indent)),
+    body: cleanOptions(input.options).map((o) => makeDirective(o.key, o.value, indent)),
   };
   block.body.push(parseLine(''));
 

@@ -9,7 +9,8 @@ import { spawn } from 'node:child_process';
 
 // Arguments travel through cmd/PowerShell/sh/AppleScript, so shell
 // metacharacters are rejected outright instead of being escaped per shell.
-const UNSAFE = /[;&|<>^%"'`$\r\n]/;
+// PowerShell treats typographic quotes (U+2018-U+201E) like ASCII ones.
+const UNSAFE = /[;&|<>^%"'`$\r\n\0\u2018-\u201e]/;
 
 export const TERMINAL_CHOICES: Record<string, string[]> = {
   win32: ['auto', 'wt', 'cmd', 'powershell'],
@@ -89,7 +90,7 @@ function linux(preference: string, parts: string[]): void {
 /** Open `cmd args...` in a new terminal window. */
 export function openTerminal(cmd: string, args: string[] = [], { preference = 'auto', title = 'Lanyard' }: OpenTerminalOptions = {}): void {
   const parts = [cmd, ...args];
-  assertSafe(parts);
+  assertSafe([...parts, title]);
   if (process.platform === 'win32') windows(preference, parts, title);
   else if (process.platform === 'darwin') mac(preference, parts);
   else linux(preference, parts);

@@ -83,6 +83,23 @@ export function configPath(ref: string): string {
   }
 }
 
+/** Feed answers to ssh-keygen's passphrase prompts (see run's noTty). */
+function passphraseInput(answers: string[]) {
+  return { input: answers.map((a) => `${a}\n`).join(''), noTty: true, env: { SSH_ASKPASS_REQUIRE: 'never' } };
+}
+
+/**
+ * Key references may be absolute paths, so operations that move or re-permission
+ * files first make sure the target really is a key: a private key file, or a
+ * file with a matching .pub next to it. Anything else is refused.
+ */
+function assertKeyFile(priv: string): string {
+  const isPrivateKey = fs.existsSync(priv) && fs.statSync(priv).isFile() && looksLikePrivateKey(readSafe(priv));
+  const isPublicOnly = !fs.existsSync(priv) && fs.existsSync(priv + '.pub') && !!parsePublicKey(readSafe(priv + '.pub') ?? '');
+  if (!isPrivateKey && !isPublicOnly) throw new Error(`Not an SSH key: ${toTilde(priv)}`);
+  return priv;
+}
+
 export function get(ref: string): KeyInfo {
   const priv = resolve(ref);
   return describe(fs.existsSync(priv) ? priv : null, fs.existsSync(priv + '.pub') ? priv + '.pub' : null);
@@ -120,24 +137,29 @@ export async function generate({ name, type = 'ed25519', bits, comment = '', pas
   const file = path.join(paths.sshDir, name);
   if (fs.existsSync(file) || fs.existsSync(file + '.pub')) throw new Error(`A key named "${name}" already exists.`);
 
-  const args = ['-t', type, '-f', file, '-N', passphrase, '-C', comment, '-q'];
+  // A passphrase is typed into ssh-keygen's prompt through stdin: on the
+  // command line (-N) any local user could read it from the process list.
+  const args = ['-t', type, '-f', file, '-C', comment, '-q'];
+  if (!passphrase) args.push('-N', '');
   if (type === 'rsa') args.push('-b', String(bits || 4096));
   if (type === 'ecdsa') args.push('-b', String(bits || 521));
-  const r = await run('ssh-keygen', args, { timeout: 120000 });
+  const r = await run('ssh-keygen', args, { timeout: 120000, ...passphraseInput([passphrase, passphrase]) });
   if (r.code !== 0) throw new Error(`ssh-keygen failed: ${(r.stderr || r.stdout).trim()}`);
   return get(file);
 }
 
 export async function changePassphrase(ref: string, oldPassphrase = '', newPassphrase = ''): Promise<KeyInfo> {
-  const priv = resolve(ref);
-  const r = await run('ssh-keygen', ['-p', '-f', priv, '-P', oldPassphrase, '-N', newPassphrase]);
+  const priv = assertKeyFile(resolve(ref));
+  // ssh-keygen -p asks for the old passphrase only when the key has one.
+  const answers = isEncrypted(fs.readFileSync(priv, 'utf8')) ? [oldPassphrase] : [];
+  const r = await run('ssh-keygen', ['-p', '-f', priv], passphraseInput([...answers, newPassphrase, newPassphrase]));
   if (r.code !== 0) throw new Error(`Could not change passphrase: ${(r.stderr || r.stdout).trim()}`);
   return get(priv);
 }
 
 /** Moves the key pair to ~/.lanyard/trash/<timestamp>/ instead of deleting it. */
 export function remove(ref: string): TrashResult {
-  const priv = resolve(ref);
+  const priv = assertKeyFile(resolve(ref));
   const trashDir = path.join(paths.trash, timestamp());
   ensureDir(trashDir);
   const moved: string[] = [];
@@ -153,7 +175,7 @@ export function remove(ref: string): TrashResult {
 
 /** Restrict a private key to the current user (OpenSSH refuses world-readable keys). */
 export async function fixPermissions(ref: string): Promise<{ message: string }> {
-  const priv = resolve(ref);
+  const priv = assertKeyFile(resolve(ref));
   if (!isWin) {
     fs.chmodSync(priv, 0o600);
     return { message: 'chmod 600 applied.' };

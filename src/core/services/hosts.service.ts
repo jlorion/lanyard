@@ -9,7 +9,8 @@ import { toTilde } from '../config/paths';
 import { run, LanyardError } from '../utils/exec';
 import type { ConfigValidation, HostEntry, HostInput, HostOption, TestResult } from '../../shared/types';
 
-const ALIAS_RE = /^[\w.@:-]+$/;
+// No leading "-": the alias is passed to ssh as an argument and must not read as an option.
+const ALIAS_RE = /^[\w.@:][\w.@:-]*$/;
 
 export function assertAlias(alias: string): string {
   if (!ALIAS_RE.test(alias || '')) throw new Error(`Invalid host alias: ${alias}`);

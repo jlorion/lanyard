@@ -8,7 +8,8 @@ import { parsePublicKey } from '../keys/key-format';
 import * as backups from '../backups/backup.service';
 import type { KnownHostEntry, ScannedHostKey } from '../../shared/types';
 
-const HOST_RE = /^[A-Za-z0-9.:_\-[\]]+$/;
+// No leading "-": the host is passed to ssh-keygen / ssh-keyscan as an argument.
+const HOST_RE = /^[A-Za-z0-9.:_[\]][A-Za-z0-9.:_\-[\]]*$/;
 
 function assertHost(host: string): void {
   if (!HOST_RE.test(host)) throw new Error(`Invalid host: ${host}`);

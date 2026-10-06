@@ -5,6 +5,12 @@ export interface RunOptions {
   timeout?: number;
   env?: Record<string, string>;
   cwd?: string;
+  /**
+   * Start the command without a controlling terminal (a new session on
+   * macOS / Linux), so tools such as ssh-keygen read prompts from `input`
+   * instead of /dev/tty. Windows consoles already read piped stdin.
+   */
+  noTty?: boolean;
 }
 
 export interface RunResult {
@@ -19,7 +25,7 @@ export interface RunResult {
  * Never rejects for a non-zero exit code; rejects only when the binary is missing.
  */
 export function run(cmd: string, args: string[] = [], options: RunOptions = {}): Promise<RunResult> {
-  const { input, timeout = 30000, env, cwd } = options;
+  const { input, timeout = 30000, env, cwd, noTty = false } = options;
   return new Promise((resolve, reject) => {
     let child: ChildProcessWithoutNullStreams;
     try {
@@ -28,6 +34,7 @@ export function run(cmd: string, args: string[] = [], options: RunOptions = {}):
         env: env ? { ...process.env, ...env } : process.env,
         windowsHide: true,
         stdio: 'pipe',
+        detached: noTty && process.platform !== 'win32',
       });
     } catch (err) {
       reject(err instanceof Error ? err : new Error(String(err)));
