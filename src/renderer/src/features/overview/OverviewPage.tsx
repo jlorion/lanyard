@@ -9,6 +9,7 @@ import { EmptyState, PageHeader } from '../../components/ui/Feedback';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { HostsTable } from '../hosts/HostsTable';
 import { HostEditorModal } from '../hosts/HostEditorModal';
+import { AddAccountFlow } from '../accounts/AddAccountFlow';
 import { IdentityCard } from './IdentityCard';
 import type { PageId } from '../../app/pages';
 
@@ -40,6 +41,7 @@ export function OverviewPage() {
   const { providers, allHosts, keys, loading } = useWorkspace();
   const agent = useResource(() => api.agent.status(), ['keys']);
   const [addingServer, setAddingServer] = useState(false);
+  const [addingAccount, setAddingAccount] = useState(false);
 
   const withAccounts = providers.filter((p) => p.accounts.length);
   const accountCount = withAccounts.reduce((n, p) => n + p.accounts.length, 0);
@@ -54,7 +56,7 @@ export function OverviewPage() {
       <PageHeader
         title={greeting()}
         description="Who you are on each git host right now, and every host in your SSH config."
-        actions={<Button variant="primary" icon={<Plus size={15} />} onClick={() => navigate('accounts', 'add-account')}>Add account</Button>}
+        actions={<Button variant="primary" icon={<Plus size={15} />} onClick={() => setAddingAccount(true)}>Add account</Button>}
       />
 
       <div className="stat-row">
@@ -91,7 +93,7 @@ export function OverviewPage() {
         <EmptyState
           icon={<GitBranch size={30} />}
           title="No git accounts yet"
-          action={<Button variant="primary" icon={<Plus size={15} />} onClick={() => navigate('accounts', 'add-account')}>Add your first account</Button>}
+          action={<Button variant="primary" icon={<Plus size={15} />} onClick={() => setAddingAccount(true)}>Add your first account</Button>}
         >
           Add a work and a personal account (or Hugging Face, GitLab…) and switch between them in one click.
         </EmptyState>
@@ -107,6 +109,7 @@ export function OverviewPage() {
       <HostsTable compact onAddServer={() => setAddingServer(true)} />
 
       {addingServer && <HostEditorModal host={null} onClose={() => setAddingServer(false)} />}
+      {addingAccount && <AddAccountFlow providers={providers} onClose={() => setAddingAccount(false)} />}
     </>
   );
 }

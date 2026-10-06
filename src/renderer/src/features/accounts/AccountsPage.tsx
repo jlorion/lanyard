@@ -7,23 +7,22 @@ import { useToast } from '../../components/feedback/ToastProvider';
 import { useConfirm } from '../../components/feedback/ConfirmProvider';
 import { Button } from '../../components/ui/Button';
 import { Callout, EmptyState, PageHeader } from '../../components/ui/Feedback';
-import { PublicKeyModal } from '../../components/domain/PublicKeyModal';
 import { ProviderMark } from '../../components/domain/ProviderMark';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useIntent } from '../../app/navigation';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import { ProviderCard } from './ProviderCard';
 import { AccountFormModal } from './AccountFormModal';
+import { AddAccountFlow } from './AddAccountFlow';
 import { ProviderFormModal } from './ProviderFormModal';
 import { RepoModal } from './RepoModal';
-import type { AccountView, AddAccountResult, ProviderOverview } from '../../../../shared/types';
+import type { AccountView, ProviderOverview } from '../../../../shared/types';
 
 type Dialog =
   | { kind: 'add'; provider?: string }
   | { kind: 'edit'; account: AccountView }
   | { kind: 'repo'; account: AccountView }
-  | { kind: 'provider' }
-  | { kind: 'created'; result: AddAccountResult; provider: ProviderOverview };
+  | { kind: 'provider' };
 
 export function AccountsPage() {
   const { data: providers = [], error, loading } = useResource(() => api.accounts.overview(), ['state', 'config', 'keys']);
@@ -164,20 +163,11 @@ export function AccountsPage() {
       )}
 
       {dialog?.kind === 'add' && (
-        <AccountFormModal
-          mode="create"
+        <AddAccountFlow
           providers={providers}
           initialProvider={dialog.provider}
           onClose={() => setDialog(null)}
-          onCreated={(result) => {
-            setProviderCollapsed(result.account.provider, false);
-            const provider = providers.find((p) => p.id === result.account.provider)!;
-            if (result.publicKey) setDialog({ kind: 'created', result, provider });
-            else {
-              toast.success(`Added ${result.account.id}`);
-              setDialog(null);
-            }
-          }}
+          onCreated={(result) => setProviderCollapsed(result.account.provider, false)}
         />
       )}
       {dialog?.kind === 'edit' && (
@@ -185,17 +175,6 @@ export function AccountsPage() {
       )}
       {dialog?.kind === 'repo' && <RepoModal account={dialog.account} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'provider' && <ProviderFormModal onClose={() => setDialog(null)} />}
-      {dialog?.kind === 'created' && (
-        <PublicKeyModal
-          title={`Account "${dialog.result.account.name}" added`}
-          publicKey={dialog.result.publicKey!}
-          keysUrl={dialog.result.keysUrl}
-          providerName={dialog.provider.name}
-          hint={dialog.result.keyHint}
-          onTest={() => api.accounts.test(dialog.result.account.provider, dialog.result.account.name)}
-          onClose={() => setDialog(null)}
-        />
-      )}
     </>
   );
 }
