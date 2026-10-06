@@ -402,6 +402,10 @@ table.table {
 .modal-backdrop,
 .palette-backdrop {
   top: var(--topbar-height) !important;
+  /* One backdrop for every overlay: same tint, blur and fade. */
+  background: var(--backdrop);
+  backdrop-filter: blur(2px);
+  animation: fade-in 0.12s ease-out;
 }
 
 :root:has(.modal-backdrop, .palette-backdrop) :is(.topbar, .brand) :is(button, input, a) {
@@ -415,9 +419,6 @@ table.table {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(5, 6, 10, 0.6);
-  backdrop-filter: blur(2px);
-  animation: fade-in 0.12s ease-out;
 }
 
 .modal {
@@ -575,8 +576,6 @@ table.table {
   display: flex;
   justify-content: center;
   padding-top: 11vh;
-  background: rgba(10, 8, 24, 0.5);
-  animation: fade-in 0.1s ease-out;
 }
 
 .palette {

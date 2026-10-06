@@ -105,6 +105,7 @@
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
   --skeleton: rgba(255, 255, 255, 0.06);
+  --backdrop: rgba(0, 0, 0, 0.55);
 
   /* The sidebar shares the app background; only the hover tint differs. */
   --sidebar-bg: var(--bg);
@@ -140,6 +141,7 @@
   --shadow: 0 16px 40px rgba(29, 28, 29, 0.16);
   --shadow-sm: 0 1px 3px rgba(29, 28, 29, 0.08);
   --skeleton: rgba(29, 28, 29, 0.06);
+  --backdrop: rgba(29, 28, 29, 0.32);
 
   --sidebar-bg: #f8f8f9;
   --sidebar-hover: rgba(29, 28, 29, 0.05);
