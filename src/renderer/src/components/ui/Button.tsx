@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { LoaderCircle } from 'lucide-react';
+import { Spinner } from './Spinner';
 
 type Variant = 'default' | 'primary' | 'danger' | 'ghost';
 
@@ -42,7 +42,7 @@ export function Button({
       aria-label={iconOnly ? rest.title : undefined}
       {...rest}
     >
-      {loading ? <LoaderCircle size={14} className="spin" /> : icon}
+      {loading ? <Spinner size={14} /> : icon}
       {children}
     </button>
   );

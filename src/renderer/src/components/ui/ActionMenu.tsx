@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { LoaderCircle, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
+import { Spinner } from './Spinner';
 
 export interface ActionItem {
   label: string;
@@ -90,7 +91,7 @@ export function ActionMenu({ items, busy, label = 'Actions', trigger, triggerCla
           setOpen((o) => !o);
         }}
       >
-        {busy ? <LoaderCircle size={15} className="spin" /> : trigger ?? <MoreHorizontal size={16} />}
+        {busy ? <Spinner size={15} label="Working" /> : trigger ?? <MoreHorizontal size={16} />}
       </button>
       {open && createPortal(
         <div
