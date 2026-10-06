@@ -1,0 +1,18 @@
+#!/bin/sh
+# sshm CLI shim for the installed macOS / Linux app (resources/cli/sshm).
+# Runs the bundled CLI with the app's own Electron binary in Node mode.
+# Symlink it onto your PATH, e.g.  ln -s "<this file>" /usr/local/bin/sshm
+set -e
+SELF="$0"
+while [ -L "$SELF" ]; do
+  TARGET="$(readlink "$SELF")"
+  case "$TARGET" in /*) SELF="$TARGET" ;; *) SELF="$(dirname "$SELF")/$TARGET" ;; esac
+done
+DIR="$(cd "$(dirname "$SELF")" && pwd)"
+if [ "$(uname)" = "Darwin" ]; then
+  APP="$DIR/../../MacOS/SSH Manager"
+else
+  APP="$DIR/../../ssh-manager"
+fi
+export SSHM_APP_EXE="$APP"
+ELECTRON_RUN_AS_NODE=1 exec "$APP" "$DIR/../app.asar/bin/sshm.js" "$@"

@@ -25,6 +25,8 @@ export default defineConfig({
     root: resolve(__dirname, 'src/renderer'),
     plugins: [react()],
     build: {
+      // electron-vite leaves output unminified by default; the renderer is the only bundle where size matters.
+      minify: true,
       rollupOptions: {
         input: { index: resolve(__dirname, 'src/renderer/index.html') },
       },
