@@ -1,14 +1,14 @@
-import type { ReactNode } from 'react';
-import { ArrowRight, GitBranch, KeyRound, Plus, Server, ShieldCheck, SquareTerminal } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { ArrowRight, GitBranch, KeyRound, Plus, Server, ShieldCheck } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useResource } from '../../hooks/useResource';
-import { useTask } from '../../hooks/useTask';
 import { useNavigation } from '../../app/navigation';
 import { useWorkspace } from '../../app/workspace';
 import { Button } from '../../components/ui/Button';
 import { EmptyState, PageHeader } from '../../components/ui/Feedback';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { HostKeySwitcher } from '../../components/domain/HostKeySwitcher';
+import { HostsTable } from '../hosts/HostsTable';
+import { HostEditorModal } from '../hosts/HostEditorModal';
 import { IdentityCard } from './IdentityCard';
 import type { PageId } from '../../app/pages';
 
@@ -37,15 +37,12 @@ function greeting(): string {
 
 export function OverviewPage() {
   const { navigate } = useNavigation();
-  const { providers, hosts, allHosts, keys, loading } = useWorkspace();
+  const { providers, allHosts, keys, loading } = useWorkspace();
   const agent = useResource(() => api.agent.status(), ['keys']);
-  const { run } = useTask();
+  const [addingServer, setAddingServer] = useState(false);
 
   const withAccounts = providers.filter((p) => p.accounts.length);
   const accountCount = withAccounts.reduce((n, p) => n + p.accounts.length, 0);
-  // Git hosts are covered by the identity cards; the host list is for servers you open shells on.
-  const servers = hosts.filter((h) => !h.gitProvider);
-  const gitHosts = hosts.filter((h) => h.gitProvider);
   // The tile mirrors the Hosts page groups (managed account entries included).
   const allServers = allHosts.filter((h) => !h.isPattern && !h.gitProvider).length;
   const allGitHosts = allHosts.filter((h) => !h.isPattern && h.gitProvider).length;
@@ -56,7 +53,7 @@ export function OverviewPage() {
     <>
       <PageHeader
         title={greeting()}
-        description="Here's who you are on each git host right now, and the servers you reach most."
+        description="Who you are on each git host right now, and every host in your SSH config."
         actions={<Button variant="primary" icon={<Plus size={15} />} onClick={() => navigate('accounts', 'add-account')}>Add account</Button>}
       />
 
@@ -101,38 +98,15 @@ export function OverviewPage() {
       )}
 
       <div className="section-head">
-        <h2>Servers</h2>
-        <Button size="sm" variant="ghost" onClick={go('hosts')}>All hosts <ArrowRight size={14} /></Button>
-      </div>
-      {loading ? <Skeleton rows={3} /> : servers.length ? (
-        <div className="host-list">
-          {servers.slice(0, 6).map((h) => (
-            <div key={h.index} className="host-row">
-              <span className="host-avatar"><Server size={16} /></span>
-              <div className="host-main">
-                <div className="host-alias">{h.alias}</div>
-                <div className="faint mono truncate">{[h.user, h.hostName].filter(Boolean).join('@') || h.alias}{h.port ? `:${h.port}` : ''}</div>
-              </div>
-              <HostKeySwitcher host={h} keys={keys} />
-              <Button size="sm" icon={<SquareTerminal size={14} />} onClick={() => run(`c:${h.alias}`, () => api.app.connect(h.alias))}>Connect</Button>
-            </div>
-          ))}
+        <h2>Hosts</h2>
+        <div className="row" style={{ gap: 4 }}>
+          <Button size="sm" variant="ghost" icon={<Plus size={14} />} onClick={() => setAddingServer(true)}>Add server</Button>
+          <Button size="sm" variant="ghost" onClick={go('hosts')}>All hosts <ArrowRight size={14} /></Button>
         </div>
-      ) : (
-        <EmptyState
-          icon={<Server size={30} />}
-          title="No servers yet"
-          action={<Button icon={<Plus size={15} />} onClick={() => navigate('hosts', 'add-host')}>Add server</Button>}
-        >
-          {gitHosts.length ? (
-            <>
-              {gitHosts.map((h, i) => <span key={h.alias}>{i ? ', ' : ''}<code>{h.alias}</code></span>)}
-              {gitHosts.length === 1 ? ' is a git host' : ' are git hosts'}, so {gitHosts.length === 1 ? 'it lives' : 'they live'} under
-              Identities above (git hosts have no shell to connect to). Add a server you SSH into to connect to it from here.
-            </>
-          ) : 'Save servers you connect to and give each one its own key.'}
-        </EmptyState>
-      )}
+      </div>
+      <HostsTable compact onAddServer={() => setAddingServer(true)} />
+
+      {addingServer && <HostEditorModal host={null} onClose={() => setAddingServer(false)} />}
     </>
   );
 }
