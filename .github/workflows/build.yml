@@ -10,9 +10,11 @@ name: Build
 
 on:
   push:
-    branches: [build]
+    branches:
+      - 'build-**'
   pull_request:
-    branches: [build]
+    branches:
+      - 'build-**'
   workflow_dispatch:
 
 # A newer push to the same branch makes the running build pointless.
