@@ -6,3 +6,5 @@ release/
 Thumbs.db
 .vscode/
 .idea/
+out/
+*.tsbuildinfo
