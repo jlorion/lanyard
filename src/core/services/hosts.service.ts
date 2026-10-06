@@ -3,6 +3,8 @@
 import * as sshConfig from '../ssh-config';
 import * as repo from '../ssh-config/config.repository';
 import * as keys from '../keys/keys.service';
+import * as providers from '../providers';
+import * as store from '../state/store';
 import { toTilde } from '../config/paths';
 import { run, SshmError } from '../utils/exec';
 import type { ConfigValidation, HostEntry, HostInput, HostOption, TestResult } from '../../shared/types';
@@ -104,17 +106,26 @@ export async function saveRaw(text: string, { force = false } = {}): Promise<{ s
   return { saved: repo.writeRaw(text, 'raw-edit') };
 }
 
-/** Non-interactive login test: runs `exit` on the server. */
+const BATCH_OPTIONS = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', '-o', 'StrictHostKeyChecking=accept-new'];
+
+/**
+ * Non-interactive login test. Git hosting providers refuse remote commands
+ * (GitHub answers "Invalid command" with exit code 1), so hosts that point at
+ * a provider are checked with `ssh -T` and the provider's greeting instead.
+ */
 export async function test(alias: string): Promise<TestResult> {
   assertAlias(alias);
-  const r = await run('ssh', [
-    '-o', 'BatchMode=yes',
-    '-o', 'ConnectTimeout=10',
-    '-o', 'StrictHostKeyChecking=accept-new',
-    alias, 'exit',
-  ], { timeout: 25000 });
+  const host = list().find((h) => h.aliases.includes(alias));
+  const provider = providers.findByHost(store.load(), alias, host?.hostName);
+  if (provider) {
+    const r = await run('ssh', ['-T', ...BATCH_OPTIONS, '-l', provider.user, alias], { timeout: 25000 });
+    return providers.interpretTest(provider, r);
+  }
+
+  const r = await run('ssh', [...BATCH_OPTIONS, alias, 'exit'], { timeout: 25000 });
   const output = `${r.stdout}\n${r.stderr}`.trim();
-  let message = r.code === 0 ? 'Login succeeded' : `ssh exited with code ${r.code}`;
+  const firstLine = output.split(/\r?\n/).find((l) => l.trim()) ?? '';
+  let message = r.code === 0 ? 'Login succeeded' : `ssh exited with code ${r.code}${firstLine ? `: ${firstLine}` : ''}`;
   if (r.timedOut) message = 'Connection timed out';
   else if (/Permission denied/i.test(output)) message = 'Permission denied (key not accepted or needs a passphrase)';
   else if (/Could not resolve hostname/i.test(output)) message = 'Could not resolve hostname';

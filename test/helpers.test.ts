@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseRemote, toAliasUrl } from '../src/core/git/remote-url';
 import { isEncrypted, parsePublicKey } from '../src/core/keys/key-format';
-import { BUILTIN_PROVIDERS, interpretTest } from '../src/core/providers';
+import { BUILTIN_PROVIDERS, findByHost, interpretTest } from '../src/core/providers';
 
 const provider = (id: string) => BUILTIN_PROVIDERS.find((p) => p.id === id)!;
 const result = (stdout: string, stderr = '', code = 0) => ({ code, stdout, stderr, timedOut: false });
@@ -32,6 +32,16 @@ describe('provider greetings', () => {
     const gh = interpretTest(provider('github'), result('', "Hi octocat! You've successfully authenticated, but GitHub does not provide shell access.", 1));
     expect(gh).toMatchObject({ ok: true, username: 'octocat' });
     expect(interpretTest(provider('huggingface'), result('Hi julien, welcome to Hugging Face.')).username).toBe('julien');
+  });
+
+  it('finds the provider behind a host name or account alias', () => {
+    const state = { version: 1 as const, accounts: [], active: {}, customProviders: [], settings: {} as never };
+    expect(findByHost(state, 'github.com')?.id).toBe('github');
+    expect(findByHost(state, 'github.com-work')?.id).toBe('github');
+    expect(findByHost(state, 'my-alias', 'hf.co')?.id).toBe('huggingface');
+    expect(findByHost(state, 'GitLab.com')?.id).toBe('gitlab');
+    expect(findByHost(state, 'prod-web', '203.0.113.10')).toBeNull();
+    expect(findByHost(state, 'github.company.com')).toBeNull();
   });
 
   it('treats anonymous / denied as failures', () => {

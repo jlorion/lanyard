@@ -126,6 +126,18 @@ export function getProvider(state: State, id: string): Provider {
   return p;
 }
 
+/**
+ * The provider a host name belongs to: a provider host ("github.com"), its
+ * primary HostName, or an account alias ("github.com-work").
+ */
+export function findByHost(state: State, ...names: (string | undefined)[]): Provider | null {
+  const wanted = names.filter((n): n is string => !!n).map((n) => n.toLowerCase());
+  return allProviders(state).find((p) => {
+    const hosts = [...p.hosts, primaryHost(p)].map((h) => h.toLowerCase());
+    return wanted.some((n) => hosts.includes(n) || hosts.some((h) => n.startsWith(`${h}-`)));
+  }) ?? null;
+}
+
 export function primaryHost(p: ProviderInfo): string {
   return p.hostname || p.hosts[0];
 }
