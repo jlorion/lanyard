@@ -88,7 +88,6 @@
   white-space: nowrap;
 }
 
-
 .provider-chips {
   display: flex;
   flex-wrap: wrap;
@@ -267,7 +266,9 @@
   box-shadow: var(--shadow-sm);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.12s, transform 0.12s;
+  transition:
+    border-color 0.12s,
+    transform 0.12s;
 }
 
 .stat-tile:hover {
@@ -419,7 +420,9 @@
   background: var(--swatch);
   color: #fff;
   cursor: pointer;
-  transition: transform 0.12s, box-shadow 0.12s;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
 }
 
 .accent-swatch:hover {
@@ -427,7 +430,9 @@
 }
 
 .accent-swatch.selected {
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--swatch);
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--swatch);
 }
 
 /* ------------------------------------------------------------ collapsible provider cards */

@@ -37,7 +37,8 @@ function onPath(bin: string): boolean {
       } catch {
         return false;
       }
-    }));
+    }),
+  );
 }
 
 function launch(cmd: string, args: string[]): void {
@@ -62,9 +63,10 @@ function windows(preference: string, parts: string[], title: string): void {
 function mac(preference: string, parts: string[]): void {
   const app = preference === 'iterm' ? 'iTerm' : 'Terminal';
   const line = parts.map(quoteSh).join(' ');
-  const script = app === 'iTerm'
-    ? `tell application "iTerm" to create window with default profile command "${line}"`
-    : `tell application "Terminal" to do script "${line}"`;
+  const script =
+    app === 'iTerm'
+      ? `tell application "iTerm" to create window with default profile command "${line}"`
+      : `tell application "Terminal" to do script "${line}"`;
   launch('osascript', ['-e', script, '-e', `tell application "${app}" to activate`]);
 }
 
@@ -79,8 +81,7 @@ function linux(preference: string, parts: string[]): void {
     ['kitty', ['sh', '-c', line]],
     ['xterm', ['-e', 'sh', '-c', line]],
   ];
-  const found = candidates.find(([bin]) => bin === preference && onPath(bin))
-    ?? candidates.find(([bin]) => onPath(bin));
+  const found = candidates.find(([bin]) => bin === preference && onPath(bin)) ?? candidates.find(([bin]) => onPath(bin));
   if (!found) throw new Error('No terminal emulator found. Choose one in Settings.');
   launch(found[0], found[1]);
 }

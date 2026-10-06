@@ -28,12 +28,15 @@ export function RawConfigEditor() {
   const validate = async () => {
     const r = await run('validate', () => api.hosts.validate(text));
     if (!r) return;
-    setProblem(r.ok ? '' : r.error ?? 'Invalid config');
+    setProblem(r.ok ? '' : (r.error ?? 'Invalid config'));
     if (r.ok) toast.success(r.skipped ? 'ssh not found - validation skipped' : 'OpenSSH accepts this config');
   };
 
   const saveWith = (force: boolean) =>
-    api.hosts.saveRaw(text, { force }).then(() => null, (err: unknown) => err);
+    api.hosts.saveRaw(text, { force }).then(
+      () => null,
+      (err: unknown) => err,
+    );
 
   const save = async () => {
     let failure = await saveWith(false);
@@ -62,12 +65,35 @@ export function RawConfigEditor() {
       <div className="row">
         <span className="muted mono truncate">{paths.config}</span>
         <span className="spacer" />
-        {dirty && <Button variant="ghost" icon={<RotateCcw size={15} />} onClick={() => { setDirty(false); setProblem(''); setText(saved); }}>Discard</Button>}
-        <Button icon={<CheckCircle2 size={15} />} loading={isBusy('validate')} onClick={() => void validate()}>Validate</Button>
-        <Button variant="primary" icon={<Save size={15} />} disabled={!dirty} onClick={() => void save()}>Save</Button>
+        {dirty && (
+          <Button
+            variant="ghost"
+            icon={<RotateCcw size={15} />}
+            onClick={() => {
+              setDirty(false);
+              setProblem('');
+              setText(saved);
+            }}
+          >
+            Discard
+          </Button>
+        )}
+        <Button icon={<CheckCircle2 size={15} />} loading={isBusy('validate')} onClick={() => void validate()}>
+          Validate
+        </Button>
+        <Button variant="primary" icon={<Save size={15} />} disabled={!dirty} onClick={() => void save()}>
+          Save
+        </Button>
       </div>
-      <Callout>A backup is taken before every save. The block between the <code>lanyard managed section</code> markers is regenerated from your git accounts.</Callout>
-      {problem && <Callout tone="danger"><pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{problem}</pre></Callout>}
+      <Callout>
+        A backup is taken before every save. The block between the <code>lanyard managed section</code> markers is regenerated from your git
+        accounts.
+      </Callout>
+      {problem && (
+        <Callout tone="danger">
+          <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{problem}</pre>
+        </Callout>
+      )}
       <Textarea
         className="raw-editor"
         value={text}

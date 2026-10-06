@@ -91,7 +91,14 @@ export function Topbar({ onSearch }: { onSearch: (query?: string) => void }) {
         <button type="button" className="topbar-icon" title="Back (Alt+Left)" aria-label="Back" disabled={!canGoBack} onClick={back}>
           <ArrowLeft size={17} />
         </button>
-        <button type="button" className="topbar-icon" title="Forward (Alt+Right)" aria-label="Forward" disabled={!canGoForward} onClick={forward}>
+        <button
+          type="button"
+          className="topbar-icon"
+          title="Forward (Alt+Right)"
+          aria-label="Forward"
+          disabled={!canGoForward}
+          onClick={forward}
+        >
           <ArrowRight size={17} />
         </button>
       </div>

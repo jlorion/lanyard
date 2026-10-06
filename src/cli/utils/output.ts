@@ -42,13 +42,19 @@ export function table<T>(rows: T[], columns: Column<T>[]): void {
     print(c.dim('  (none)'));
     return;
   }
-  const cells = rows.map((r) => columns.map((col) => {
-    const raw = r[col.key];
-    const v = col.format ? col.format(raw, r) : raw;
-    return v == null ? '' : String(v);
-  }));
+  const cells = rows.map((r) =>
+    columns.map((col) => {
+      const raw = r[col.key];
+      const v = col.format ? col.format(raw, r) : raw;
+      return v == null ? '' : String(v);
+    }),
+  );
   const widths = columns.map((col, i) => Math.max(width(col.label), ...cells.map((row) => width(row[i]))));
-  const line = (vals: string[]) => vals.map((v, i) => v + ' '.repeat(widths[i] - width(v))).join('  ').trimEnd();
+  const line = (vals: string[]) =>
+    vals
+      .map((v, i) => v + ' '.repeat(widths[i] - width(v)))
+      .join('  ')
+      .trimEnd();
   print(c.dim(line(columns.map((col) => col.label.toUpperCase()))));
   for (const row of cells) print(line(row));
 }

@@ -13,7 +13,10 @@ export function HostsPage() {
   const [view, setView] = useState<'list' | 'raw'>('list');
   const [query, setQuery] = useState('');
   const [adding, setAdding] = useState(false);
-  useIntent('add-host', () => { setView('list'); setAdding(true); });
+  useIntent('add-host', () => {
+    setView('list');
+    setAdding(true);
+  });
   useIntent('raw-config', () => setView('raw'));
 
   return (
@@ -21,15 +24,28 @@ export function HostsPage() {
       <PageHeader
         title="Hosts"
         description="Every Host entry in ~/.ssh/config. Edits keep your comments and formatting, and every change is backed up."
-        actions={(
+        actions={
           <>
-            <Segmented value={view} onChange={setView} options={[{ value: 'list', label: 'Hosts' }, { value: 'raw', label: 'Raw config' }]} />
-            {view === 'list' && <Button variant="primary" icon={<Plus size={15} />} onClick={() => setAdding(true)}>Add host</Button>}
+            <Segmented
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'list', label: 'Hosts' },
+                { value: 'raw', label: 'Raw config' },
+              ]}
+            />
+            {view === 'list' && (
+              <Button variant="primary" icon={<Plus size={15} />} onClick={() => setAdding(true)}>
+                Add host
+              </Button>
+            )}
           </>
-        )}
+        }
       />
 
-      {view === 'raw' ? <RawConfigEditor /> : (
+      {view === 'raw' ? (
+        <RawConfigEditor />
+      ) : (
         <>
           <div className="toolbar">
             <SearchInput value={query} onChange={setQuery} placeholder="Search hosts…" />

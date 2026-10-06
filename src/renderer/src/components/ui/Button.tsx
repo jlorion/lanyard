@@ -33,15 +33,11 @@ export function Button({
     iconOnly && 'btn-icon',
     danger && 'danger',
     className,
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <button
-      type={type}
-      className={classes}
-      disabled={disabled || loading}
-      aria-label={iconOnly ? rest.title : undefined}
-      {...rest}
-    >
+    <button type={type} className={classes} disabled={disabled || loading} aria-label={iconOnly ? rest.title : undefined} {...rest}>
       {loading ? <Spinner size={14} /> : icon}
       {children}
     </button>

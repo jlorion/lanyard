@@ -37,21 +37,25 @@ export function HostEditorModal({ host, onClose }: { host: HostEntry | null; onC
   const [extra, setExtra] = useState<HostOption[]>(initial.extra);
 
   const setField = (k: Known, v: string) => setKnown((s) => ({ ...s, [k]: v }));
-  const setExtraAt = (i: number, patch: Partial<HostOption>) =>
-    setExtra((rows) => rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const setExtraAt = (i: number, patch: Partial<HostOption>) => setExtra((rows) => rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   const submit = async () => {
     const options: HostOption[] = [
       ...KNOWN.filter((k) => known[k].trim()).map((k) => ({ key: k, value: known[k].trim() })),
       ...extra.filter((o) => o.key.trim() && o.value.trim()),
     ];
-    const ok = await run('save', () => api.hosts.save({
-      index: host?.index ?? null,
-      originalPatterns: host?.patterns,
-      patterns: patterns.trim(),
-      options,
-      comment,
-    }), host ? 'Host updated' : 'Host added');
+    const ok = await run(
+      'save',
+      () =>
+        api.hosts.save({
+          index: host?.index ?? null,
+          originalPatterns: host?.patterns,
+          patterns: patterns.trim(),
+          options,
+          comment,
+        }),
+      host ? 'Host updated' : 'Host added',
+    );
     if (ok) onClose();
   };
 
@@ -62,14 +66,14 @@ export function HostEditorModal({ host, onClose }: { host: HostEntry | null; onC
       onClose={onClose}
       onSubmit={submit}
       wide
-      footer={(
+      footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="primary" disabled={!patterns.trim()} loading={isBusy('save')}>
             {host ? 'Save changes' : 'Add host'}
           </Button>
         </>
-      )}
+      }
     >
       <div className="form-grid">
         <Field label="Alias (Host)" required hint="Name you type after ssh. Several aliases or patterns can be space-separated.">
@@ -86,7 +90,13 @@ export function HostEditorModal({ host, onClose }: { host: HostEntry | null; onC
             <Input mono value={known.User} placeholder="deploy" onChange={(e) => setField('User', e.target.value)} />
           </Field>
           <Field label="Port">
-            <Input mono value={known.Port} placeholder="22" inputMode="numeric" onChange={(e) => setField('Port', e.target.value.replace(/\D/g, ''))} />
+            <Input
+              mono
+              value={known.Port}
+              placeholder="22"
+              inputMode="numeric"
+              onChange={(e) => setField('Port', e.target.value.replace(/\D/g, ''))}
+            />
           </Field>
         </div>
         <Field label="IdentityFile" className="full">
@@ -110,11 +120,20 @@ export function HostEditorModal({ host, onClose }: { host: HostEntry | null; onC
               <div className="option-row" key={i}>
                 <Input mono value={o.key} placeholder="ServerAliveInterval" onChange={(e) => setExtraAt(i, { key: e.target.value })} />
                 <Input mono value={o.value} placeholder="60" onChange={(e) => setExtraAt(i, { value: e.target.value })} />
-                <Button variant="ghost" iconOnly danger title="Remove option" icon={<Trash2 size={14} />} onClick={() => setExtra((rows) => rows.filter((_, j) => j !== i))} />
+                <Button
+                  variant="ghost"
+                  iconOnly
+                  danger
+                  title="Remove option"
+                  icon={<Trash2 size={14} />}
+                  onClick={() => setExtra((rows) => rows.filter((_, j) => j !== i))}
+                />
               </div>
             ))}
             <div>
-              <Button size="sm" icon={<Plus size={14} />} onClick={() => setExtra((rows) => [...rows, { key: '', value: '' }])}>Add option</Button>
+              <Button size="sm" icon={<Plus size={14} />} onClick={() => setExtra((rows) => [...rows, { key: '', value: '' }])}>
+                Add option
+              </Button>
             </div>
           </div>
         </div>

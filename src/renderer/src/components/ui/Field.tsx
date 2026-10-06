@@ -1,8 +1,20 @@
-import { cloneElement, isValidElement, type InputHTMLAttributes, type ReactElement, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import {
+  cloneElement,
+  isValidElement,
+  type InputHTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 
 /** Red asterisk after a label; the field can't be submitted without a value. */
 export function RequiredMark() {
-  return <span className="field-required" title="Required" aria-hidden>*</span>;
+  return (
+    <span className="field-required" title="Required" aria-hidden>
+      *
+    </span>
+  );
 }
 
 /**
@@ -10,7 +22,14 @@ export function RequiredMark() {
  * aria-required to the control); `error` replaces the hint and marks the
  * field invalid.
  */
-export function Field({ label, hint, error, required, children, className = '' }: {
+export function Field({
+  label,
+  hint,
+  error,
+  required,
+  children,
+  className = '',
+}: {
   label?: ReactNode;
   hint?: ReactNode;
   error?: ReactNode;
@@ -19,18 +38,26 @@ export function Field({ label, hint, error, required, children, className = '' }
   className?: string;
 }) {
   // aria-required belongs on the control itself, not on wrapper elements like <div>.
-  const isControl = isValidElement(children)
-    && (typeof children.type !== 'string' || ['input', 'select', 'textarea'].includes(children.type));
-  const control = required && isControl
-    ? cloneElement(children as ReactElement<{ 'aria-required'?: boolean }>, { 'aria-required': true })
-    : children;
+  const isControl =
+    isValidElement(children) && (typeof children.type !== 'string' || ['input', 'select', 'textarea'].includes(children.type));
+  const control =
+    required && isControl ? cloneElement(children as ReactElement<{ 'aria-required'?: boolean }>, { 'aria-required': true }) : children;
   return (
     <label className={`field${error ? ' invalid' : ''} ${className}`}>
-      {label && <span className="field-label">{label}{required && <RequiredMark />}</span>}
+      {label && (
+        <span className="field-label">
+          {label}
+          {required && <RequiredMark />}
+        </span>
+      )}
       {control}
-      {error
-        ? <span className="field-hint field-error" role="alert">{error}</span>
-        : hint && <span className="field-hint">{hint}</span>}
+      {error ? (
+        <span className="field-hint field-error" role="alert">
+          {error}
+        </span>
+      ) : (
+        hint && <span className="field-hint">{hint}</span>
+      )}
     </label>
   );
 }
@@ -40,14 +67,23 @@ export function Input({ mono, className = '', ...rest }: InputHTMLAttributes<HTM
 }
 
 export function Select({ className = '', children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={`select ${className}`} {...rest}>{children}</select>;
+  return (
+    <select className={`select ${className}`} {...rest}>
+      {children}
+    </select>
+  );
 }
 
 export function Textarea({ className = '', ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={`textarea ${className}`} spellCheck={false} {...rest} />;
 }
 
-export function Checkbox({ checked, onChange, label, hint }: {
+export function Checkbox({
+  checked,
+  onChange,
+  label,
+  hint,
+}: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: ReactNode;
@@ -64,7 +100,11 @@ export function Checkbox({ checked, onChange, label, hint }: {
   );
 }
 
-export function Segmented<T extends string>({ value, options, onChange }: {
+export function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
   value: T;
   options: { value: T; label: ReactNode }[];
   onChange: (value: T) => void;

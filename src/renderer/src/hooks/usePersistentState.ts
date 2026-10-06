@@ -14,17 +14,20 @@ export function usePersistentState<T>(key: string, initial: T): [T, (update: T |
     }
   });
 
-  const set = useCallback((update: T | ((prev: T) => T)) => {
-    setValue((prev) => {
-      const next = typeof update === 'function' ? (update as (p: T) => T)(prev) : update;
-      try {
-        localStorage.setItem(key, JSON.stringify(next));
-      } catch {
-        // storage unavailable
-      }
-      return next;
-    });
-  }, [key]);
+  const set = useCallback(
+    (update: T | ((prev: T) => T)) => {
+      setValue((prev) => {
+        const next = typeof update === 'function' ? (update as (p: T) => T)(prev) : update;
+        try {
+          localStorage.setItem(key, JSON.stringify(next));
+        } catch {
+          // storage unavailable
+        }
+        return next;
+      });
+    },
+    [key],
+  );
 
   return [value, set];
 }

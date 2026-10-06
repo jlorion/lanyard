@@ -16,10 +16,7 @@ const ConfirmContext = createContext<Confirm | null>(null);
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<(ConfirmOptions & { resolve: (ok: boolean) => void }) | null>(null);
 
-  const confirm = useCallback<Confirm>(
-    (options) => new Promise((resolve) => setPending({ ...options, resolve })),
-    [],
-  );
+  const confirm = useCallback<Confirm>((options) => new Promise((resolve) => setPending({ ...options, resolve })), []);
 
   const close = (ok: boolean) => {
     pending?.resolve(ok);
@@ -34,14 +31,14 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           title={pending.title}
           onClose={() => close(false)}
           onSubmit={() => close(true)}
-          footer={(
+          footer={
             <>
               <Button onClick={() => close(false)}>Cancel</Button>
               <Button type="submit" variant={pending.danger ? 'danger' : 'primary'} autoFocus>
                 {pending.confirmLabel ?? 'Confirm'}
               </Button>
             </>
-          )}
+          }
         >
           <div className="muted selectable">{pending.message}</div>
         </Modal>

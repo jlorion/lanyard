@@ -29,7 +29,9 @@ export function fingerprint(base64Blob: string): string {
 
 /** Parse a single public key line: "<type> <base64> [comment]". */
 export function parsePublicKey(line: string | null | undefined): PublicKey | null {
-  const parts = String(line ?? '').trim().split(/\s+/);
+  const parts = String(line ?? '')
+    .trim()
+    .split(/\s+/);
   if (parts.length < 2 || !/^[A-Za-z0-9+/=]+$/.test(parts[1])) return null;
   return {
     algorithm: parts[0],

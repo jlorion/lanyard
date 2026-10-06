@@ -14,8 +14,7 @@ function subscribe<T>(channel: string, listener: (payload: T) => void): () => vo
 }
 
 const bridge: PreloadBridge = {
-  invoke: (namespace, method, args) =>
-    ipcRenderer.invoke(IPC_CHANNELS.invoke, namespace, method, args) as Promise<IpcResponse>,
+  invoke: (namespace, method, args) => ipcRenderer.invoke(IPC_CHANNELS.invoke, namespace, method, args) as Promise<IpcResponse>,
   onChanged: (listener) => subscribe<ChangeTopic[]>(IPC_CHANNELS.changed, listener),
   onNavigate: (listener) => subscribe<NavigateRequest>(IPC_CHANNELS.navigate, listener),
   onCommand: (listener) => subscribe<AppCommand>(IPC_CHANNELS.command, listener),

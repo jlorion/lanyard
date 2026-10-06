@@ -42,7 +42,9 @@ export async function validate(text: string): Promise<ConfigValidation> {
   try {
     const r = await run('ssh', ['-G', '-F', tmp, 'lanyard-validate-probe'], { timeout: 10000 });
     if (r.code === 0) return { ok: true };
-    const error = (r.stderr || r.stdout).trim().split(/\r?\n/)
+    const error = (r.stderr || r.stdout)
+      .trim()
+      .split(/\r?\n/)
       .filter((l) => !/terminating|^\s*$/.test(l))
       .join('\n')
       .replaceAll(tmp, 'config');

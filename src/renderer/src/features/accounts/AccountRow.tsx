@@ -13,7 +13,13 @@ export interface AccountRowActions {
   onRemove: () => void;
 }
 
-export function AccountRow({ account, user, testing, switching, actions }: {
+export function AccountRow({
+  account,
+  user,
+  testing,
+  switching,
+  actions,
+}: {
   account: AccountView;
   user: string;
   testing: boolean;
@@ -38,11 +44,17 @@ export function AccountRow({ account, user, testing, switching, actions }: {
         <div className="row" style={{ gap: 6 }}>
           <span className="account-name">{account.name}</span>
           {account.active && <Badge tone="accent">active</Badge>}
-          {account.keyEncrypted && <Badge title="Key has a passphrase"><Lock size={11} /> passphrase</Badge>}
+          {account.keyEncrypted && (
+            <Badge title="Key has a passphrase">
+              <Lock size={11} /> passphrase
+            </Badge>
+          )}
           {!account.keyExists && <Badge tone="danger">key missing</Badge>}
         </div>
         <div className="account-meta">
-          <code className="selectable">{user}@{account.alias}</code>
+          <code className="selectable">
+            {user}@{account.alias}
+          </code>
           {account.gitEmail && <span className="truncate">{account.gitEmail}</span>}
           {t && (
             <span className={t.ok ? 'test-ok' : 'test-fail'} title={t.message}>

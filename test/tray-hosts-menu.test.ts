@@ -4,20 +4,59 @@ import { buildHostsMenu, type HostsMenuActions } from '../src/main/tray-hosts-me
 import type { AccountView, HostEntry, KeyInfo, ProviderOverview } from '../src/shared/types';
 
 const host = (alias: string, extra: Partial<HostEntry> = {}): HostEntry => ({
-  index: 0, managed: false, kind: 'Host', patterns: alias, alias, aliases: alias.split(' '),
-  isPattern: false, hostName: '', user: '', port: '', identityFile: '', options: [], comment: '', gitProvider: null, ...extra,
+  index: 0,
+  managed: false,
+  kind: 'Host',
+  patterns: alias,
+  alias,
+  aliases: alias.split(' '),
+  isPattern: false,
+  hostName: '',
+  user: '',
+  port: '',
+  identityFile: '',
+  options: [],
+  comment: '',
+  gitProvider: null,
+  ...extra,
 });
 const account = (provider: string, name: string, alias: string, active = false): AccountView => ({
-  id: `${provider}:${name}`, provider, name, keyPath: `~/.ssh/${name}`, gitName: '', gitEmail: '', setGitIdentity: false,
-  createdAt: '', alias, active, keyExists: true, keyEncrypted: false,
+  id: `${provider}:${name}`,
+  provider,
+  name,
+  keyPath: `~/.ssh/${name}`,
+  gitName: '',
+  gitEmail: '',
+  setGitIdentity: false,
+  createdAt: '',
+  alias,
+  active,
+  keyExists: true,
+  keyEncrypted: false,
 });
 const provider = (id: string, name: string, accounts: AccountView[]): ProviderOverview => ({
-  id, name, hosts: [`${id}.com`], user: 'git', color: '#000', keysUrl: '', accounts,
-  active: accounts.find((a) => a.active)?.name ?? null, conflicts: [],
+  id,
+  name,
+  hosts: [`${id}.com`],
+  user: 'git',
+  color: '#000',
+  keysUrl: '',
+  accounts,
+  active: accounts.find((a) => a.active)?.name ?? null,
+  conflicts: [],
 });
 const key = (name: string): KeyInfo => ({
-  name, path: `/k/${name}`, tildePath: `~/.ssh/${name}`, publicPath: null, hasPrivate: true, type: 'ED25519',
-  algorithm: 'ssh-ed25519', fingerprint: '', comment: '', encrypted: false, modifiedAt: '',
+  name,
+  path: `/k/${name}`,
+  tildePath: `~/.ssh/${name}`,
+  publicPath: null,
+  hasPrivate: true,
+  type: 'ED25519',
+  algorithm: 'ssh-ed25519',
+  fingerprint: '',
+  comment: '',
+  encrypted: false,
+  modifiedAt: '',
 });
 
 const actions = (): HostsMenuActions => ({ connect: vi.fn(), test: vi.fn(), setKey: vi.fn(), useAccount: vi.fn(), addServer: vi.fn() });

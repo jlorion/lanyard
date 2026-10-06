@@ -12,7 +12,11 @@ export function interactive(cmd: string, args: string[]): number {
 const CLIPBOARD_TOOLS: Record<string, [string, string[]][]> = {
   win32: [['clip', []]],
   darwin: [['pbcopy', []]],
-  linux: [['wl-copy', []], ['xclip', ['-selection', 'clipboard']], ['xsel', ['--clipboard', '--input']]],
+  linux: [
+    ['wl-copy', []],
+    ['xclip', ['-selection', 'clipboard']],
+    ['xsel', ['--clipboard', '--input']],
+  ],
 };
 
 export function copyToClipboard(text: string): boolean {

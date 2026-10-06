@@ -3,12 +3,20 @@
 import type { ReactNode } from 'react';
 import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react';
 
-export function Badge({ tone = 'default', children, title }: {
+export function Badge({
+  tone = 'default',
+  children,
+  title,
+}: {
   tone?: 'default' | 'accent' | 'success' | 'danger' | 'warning';
   children: ReactNode;
   title?: string;
 }) {
-  return <span className={`badge${tone !== 'default' ? ` badge-${tone}` : ''}`} title={title}>{children}</span>;
+  return (
+    <span className={`badge${tone !== 'default' ? ` badge-${tone}` : ''}`} title={title}>
+      {children}
+    </span>
+  );
 }
 
 const CALLOUT_ICONS = {
@@ -28,7 +36,12 @@ export function Callout({ tone = 'info', children }: { tone?: keyof typeof CALLO
   );
 }
 
-export function EmptyState({ icon, title, children, action }: {
+export function EmptyState({
+  icon,
+  title,
+  children,
+  action,
+}: {
   icon: ReactNode;
   title: string;
   children?: ReactNode;
@@ -44,11 +57,7 @@ export function EmptyState({ icon, title, children, action }: {
   );
 }
 
-export function PageHeader({ title, description, actions }: {
-  title: string;
-  description?: ReactNode;
-  actions?: ReactNode;
-}) {
+export function PageHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {
   return (
     <header className="page-header">
       <div>
@@ -61,5 +70,9 @@ export function PageHeader({ title, description, actions }: {
 }
 
 export function CodeBlock({ children, maxHeight }: { children: ReactNode; maxHeight?: number }) {
-  return <pre className="code-block" style={{ maxHeight }}>{children}</pre>;
+  return (
+    <pre className="code-block" style={{ maxHeight }}>
+      {children}
+    </pre>
+  );
 }

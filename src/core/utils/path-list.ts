@@ -16,7 +16,10 @@ export const NATIVE_PATH_LIST: PathListOptions = {
 };
 
 function normalize(entry: string, opts: PathListOptions): string {
-  const e = entry.trim().replace(/^"|"$/g, '').replace(/[\\/]+$/, '');
+  const e = entry
+    .trim()
+    .replace(/^"|"$/g, '')
+    .replace(/[\\/]+$/, '');
   return opts.caseInsensitive ? e.toLowerCase() : e;
 }
 
@@ -38,5 +41,7 @@ export function addToPathList(list: string, dir: string, opts: PathListOptions =
 /** Remove every spelling of `dir`. Other entries are kept verbatim. */
 export function removeFromPathList(list: string, dir: string, opts: PathListOptions = NATIVE_PATH_LIST): string {
   const target = normalize(dir, opts);
-  return entries(list, opts).filter((e) => normalize(e, opts) !== target).join(opts.separator);
+  return entries(list, opts)
+    .filter((e) => normalize(e, opts) !== target)
+    .join(opts.separator);
 }

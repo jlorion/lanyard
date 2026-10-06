@@ -132,10 +132,12 @@ export function getProvider(state: State, id: string): Provider {
  */
 export function findByHost(state: State, ...names: (string | undefined)[]): Provider | null {
   const wanted = names.filter((n): n is string => !!n).map((n) => n.toLowerCase());
-  return allProviders(state).find((p) => {
-    const hosts = [...p.hosts, primaryHost(p)].map((h) => h.toLowerCase());
-    return wanted.some((n) => hosts.includes(n) || hosts.some((h) => n.startsWith(`${h}-`)));
-  }) ?? null;
+  return (
+    allProviders(state).find((p) => {
+      const hosts = [...p.hosts, primaryHost(p)].map((h) => h.toLowerCase());
+      return wanted.some((n) => hosts.includes(n) || hosts.some((h) => n.startsWith(`${h}-`)));
+    }) ?? null
+  );
 }
 
 export function primaryHost(p: ProviderInfo): string {

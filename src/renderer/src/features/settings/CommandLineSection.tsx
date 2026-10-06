@@ -31,9 +31,17 @@ export function CommandLineSection() {
   let hint: ReactNode = null;
   if (s && !ready) {
     if (!s.packaged) {
-      hint = <>Development build: run <code>npm link</code> in the project folder to get the commands.</>;
+      hint = (
+        <>
+          Development build: run <code>npm link</code> in the project folder to get the commands.
+        </>
+      );
     } else if (s.installed && s.pathHint) {
-      hint = <>Add <span className="mono">{s.binDir}</span> to your PATH: <code className="selectable">{s.pathHint}</code></>;
+      hint = (
+        <>
+          Add <span className="mono">{s.binDir}</span> to your PATH: <code className="selectable">{s.pathHint}</code>
+        </>
+      );
     } else if (s.installCommand) {
       hint = (
         <span className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
@@ -64,7 +72,9 @@ export function CommandLineSection() {
           <span>Without installing anything:</span>
           <code className="selectable">{NPX}</code>
           <Button size="sm" variant="ghost" iconOnly title="Copy" icon={<Copy size={14} />} onClick={() => void copy(NPX)} />
-          <span>· add <code>--json</code> to any command for scripting.</span>
+          <span>
+            · add <code>--json</code> to any command for scripting.
+          </span>
         </div>
       </div>
     </div>

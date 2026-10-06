@@ -85,10 +85,24 @@ export function buildCommands(d: CommandDeps): PaletteCommand[] {
   }
 
   for (const mode of ['system', 'light', 'dark'] as const) {
-    commands.push({ id: `theme:${mode}`, group: 'Appearance', label: `Theme: ${mode[0].toUpperCase()}${mode.slice(1)}`, icon: SunMoon, keywords: 'dark light mode colour color', run: () => d.setTheme(mode) });
+    commands.push({
+      id: `theme:${mode}`,
+      group: 'Appearance',
+      label: `Theme: ${mode[0].toUpperCase()}${mode.slice(1)}`,
+      icon: SunMoon,
+      keywords: 'dark light mode colour color',
+      run: () => d.setTheme(mode),
+    });
   }
   for (const a of ACCENTS) {
-    commands.push({ id: `accent:${a.id}`, group: 'Appearance', label: `Accent: ${a.label}`, icon: Palette, keywords: 'colour color theme', run: () => d.setAccent(a.id) });
+    commands.push({
+      id: `accent:${a.id}`,
+      group: 'Appearance',
+      label: `Accent: ${a.label}`,
+      icon: Palette,
+      keywords: 'colour color theme',
+      run: () => d.setAccent(a.id),
+    });
   }
 
   for (const r of ROUTES) {

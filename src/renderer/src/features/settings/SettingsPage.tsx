@@ -18,7 +18,6 @@ import type { Settings } from '../../../../shared/types';
 
 const WINDOWS_OPENSSH = 'C:/Windows/System32/OpenSSH/ssh.exe';
 
-
 function Row({ title, description, children }: { title: string; description?: ReactNode; children: ReactNode }) {
   return (
     <div className="settings-row">
@@ -52,7 +51,6 @@ export function SettingsPage() {
     await identity.reload();
   };
 
-
   return (
     <>
       <PageHeader title="Settings" description="Preferences are stored in ~/.lanyard/state.json and shared with the lanyard CLI." />
@@ -63,7 +61,11 @@ export function SettingsPage() {
           <Segmented<ThemeMode>
             value={theme}
             onChange={setTheme}
-            options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]}
+            options={[
+              { value: 'system', label: 'System' },
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+            ]}
           />
         </Row>
         <Row title="Accent colour" description="Used for the active page, primary buttons, focus rings and selections.">
@@ -90,7 +92,11 @@ export function SettingsPage() {
           <div className="card settings-section">
             <Row title="Terminal" description="Used for Connect and for typing key passphrases.">
               <Select value={s.terminal} style={{ width: 200 }} onChange={(e) => void update({ terminal: e.target.value })}>
-                {info.terminalChoices.map((t) => <option key={t} value={t}>{t}</option>)}
+                {info.terminalChoices.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
               </Select>
             </Row>
             <Row title="Backups to keep" description="Per file (config and known_hosts).">
@@ -115,11 +121,25 @@ export function SettingsPage() {
         <Row title="Global identity" description="Updated on switch for accounts with “set git identity” enabled.">
           <span className="mono selectable">{identity.data ? `${identity.data.name || '-'} <${identity.data.email || '-'}>` : '…'}</span>
         </Row>
-        <Row title="core.sshCommand" description={info.platform === 'win32' ? 'Point git at Windows OpenSSH so it shares the Windows ssh-agent service.' : 'Custom ssh binary git uses.'}>
+        <Row
+          title="core.sshCommand"
+          description={
+            info.platform === 'win32'
+              ? 'Point git at Windows OpenSSH so it shares the Windows ssh-agent service.'
+              : 'Custom ssh binary git uses.'
+          }
+        >
           <span className="mono faint">{identity.data?.sshCommand || '(default)'}</span>
-          {info.platform === 'win32' && (identity.data?.sshCommand
-            ? <Button size="sm" onClick={() => void setSshCommand('')}>Reset</Button>
-            : <Button size="sm" onClick={() => void setSshCommand(WINDOWS_OPENSSH)}>Use Windows OpenSSH</Button>)}
+          {info.platform === 'win32' &&
+            (identity.data?.sshCommand ? (
+              <Button size="sm" onClick={() => void setSshCommand('')}>
+                Reset
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => void setSshCommand(WINDOWS_OPENSSH)}>
+                Use Windows OpenSSH
+              </Button>
+            ))}
         </Row>
       </div>
 
@@ -130,7 +150,14 @@ export function SettingsPage() {
       <div className="card settings-section">
         {Object.entries(info.paths).map(([key, path]) => (
           <Row key={key} title={key} description={<span className="mono selectable">{path}</span>}>
-            <Button size="sm" variant="ghost" iconOnly title="Show in folder" icon={<FolderOpen size={14} />} onClick={() => run('reveal', () => api.app.revealPath(path))} />
+            <Button
+              size="sm"
+              variant="ghost"
+              iconOnly
+              title="Show in folder"
+              icon={<FolderOpen size={14} />}
+              onClick={() => run('reveal', () => api.app.revealPath(path))}
+            />
           </Row>
         ))}
       </div>

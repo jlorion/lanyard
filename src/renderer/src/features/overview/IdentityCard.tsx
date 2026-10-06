@@ -17,8 +17,11 @@ export function IdentityCard({ provider: p }: { provider: ProviderOverview }) {
   const last = active?.lastTest;
 
   const switchTo = (name: string) =>
-    run('use', () => api.accounts.use(p.id, name === NONE ? null : name), (r) =>
-      r.active ? `${p.name} now uses "${r.active}"` : `${p.name}: no active account`);
+    run(
+      'use',
+      () => api.accounts.use(p.id, name === NONE ? null : name),
+      (r) => (r.active ? `${p.name} now uses "${r.active}"` : `${p.name}: no active account`),
+    );
 
   const test = async () => {
     const r = await run('test', () => api.accounts.test(p.id));
@@ -31,11 +34,15 @@ export function IdentityCard({ provider: p }: { provider: ProviderOverview }) {
         <ProviderMark id={p.id} name={p.name} color={p.color} size={36} />
         <div style={{ minWidth: 0 }}>
           <div className="identity-provider">{p.name}</div>
-          <div className="faint mono truncate">{p.user}@{p.hosts[0]}</div>
+          <div className="faint mono truncate">
+            {p.user}@{p.hosts[0]}
+          </div>
         </div>
       </div>
 
-      <label className="identity-label" htmlFor={`identity-${p.id}`}>Signed in as</label>
+      <label className="identity-label" htmlFor={`identity-${p.id}`}>
+        Signed in as
+      </label>
       <select
         id={`identity-${p.id}`}
         className="select identity-select"
@@ -43,7 +50,11 @@ export function IdentityCard({ provider: p }: { provider: ProviderOverview }) {
         disabled={isBusy('use')}
         onChange={(e) => void switchTo(e.target.value)}
       >
-        {p.accounts.map((a) => <option key={a.id} value={a.name}>{a.name}</option>)}
+        {p.accounts.map((a) => (
+          <option key={a.id} value={a.name}>
+            {a.name}
+          </option>
+        ))}
         <option value={NONE}>No active account</option>
       </select>
       <div className="identity-email faint truncate" title={active?.gitEmail}>

@@ -14,7 +14,13 @@ import type { AccountView, AddAccountResult, KeyType, ProviderOverview } from '.
 const NAME_RE = /^[a-z0-9][a-z0-9._-]*$/i;
 
 type Props =
-  | { mode: 'create'; providers: ProviderOverview[]; initialProvider?: string; onClose: () => void; onCreated: (r: AddAccountResult) => void }
+  | {
+      mode: 'create';
+      providers: ProviderOverview[];
+      initialProvider?: string;
+      onClose: () => void;
+      onCreated: (r: AddAccountResult) => void;
+    }
   | { mode: 'edit'; providers: ProviderOverview[]; account: AccountView; onClose: () => void };
 
 export function AccountFormModal(props: Props) {
@@ -22,7 +28,9 @@ export function AccountFormModal(props: Props) {
   const editing = props.mode === 'edit' ? props.account : null;
   const { run, isBusy } = useTask();
 
-  const [provider, setProvider] = useState(editing?.provider ?? (props.mode === 'create' ? props.initialProvider : undefined) ?? providers[0]?.id ?? 'github');
+  const [provider, setProvider] = useState(
+    editing?.provider ?? (props.mode === 'create' ? props.initialProvider : undefined) ?? providers[0]?.id ?? 'github',
+  );
   const [name, setName] = useState(editing?.name ?? '');
   const [keySource, setKeySource] = useState<'generate' | 'existing'>(editing ? 'existing' : 'generate');
   const [keyPath, setKeyPath] = useState(editing?.keyPath ?? '');
@@ -54,22 +62,33 @@ export function AccountFormModal(props: Props) {
   const submit = async () => {
     if (!canSubmit) return;
     if (props.mode === 'edit') {
-      const ok = await run('save', () => api.accounts.update(props.account.provider, props.account.name, {
-        name, keyPath, gitName, gitEmail, setGitIdentity,
-      }), 'Account updated');
+      const ok = await run(
+        'save',
+        () =>
+          api.accounts.update(props.account.provider, props.account.name, {
+            name,
+            keyPath,
+            gitName,
+            gitEmail,
+            setGitIdentity,
+          }),
+        'Account updated',
+      );
       if (ok) onClose();
       return;
     }
-    const result = await run('save', () => api.accounts.add({
-      provider,
-      name,
-      keyPath: keySource === 'existing' ? keyPath : undefined,
-      generate: keySource === 'generate' ? { type: keyType, passphrase, comment: gitEmail || undefined, fileName: keyFile } : null,
-      gitName,
-      gitEmail,
-      setGitIdentity,
-      activate,
-    }));
+    const result = await run('save', () =>
+      api.accounts.add({
+        provider,
+        name,
+        keyPath: keySource === 'existing' ? keyPath : undefined,
+        generate: keySource === 'generate' ? { type: keyType, passphrase, comment: gitEmail || undefined, fileName: keyFile } : null,
+        gitName,
+        gitEmail,
+        setGitIdentity,
+        activate,
+      }),
+    );
     if (result) props.onCreated(result);
   };
 
@@ -79,14 +98,14 @@ export function AccountFormModal(props: Props) {
       icon={editing ? <UserPen size={18} /> : <UserPlus size={18} />}
       onClose={onClose}
       onSubmit={submit}
-      footer={(
+      footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="primary" disabled={!canSubmit} loading={isBusy('save')}>
             {editing ? 'Save' : keySource === 'generate' ? 'Generate key & add' : 'Add account'}
           </Button>
         </>
-      )}
+      }
     >
       <div className="form-grid">
         <Field label="Provider" required>
@@ -98,24 +117,38 @@ export function AccountFormModal(props: Props) {
               setActivate(!providers.find((p) => p.id === e.target.value)?.active);
             }}
           >
-            {providers.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.hosts[0]})</option>)}
+            {providers.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.hosts[0]})
+              </option>
+            ))}
           </Select>
         </Field>
         <Field
           label="Account name"
           required
-          hint={name && !nameValid ? 'Letters, digits, ".", "_" and "-" only' : `Alias host: ${selected?.hostname ?? selected?.hosts[0]}-${name || 'name'}`}
+          hint={
+            name && !nameValid
+              ? 'Letters, digits, ".", "_" and "-" only'
+              : `Alias host: ${selected?.hostname ?? selected?.hosts[0]}-${name || 'name'}`
+          }
         >
           <Input value={name} placeholder="work, personal…" onChange={(e) => setName(e.target.value.trim())} />
         </Field>
 
         <div className="field full">
-          <span className="field-label">SSH key<RequiredMark /></span>
+          <span className="field-label">
+            SSH key
+            <RequiredMark />
+          </span>
           {!editing && (
             <Segmented
               value={keySource}
               onChange={setKeySource}
-              options={[{ value: 'generate', label: 'Generate a new key' }, { value: 'existing', label: 'Use an existing key' }]}
+              options={[
+                { value: 'generate', label: 'Generate a new key' },
+                { value: 'existing', label: 'Use an existing key' },
+              ]}
             />
           )}
         </div>
@@ -132,17 +165,34 @@ export function AccountFormModal(props: Props) {
             <Field label="Passphrase" hint="Optional. Keys with a passphrase must be loaded into ssh-agent.">
               <Input type="password" value={passphrase} autoComplete="new-password" onChange={(e) => setPassphrase(e.target.value)} />
             </Field>
-            {selected?.keyHint && <div className="full"><Callout tone="warning">{selected.keyHint}</Callout></div>}
+            {selected?.keyHint && (
+              <div className="full">
+                <Callout tone="warning">{selected.keyHint}</Callout>
+              </div>
+            )}
             {nameValid && fileCheck?.exists && (
               <div className="full">
                 <Callout tone="warning">
-                  <div><code>~/.ssh/{keyFile}</code> already exists.</div>
+                  <div>
+                    <code>~/.ssh/{keyFile}</code> already exists.
+                  </div>
                   <div className="row" style={{ marginTop: 6, gap: 14 }}>
-                    <button type="button" className="link-button" onClick={() => { setKeySource('existing'); setKeyPath(`~/.ssh/${keyFile}`); }}>
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => {
+                        setKeySource('existing');
+                        setKeyPath(`~/.ssh/${keyFile}`);
+                      }}
+                    >
                       Use the existing key
                     </button>
                     {fileCheck.suggestion && (
-                      <button type="button" className="link-button" onClick={() => setFileOverride({ base: defaultFile, name: fileCheck.suggestion! })}>
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => setFileOverride({ base: defaultFile, name: fileCheck.suggestion! })}
+                      >
                         Generate as {fileCheck.suggestion}
                       </button>
                     )}
@@ -150,7 +200,11 @@ export function AccountFormModal(props: Props) {
                 </Callout>
               </div>
             )}
-            {nameValid && fileFree && <div className="full field-hint">Will be saved as <code>~/.ssh/{keyFile}</code></div>}
+            {nameValid && fileFree && (
+              <div className="full field-hint">
+                Will be saved as <code>~/.ssh/{keyFile}</code>
+              </div>
+            )}
           </>
         ) : (
           <Field className="full" hint="Private key file; its .pub must be registered with the provider.">
@@ -175,9 +229,13 @@ export function AccountFormModal(props: Props) {
           label="Git user.email"
           required
           hint={`An email verified on this ${selected?.name ?? ''} account (or its no-reply address)${generating ? ' - also the key comment' : ''}`}
-          error={touched.gitEmail && !gitEmailValid
-            ? (gitEmail.trim() ? "That doesn't look like an email address" : 'Enter the email to put on your commits')
-            : undefined}
+          error={
+            touched.gitEmail && !gitEmailValid
+              ? gitEmail.trim()
+                ? "That doesn't look like an email address"
+                : 'Enter the email to put on your commits'
+              : undefined
+          }
         >
           <Input
             type="email"

@@ -85,7 +85,11 @@ export async function scan(host: string, port?: string | number): Promise<Scanne
 
 /** Append scanned lines, skipping ones already present. */
 export function trust(rawLines: string[]): { added: number } {
-  const existing = new Set(readText(paths.knownHosts).split(/\r?\n/).map((l) => l.trim()));
+  const existing = new Set(
+    readText(paths.knownHosts)
+      .split(/\r?\n/)
+      .map((l) => l.trim()),
+  );
   const fresh = rawLines.map((l) => l.trim()).filter((l) => l && parseEntry(l, 0) && !existing.has(l));
   if (!fresh.length) return { added: 0 };
   backups.create('known_hosts', 'trust');

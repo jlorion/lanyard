@@ -101,7 +101,12 @@ export interface LanyardApi {
     use(provider: string, name: string | null): Promise<UseResult>;
     test(provider: string, name?: string): Promise<AccountTestResult>;
     cloneUrl(provider: string, name: string, repoUrl: string): Promise<string>;
-    applyToRepo(provider: string, name: string, dir: string, options?: { remote?: string; setIdentity?: boolean }): Promise<RepoRewriteResult>;
+    applyToRepo(
+      provider: string,
+      name: string,
+      dir: string,
+      options?: { remote?: string; setIdentity?: boolean },
+    ): Promise<RepoRewriteResult>;
     addProvider(input: CustomProviderInput): Promise<ProviderInfo>;
     removeProvider(id: string): Promise<{ removed: string }>;
   };
@@ -179,9 +184,7 @@ export interface LanyardApi {
 
 export type ApiNamespace = keyof LanyardApi;
 
-export type IpcResponse<T = unknown> =
-  | { ok: true; data: T }
-  | { ok: false; error: string; code?: string };
+export type IpcResponse<T = unknown> = { ok: true; data: T } | { ok: false; error: string; code?: string };
 
 /** What the preload script exposes on `window.lanyard`. */
 export interface PreloadBridge {

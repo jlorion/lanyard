@@ -125,7 +125,9 @@ function decorate(p: ProviderInfo, a: Account, state: State): AccountView {
 function conflictsFor(p: ProviderInfo, hosts: HostEntry[]): string[] {
   return hosts
     .filter((h) => !h.managed && h.aliases.some((a) => p.hosts.includes(a)))
-    .map((h) => `Your config also defines "Host ${h.patterns}". The managed block wins, but its IdentityFile is still offered as a fallback.`);
+    .map(
+      (h) => `Your config also defines "Host ${h.patterns}". The managed block wins, but its IdentityFile is still offered as a fallback.`,
+    );
 }
 
 export function overview(): ProviderOverview[] {
@@ -277,13 +279,9 @@ export async function test(providerId: string, name?: string): Promise<AccountTe
   const account = find(state, providerId, accountName);
 
   const target = `${p.user}@${providers.aliasFor(p, account.name)}`;
-  const r = await run('ssh', [
-    '-T',
-    '-o', 'BatchMode=yes',
-    '-o', 'ConnectTimeout=10',
-    '-o', 'StrictHostKeyChecking=accept-new',
-    target,
-  ], { timeout: 25000 });
+  const r = await run('ssh', ['-T', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', '-o', 'StrictHostKeyChecking=accept-new', target], {
+    timeout: 25000,
+  });
   const result = providers.interpretTest(p, r);
   const view = decorate(p, account, state);
   if (!result.ok && view.keyEncrypted) {
@@ -347,7 +345,7 @@ export function addProvider(input: CustomProviderInput): ProviderInfo {
 export function removeProvider(id: string): { removed: string } {
   return store.update((state) => {
     if (!state.customProviders.some((p) => p.id === id)) throw new Error(`"${id}" is not a custom provider.`);
-    if (state.accounts.some((a) => a.provider === id)) throw new Error('Remove the provider\'s accounts first.');
+    if (state.accounts.some((a) => a.provider === id)) throw new Error("Remove the provider's accounts first.");
     state.customProviders = state.customProviders.filter((p) => p.id !== id);
     delete state.active[id];
     return { removed: id };

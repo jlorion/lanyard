@@ -54,9 +54,7 @@ export class TrayController {
     return [
       { label: 'Open Lanyard', click: () => window.show() },
       { type: 'separator' },
-      ...(providers.length
-        ? providers.map((p) => this.providerMenu(p))
-        : [{ label: 'No git accounts yet', enabled: false }]),
+      ...(providers.length ? providers.map((p) => this.providerMenu(p)) : [{ label: 'No git accounts yet', enabled: false }]),
       { label: 'Test active accounts', enabled: providers.some((p) => p.active), click: () => void this.testActive(providers) },
       { type: 'separator' },
       { label: 'Hosts', submenu: this.hostsMenu(providers) },
@@ -112,13 +110,16 @@ export class TrayController {
     } catch {
       return [{ label: 'Could not read ~/.ssh/config', enabled: false }];
     }
-    return buildHostsMenu({ hosts, keys, providers, isKeyAt: core.keys.isKeyAt }, {
-      connect: (alias) => this.deps.connect(alias),
-      test: (alias) => void this.testHost(alias),
-      setKey: (alias, key) => void this.setHostKey(alias, key),
-      useAccount: (p, name) => void this.switchTo(p, name),
-      addServer: () => this.deps.window.show('hosts', 'add-host'),
-    });
+    return buildHostsMenu(
+      { hosts, keys, providers, isKeyAt: core.keys.isKeyAt },
+      {
+        connect: (alias) => this.deps.connect(alias),
+        test: (alias) => void this.testHost(alias),
+        setKey: (alias, key) => void this.setHostKey(alias, key),
+        useAccount: (p, name) => void this.switchTo(p, name),
+        addServer: () => this.deps.window.show('hosts', 'add-host'),
+      },
+    );
   }
 
   private async setHostKey(alias: string, key: KeyInfo | null): Promise<void> {
@@ -143,7 +144,12 @@ export class TrayController {
   private async switchTo(p: ProviderOverview, name: string | null): Promise<void> {
     try {
       const r = await core.accounts.use(p.id, name);
-      notify(p.name, r.active ? `Now using "${r.active}"${r.gitIdentityApplied ? ' (git identity updated)' : ''}` : 'No active account - plain URLs use your default SSH keys');
+      notify(
+        p.name,
+        r.active
+          ? `Now using "${r.active}"${r.gitIdentityApplied ? ' (git identity updated)' : ''}`
+          : 'No active account - plain URLs use your default SSH keys',
+      );
     } catch (err) {
       notify(`${p.name}: switch failed`, (err as Error).message);
     }
@@ -152,8 +158,9 @@ export class TrayController {
 
   private async testActive(providers: ProviderOverview[]): Promise<void> {
     const results = await Promise.all(
-      providers.filter((p) => p.active).map((p) =>
-        core.accounts.test(p.id).catch((err: Error) => ({ ok: false, account: p.id, message: err.message }))),
+      providers
+        .filter((p) => p.active)
+        .map((p) => core.accounts.test(p.id).catch((err: Error) => ({ ok: false, account: p.id, message: err.message }))),
     );
     const failed = results.filter((r) => !r.ok);
     notify(

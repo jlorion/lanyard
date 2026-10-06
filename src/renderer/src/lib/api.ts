@@ -7,23 +7,29 @@
 import type { ApiNamespace, LanyardApi } from '../../../shared/ipc';
 
 export class ApiError extends Error {
-  constructor(message: string, public readonly code?: string) {
+  constructor(
+    message: string,
+    public readonly code?: string,
+  ) {
     super(message);
     this.name = 'ApiError';
   }
 }
 
 function namespaceProxy(namespace: ApiNamespace): object {
-  return new Proxy({}, {
-    get: (_target, method) => {
-      if (typeof method !== 'string') return undefined;
-      return async (...args: unknown[]) => {
-        const res = await window.lanyard.invoke(namespace, method, args);
-        if (!res.ok) throw new ApiError(res.error, res.code);
-        return res.data;
-      };
+  return new Proxy(
+    {},
+    {
+      get: (_target, method) => {
+        if (typeof method !== 'string') return undefined;
+        return async (...args: unknown[]) => {
+          const res = await window.lanyard.invoke(namespace, method, args);
+          if (!res.ok) throw new ApiError(res.error, res.code);
+          return res.data;
+        };
+      },
     },
-  });
+  );
 }
 
 export const api = new Proxy({} as LanyardApi, {

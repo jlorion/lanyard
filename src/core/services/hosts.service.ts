@@ -20,7 +20,7 @@ export function list(): HostEntry[] {
   const state = store.load();
   return sshConfig.listHosts(repo.load()).map((h) => ({
     ...h,
-    gitProvider: h.isPattern ? null : providers.findByHost(state, h.alias, h.hostName)?.id ?? null,
+    gitProvider: h.isPattern ? null : (providers.findByHost(state, h.alias, h.hostName)?.id ?? null),
   }));
 }
 
@@ -38,7 +38,8 @@ export function connectable(): HostEntry[] {
 /** Create (index == null) or update a host. */
 export function save(host: HostInput): HostEntry[] {
   const model = repo.load();
-  const taken = sshConfig.listHosts(model)
+  const taken = sshConfig
+    .listHosts(model)
     .filter((h) => h.managed || h.index !== host.index)
     .flatMap((h) => h.aliases);
   const clash = host.patterns.split(/\s+/).find((a) => a && taken.includes(a));

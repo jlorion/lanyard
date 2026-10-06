@@ -18,11 +18,15 @@ function Shell({ info }: { info: AppInfo }) {
   const [palette, setPalette] = useState<{ query: string } | null>(null);
 
   // App-menu actions that live in the renderer.
-  useEffect(() => window.lanyard.onCommand((command) => {
-    if (command === 'palette') setPalette((p) => (p ? null : { query: '' }));
-    else if (command === 'back') back();
-    else if (command === 'forward') forward();
-  }), [back, forward]);
+  useEffect(
+    () =>
+      window.lanyard.onCommand((command) => {
+        if (command === 'palette') setPalette((p) => (p ? null : { query: '' }));
+        else if (command === 'back') back();
+        else if (command === 'forward') forward();
+      }),
+    [back, forward],
+  );
 
   // Ctrl/Cmd+K toggles the palette, Ctrl/Cmd+1..8 jump between pages, Alt+Left/Right go back/forward.
   useEffect(() => {
@@ -74,7 +78,12 @@ export function App() {
     api.app.info().then(setInfo, (err) => setError(errorMessage(err)));
   }, []);
 
-  if (error) return <div className="page"><Callout tone="danger">{error}</Callout></div>;
+  if (error)
+    return (
+      <div className="page">
+        <Callout tone="danger">{error}</Callout>
+      </div>
+    );
   if (!info) return null;
 
   return (

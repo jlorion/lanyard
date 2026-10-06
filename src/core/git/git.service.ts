@@ -30,9 +30,7 @@ export async function setGlobalIdentity({ name, email }: { name?: string; email?
 
 /** Set (or unset with an empty value) git's global core.sshCommand. */
 export async function setSshCommand(command: string): Promise<void> {
-  const args = command
-    ? ['config', '--global', 'core.sshCommand', command]
-    : ['config', '--global', '--unset', 'core.sshCommand'];
+  const args = command ? ['config', '--global', 'core.sshCommand', command] : ['config', '--global', '--unset', 'core.sshCommand'];
   const r = await git(args);
   if (r.code !== 0 && command) throw new Error(r.stderr.trim() || 'git config failed');
 }

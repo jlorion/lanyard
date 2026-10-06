@@ -47,9 +47,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const page = history.stack[history.index];
 
   const navigate = useCallback((next: PageId, nextIntent?: Intent) => {
-    setHistory((h) => (h.stack[h.index] === next
-      ? h
-      : { stack: [...h.stack.slice(0, h.index + 1), next].slice(-50), index: Math.min(h.index + 1, 49) }));
+    setHistory((h) =>
+      h.stack[h.index] === next ? h : { stack: [...h.stack.slice(0, h.index + 1), next].slice(-50), index: Math.min(h.index + 1, 49) },
+    );
     setIntent(nextIntent ?? null);
   }, []);
   const back = useCallback(() => setHistory((h) => (h.index > 0 ? { ...h, index: h.index - 1 } : h)), []);
@@ -65,20 +65,27 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   }, [page]);
 
   // The tray and the app menu can open a page, optionally with an intent.
-  useEffect(() => window.lanyard.onNavigate(({ page: p, intent: i }) => {
-    if (isPageId(p)) navigate(p, isIntent(i) ? i : undefined);
-  }), [navigate]);
+  useEffect(
+    () =>
+      window.lanyard.onNavigate(({ page: p, intent: i }) => {
+        if (isPageId(p)) navigate(p, isIntent(i) ? i : undefined);
+      }),
+    [navigate],
+  );
 
-  const value = useMemo(() => ({
-    page,
-    navigate,
-    intent,
-    clearIntent,
-    canGoBack: history.index > 0,
-    canGoForward: history.index < history.stack.length - 1,
-    back,
-    forward,
-  }), [page, navigate, intent, clearIntent, history, back, forward]);
+  const value = useMemo(
+    () => ({
+      page,
+      navigate,
+      intent,
+      clearIntent,
+      canGoBack: history.index > 0,
+      canGoForward: history.index < history.stack.length - 1,
+      back,
+      forward,
+    }),
+    [page, navigate, intent, clearIntent, history, back, forward],
+  );
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }
 

@@ -36,11 +36,14 @@ describe.skipIf(process.platform !== 'win32' || !built)('Windows shims actually 
 
 describe('CLI launcher shims', () => {
   it('runs the packaged app binary as Node on Windows', () => {
-    const [lanyard, lny] = renderShims({
-      exe: 'C:\\Program Files\\Lanyard\\Lanyard.exe',
-      script: 'C:\\Program Files\\Lanyard\\resources\\app.asar\\bin\\lanyard.js',
-      runAsNode: true,
-    }, 'win32');
+    const [lanyard, lny] = renderShims(
+      {
+        exe: 'C:\\Program Files\\Lanyard\\Lanyard.exe',
+        script: 'C:\\Program Files\\Lanyard\\resources\\app.asar\\bin\\lanyard.js',
+        runAsNode: true,
+      },
+      'win32',
+    );
     expect(lanyard.fileName).toBe('lanyard.cmd');
     expect(lny.fileName).toBe('lny.cmd');
     expect(lanyard.content).toContain(SHIM_MARKER);

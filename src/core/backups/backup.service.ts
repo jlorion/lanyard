@@ -17,12 +17,17 @@ const TARGETS: Record<BackupKind, () => string> = {
 const NAME_RE = /^(config|known_hosts)_(\d{4}-\d\d-\d\d)_(\d\d)-(\d\d)-(\d\d)(?:-\d{3})?(?:_(.*))?\.bak$/;
 
 function slug(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40);
 }
 
 export function list(kind?: BackupKind): BackupInfo[] {
   if (!fs.existsSync(paths.backups)) return [];
-  return fs.readdirSync(paths.backups)
+  return fs
+    .readdirSync(paths.backups)
     .filter((f) => f.endsWith('.bak') && (!kind || f.startsWith(kind + '_')))
     .map((f): BackupInfo => {
       const m = f.match(NAME_RE);

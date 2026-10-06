@@ -14,7 +14,9 @@
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
 
 .btn:hover:not(:disabled) {
@@ -605,13 +607,17 @@ table.table {
 
 .skeleton {
   border-radius: var(--radius-lg);
-  background: linear-gradient(90deg, var(--skeleton) 25%, transparent 50%, var(--skeleton) 75%) 0 0 / 200% 100%, var(--skeleton);
+  background:
+    linear-gradient(90deg, var(--skeleton) 25%, transparent 50%, var(--skeleton) 75%) 0 0 / 200% 100%,
+    var(--skeleton);
   animation: shimmer 1.4s linear infinite;
 }
 
 @keyframes shimmer {
   to {
-    background-position: -200% 0, 0 0;
+    background-position:
+      -200% 0,
+      0 0;
   }
 }
 

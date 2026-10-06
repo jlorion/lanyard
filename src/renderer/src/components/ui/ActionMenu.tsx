@@ -18,7 +18,13 @@ export interface ActionItem {
  * <body> with fixed positioning so table clipping can't cut it off, and flips
  * upward when there is no room below.
  */
-export function ActionMenu({ items, busy, label = 'Actions', trigger, triggerClassName }: {
+export function ActionMenu({
+  items,
+  busy,
+  label = 'Actions',
+  trigger,
+  triggerClassName,
+}: {
   items: ActionItem[];
   /** Show a spinner on the button while one of the actions runs. */
   busy?: boolean;
@@ -70,10 +76,16 @@ export function ActionMenu({ items, busy, label = 'Actions', trigger, triggerCla
   const onMenuKey = (e: React.KeyboardEvent) => {
     const buttons = [...(menuRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])];
     const i = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    if (e.key === 'Escape') { e.preventDefault(); close(); }
-    else if (e.key === 'ArrowDown') { e.preventDefault(); buttons[(i + 1) % buttons.length]?.focus(); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); buttons[(i - 1 + buttons.length) % buttons.length]?.focus(); }
-    else if (e.key === 'Tab') setOpen(false);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      buttons[(i + 1) % buttons.length]?.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      buttons[(i - 1 + buttons.length) % buttons.length]?.focus();
+    } else if (e.key === 'Tab') setOpen(false);
   };
 
   return (
@@ -91,37 +103,38 @@ export function ActionMenu({ items, busy, label = 'Actions', trigger, triggerCla
           setOpen((o) => !o);
         }}
       >
-        {busy ? <Spinner size={15} label="Working" /> : trigger ?? <MoreHorizontal size={16} />}
+        {busy ? <Spinner size={15} label="Working" /> : (trigger ?? <MoreHorizontal size={16} />)}
       </button>
-      {open && createPortal(
-        <div
-          ref={menuRef}
-          className="action-menu"
-          role="menu"
-          style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
-          onKeyDown={onMenuKey}
-        >
-          {items.map((item) => (
-            <div key={item.label}>
-              {item.separated && <div className="action-menu-sep" role="separator" />}
-              <button
-                type="button"
-                role="menuitem"
-                className={`action-menu-item${item.danger ? ' danger' : ''}`}
-                disabled={item.disabled}
-                onClick={() => {
-                  setOpen(false);
-                  item.onSelect();
-                }}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            </div>
-          ))}
-        </div>,
-        document.body,
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="action-menu"
+            role="menu"
+            style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
+            onKeyDown={onMenuKey}
+          >
+            {items.map((item) => (
+              <div key={item.label}>
+                {item.separated && <div className="action-menu-sep" role="separator" />}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`action-menu-item${item.danger ? ' danger' : ''}`}
+                  disabled={item.disabled}
+                  onClick={() => {
+                    setOpen(false);
+                    item.onSelect();
+                  }}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
+              </div>
+            ))}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

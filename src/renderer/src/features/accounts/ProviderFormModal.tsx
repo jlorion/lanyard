@@ -16,11 +16,18 @@ export function ProviderFormModal({ onClose }: { onClose: () => void }) {
   const [user, setUser] = useState('git');
   const [keysUrl, setKeysUrl] = useState('');
 
-  const suggestedId = hostname.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const suggestedId = hostname
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
   const finalId = id || suggestedId;
 
   const submit = async () => {
-    const ok = await run('save', () => api.accounts.addProvider({ id: finalId, name: name || hostname, hostname, port, user, keysUrl }), 'Provider added');
+    const ok = await run(
+      'save',
+      () => api.accounts.addProvider({ id: finalId, name: name || hostname, hostname, port, user, keysUrl }),
+      'Provider added',
+    );
     if (ok) onClose();
   };
 
@@ -30,12 +37,14 @@ export function ProviderFormModal({ onClose }: { onClose: () => void }) {
       icon={<Building2 size={18} />}
       onClose={onClose}
       onSubmit={submit}
-      footer={(
+      footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={!hostname || !finalId} loading={isBusy('save')}>Add provider</Button>
+          <Button type="submit" variant="primary" disabled={!hostname || !finalId} loading={isBusy('save')}>
+            Add provider
+          </Button>
         </>
-      )}
+      }
     >
       <div className="form-grid">
         <Field label="SSH hostname" required className="full" hint="For example git.company.com">
@@ -54,7 +63,12 @@ export function ProviderFormModal({ onClose }: { onClose: () => void }) {
           <Input mono value={port} inputMode="numeric" onChange={(e) => setPort(e.target.value.replace(/\D/g, ''))} />
         </Field>
         <Field label="SSH keys page" className="full">
-          <Input mono value={keysUrl} placeholder="https://git.company.com/-/user_settings/ssh_keys" onChange={(e) => setKeysUrl(e.target.value.trim())} />
+          <Input
+            mono
+            value={keysUrl}
+            placeholder="https://git.company.com/-/user_settings/ssh_keys"
+            onChange={(e) => setKeysUrl(e.target.value.trim())}
+          />
         </Field>
       </div>
     </Modal>

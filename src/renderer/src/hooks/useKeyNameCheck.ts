@@ -14,7 +14,10 @@ export function useKeyNameCheck(name: string, enabled = true): KeyNameCheck | nu
     setResult(null);
     let cancelled = false;
     const timer = setTimeout(() => {
-      api.keys.checkName(name).then((r) => !cancelled && setResult(r), () => {});
+      api.keys.checkName(name).then(
+        (r) => !cancelled && setResult(r),
+        () => {},
+      );
     }, 150);
     return () => {
       cancelled = true;

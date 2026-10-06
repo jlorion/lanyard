@@ -23,8 +23,11 @@ export function ScanHostModal({ onClose }: { onClose: () => void }) {
 
   const trust = async () => {
     if (!keys) return;
-    const r = await run('trust', () => api.knownHosts.trust(keys.map((k) => k.raw)), (res) =>
-      res.added ? `${res.added} key(s) added to known_hosts` : 'Already trusted');
+    const r = await run(
+      'trust',
+      () => api.knownHosts.trust(keys.map((k) => k.raw)),
+      (res) => (res.added ? `${res.added} key(s) added to known_hosts` : 'Already trusted'),
+    );
     if (r) onClose();
   };
 
@@ -35,33 +38,60 @@ export function ScanHostModal({ onClose }: { onClose: () => void }) {
       onClose={onClose}
       onSubmit={scan}
       wide
-      footer={(
+      footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          {keys
-            ? <Button variant="primary" loading={isBusy('trust')} onClick={() => void trust()}>Trust these keys</Button>
-            : <Button type="submit" variant="primary" disabled={!host.trim()} loading={isBusy('scan')}>Scan</Button>}
+          {keys ? (
+            <Button variant="primary" loading={isBusy('trust')} onClick={() => void trust()}>
+              Trust these keys
+            </Button>
+          ) : (
+            <Button type="submit" variant="primary" disabled={!host.trim()} loading={isBusy('scan')}>
+              Scan
+            </Button>
+          )}
         </>
-      )}
+      }
     >
       <div className="stack">
         <div className="form-grid" style={{ gridTemplateColumns: '1fr 120px' }}>
           <Field label="Host" required>
-            <Input mono value={host} placeholder="github.com" onChange={(e) => { setHost(e.target.value); setKeys(null); }} />
+            <Input
+              mono
+              value={host}
+              placeholder="github.com"
+              onChange={(e) => {
+                setHost(e.target.value);
+                setKeys(null);
+              }}
+            />
           </Field>
           <Field label="Port">
-            <Input mono value={port} placeholder="22" inputMode="numeric" onChange={(e) => { setPort(e.target.value.replace(/\D/g, '')); setKeys(null); }} />
+            <Input
+              mono
+              value={port}
+              placeholder="22"
+              inputMode="numeric"
+              onChange={(e) => {
+                setPort(e.target.value.replace(/\D/g, ''));
+                setKeys(null);
+              }}
+            />
           </Field>
         </div>
         {keys && (
           <>
-            <Callout tone="warning">Compare these fingerprints with the ones the provider or server admin publishes before trusting them.</Callout>
+            <Callout tone="warning">
+              Compare these fingerprints with the ones the provider or server admin publishes before trusting them.
+            </Callout>
             <div className="table-wrap">
               <table className="table">
                 <tbody>
                   {keys.map((k) => (
                     <tr key={k.raw}>
-                      <td style={{ width: 110 }}><Badge>{k.type}</Badge></td>
+                      <td style={{ width: 110 }}>
+                        <Badge>{k.type}</Badge>
+                      </td>
                       <td className="mono selectable">{k.fingerprint}</td>
                     </tr>
                   ))}

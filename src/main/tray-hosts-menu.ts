@@ -36,7 +36,9 @@ function keyRadios(h: HostEntry, data: HostsMenuData, actions: HostsMenuActions)
       checked: k === current,
       click: () => actions.setKey(h.alias, k),
     })),
-    ...(missing ? [{ label: `${missing} (not in ~/.ssh)`, type: 'radio', checked: true, enabled: false } as MenuItemConstructorOptions] : []),
+    ...(missing
+      ? [{ label: `${missing} (not in ~/.ssh)`, type: 'radio', checked: true, enabled: false } as MenuItemConstructorOptions]
+      : []),
     { label: 'SSH default keys', type: 'radio', checked: !h.identityFile, click: () => actions.setKey(h.alias, null) },
   ];
 }
@@ -49,36 +51,36 @@ export function buildHostsMenu(data: HostsMenuData, actions: HostsMenuActions): 
 
   const items: MenuItemConstructorOptions[] = [{ label: 'Servers', enabled: false }];
   if (servers.length) {
-    items.push(...servers.slice(0, 30).map((h): MenuItemConstructorOptions => ({
-      label: h.hostName ? `${h.alias}  →  ${h.hostName}` : h.alias,
-      submenu: [
-        { label: `Connect to ${h.hostName || h.alias}`, click: () => actions.connect(h.alias) },
-        { label: 'Test login', click: () => actions.test(h.alias) },
-        { type: 'separator' },
-        ...keyRadios(h, data, actions),
-      ],
-    })));
+    items.push(
+      ...servers.slice(0, 30).map((h): MenuItemConstructorOptions => ({
+        label: h.hostName ? `${h.alias}  →  ${h.hostName}` : h.alias,
+        submenu: [
+          { label: `Connect to ${h.hostName || h.alias}`, click: () => actions.connect(h.alias) },
+          { label: 'Test login', click: () => actions.test(h.alias) },
+          { type: 'separator' },
+          ...keyRadios(h, data, actions),
+        ],
+      })),
+    );
   } else {
     items.push({ label: 'Add server…', click: actions.addServer });
   }
 
   // Provider order, then the order accounts were added: switching never reorders entries.
-  const accountItems = providers.flatMap((p) => p.accounts.map((a): MenuItemConstructorOptions => ({
-    label: `${a.alias}${a.active ? '  ·  active' : ''}`,
-    submenu: [
-      { label: 'Test (ssh -T)', click: () => actions.test(a.alias) },
-      a.active
-        ? { label: `Active ${p.name} account`, enabled: false }
-        : { label: `Use ${a.name}`, click: () => actions.useAccount(p, a.name) },
-    ],
-  })));
+  const accountItems = providers.flatMap((p) =>
+    p.accounts.map((a): MenuItemConstructorOptions => ({
+      label: `${a.alias}${a.active ? '  ·  active' : ''}`,
+      submenu: [
+        { label: 'Test (ssh -T)', click: () => actions.test(a.alias) },
+        a.active
+          ? { label: `Active ${p.name} account`, enabled: false }
+          : { label: `Use ${a.name}`, click: () => actions.useAccount(p, a.name) },
+      ],
+    })),
+  );
   const ownItems = ownGitBlocks.map((h): MenuItemConstructorOptions => ({
     label: `${h.alias}${h.aliases.some((x) => managedAliases.has(x)) ? '  ·  overridden' : ''}`,
-    submenu: [
-      { label: 'Test (ssh -T)', click: () => actions.test(h.alias) },
-      { type: 'separator' },
-      ...keyRadios(h, data, actions),
-    ],
+    submenu: [{ label: 'Test (ssh -T)', click: () => actions.test(h.alias) }, { type: 'separator' }, ...keyRadios(h, data, actions)],
   }));
   if (accountItems.length || ownItems.length) {
     items.push({ type: 'separator' }, { label: 'Git hosts', enabled: false }, ...accountItems, ...ownItems);

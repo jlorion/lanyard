@@ -24,7 +24,14 @@ import type { HostEntry } from '../../../../shared/types';
 
 const rowKey = (h: HostEntry) => `${h.managed ? 'm' : 'u'}${h.index}`;
 
-function HostGroup({ title, description, count, children, empty, withStatus }: {
+function HostGroup({
+  title,
+  description,
+  count,
+  children,
+  empty,
+  withStatus,
+}: {
   title: string;
   description: ReactNode;
   count: number;
@@ -54,12 +61,18 @@ function HostGroup({ title, description, count, children, empty, withStatus }: {
             <tbody>{children}</tbody>
           </table>
         </div>
-      ) : empty}
+      ) : (
+        empty
+      )}
     </section>
   );
 }
 
-export function HostsTable({ query = '', compact = false, onAddServer }: {
+export function HostsTable({
+  query = '',
+  compact = false,
+  onAddServer,
+}: {
   query?: string;
   /** Overview mode: no Patterns group and no empty Servers placeholder. */
   compact?: boolean;
@@ -96,9 +109,10 @@ export function HostsTable({ query = '', compact = false, onAddServer }: {
   };
   const gitHosts = visible
     .filter((h) => !h.isPattern && h.gitProvider && (!h.managed || accountOf(h)))
-    .sort((a, b) =>
-      providers.findIndex((p) => p.id === a.gitProvider) - providers.findIndex((p) => p.id === b.gitProvider)
-      || gitRank(a) - gitRank(b));
+    .sort(
+      (a, b) =>
+        providers.findIndex((p) => p.id === a.gitProvider) - providers.findIndex((p) => p.id === b.gitProvider) || gitRank(a) - gitRank(b),
+    );
   const servers = visible.filter((h) => !h.isPattern && !h.gitProvider);
   const patterns = compact ? [] : visible.filter((h) => h.isPattern);
 
@@ -107,7 +121,11 @@ export function HostsTable({ query = '', compact = false, onAddServer }: {
     const account = accountOf(h);
     if (account && provider) {
       if (account.active) {
-        return <Badge tone="success" title={`Plain ${provider.user}@${provider.hosts[0]} URLs use this account`}>Active</Badge>;
+        return (
+          <Badge tone="success" title={`Plain ${provider.user}@${provider.hosts[0]} URLs use this account`}>
+            Active
+          </Badge>
+        );
       }
       return (
         <Button
@@ -115,7 +133,9 @@ export function HostsTable({ query = '', compact = false, onAddServer }: {
           variant="ghost"
           loading={isBusy(`use:${account.id}`)}
           title={`Make ${account.name} the active ${provider.name} account`}
-          onClick={() => void run(`use:${account.id}`, () => api.accounts.use(provider.id, account.name), `${provider.name} now uses "${account.name}"`)}
+          onClick={() =>
+            void run(`use:${account.id}`, () => api.accounts.use(provider.id, account.name), `${provider.name} now uses "${account.name}"`)
+          }
         >
           Use
         </Button>
@@ -125,7 +145,11 @@ export function HostsTable({ query = '', compact = false, onAddServer }: {
       const why = provider?.active
         ? `Lanyard's ${provider.name} account (${provider.active}) is applied first; this block's key is only offered as a fallback.`
         : 'A Lanyard entry for this host is applied first.';
-      return <Badge tone="warning" title={why}>Overridden</Badge>;
+      return (
+        <Badge tone="warning" title={why}>
+          Overridden
+        </Badge>
+      );
     }
     return <span className="faint">-</span>;
   };
@@ -138,7 +162,11 @@ export function HostsTable({ query = '', compact = false, onAddServer }: {
   const remove = async (h: HostEntry) => {
     const ok = await confirm({
       title: `Remove host ${h.alias}?`,
-      message: <>The <code>Host {h.patterns}</code> block is removed from your SSH config. A backup is kept.</>,
+      message: (
+        <>
+          The <code>Host {h.patterns}</code> block is removed from your SSH config. A backup is kept.
+        </>
+      ),
       confirmLabel: 'Remove host',
       danger: true,
     });
@@ -171,7 +199,11 @@ export function HostsTable({ query = '', compact = false, onAddServer }: {
       <EmptyState
         icon={<Server size={30} />}
         title="No hosts yet"
-        action={<Button variant="primary" icon={<Plus size={15} />} onClick={onAddServer}>Add host</Button>}
+        action={
+          <Button variant="primary" icon={<Plus size={15} />} onClick={onAddServer}>
+            Add host
+          </Button>
+        }
       >
         Add servers you connect to so you can reach them with a short alias - from a terminal, from here, or from the tray.
       </EmptyState>
@@ -187,18 +219,25 @@ export function HostsTable({ query = '', compact = false, onAddServer }: {
           title="Servers"
           count={servers.length}
           description="Machines you open a terminal on"
-          empty={(
+          empty={
             <div className="host-group-empty">
               No servers yet - add a VPS, work machine or Raspberry Pi to connect in one click.
-              <Button size="sm" icon={<Plus size={14} />} onClick={onAddServer}>Add server</Button>
+              <Button size="sm" icon={<Plus size={14} />} onClick={onAddServer}>
+                Add server
+              </Button>
             </div>
-          )}
+          }
         >
           {servers.map((h) => row(h))}
         </HostGroup>
       )}
       {gitHosts.length > 0 && (
-        <HostGroup withStatus title="Git hosts" count={gitHosts.length} description="One row per account; the active one is what plain git URLs use">
+        <HostGroup
+          withStatus
+          title="Git hosts"
+          count={gitHosts.length}
+          description="One row per account; the active one is what plain git URLs use"
+        >
           {gitHosts.map((h) => row(h, true))}
         </HostGroup>
       )}

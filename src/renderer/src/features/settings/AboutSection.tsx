@@ -27,7 +27,10 @@ function tagline(a: AboutInfo): string {
 }
 
 /** Settings > About: what this build is and what it runs on. */
-export function AboutSection({ focus = false, onFocused }: {
+export function AboutSection({
+  focus = false,
+  onFocused,
+}: {
   /** Scroll into view once loaded (the sidebar version opens Settings here). */
   focus?: boolean;
   onFocused?: () => void;
@@ -46,7 +49,11 @@ export function AboutSection({ focus = false, onFocused }: {
 
   return (
     <div ref={ref} className="card settings-section about">
-      {!a ? <div className="card-body"><Skeleton rows={2} height={40} /></div> : (
+      {!a ? (
+        <div className="card-body">
+          <Skeleton rows={2} height={40} />
+        </div>
+      ) : (
         <>
           <div className="about-head">
             <LanyardMark size={56} />
@@ -64,7 +71,12 @@ export function AboutSection({ focus = false, onFocused }: {
             <dt>Version</dt>
             <dd className="mono selectable">{a.version}</dd>
             <dt>Electron</dt>
-            <dd className="mono selectable">{a.runtime.electron} <span className="faint">· Chromium {a.runtime.chrome} · Node {a.runtime.node}</span></dd>
+            <dd className="mono selectable">
+              {a.runtime.electron}{' '}
+              <span className="faint">
+                · Chromium {a.runtime.chrome} · Node {a.runtime.node}
+              </span>
+            </dd>
             <dt>OpenSSH</dt>
             <dd className="mono selectable">{a.tools.ssh ?? <span className="test-fail">not found on PATH</span>}</dd>
             <dt>Git</dt>
@@ -72,13 +84,19 @@ export function AboutSection({ focus = false, onFocused }: {
             <dt>System</dt>
             <dd className="mono selectable">{a.os}</dd>
             <dt>License</dt>
-            <dd>{a.license} <span className="faint">· provider logos from Simple Icons (CC0), trademarks of their owners</span></dd>
+            <dd>
+              {a.license} <span className="faint">· provider logos from Simple Icons (CC0), trademarks of their owners</span>
+            </dd>
           </dl>
 
           <div className="card-footer">
             <span className="faint">Include this when reporting a problem.</span>
             <span className="spacer" />
-            <Button size="sm" icon={<Copy size={14} />} onClick={() => run('copy', () => api.app.copy(versionReport(a)), 'Version info copied')}>
+            <Button
+              size="sm"
+              icon={<Copy size={14} />}
+              onClick={() => run('copy', () => api.app.copy(versionReport(a)), 'Version info copied')}
+            >
               Copy version info
             </Button>
           </div>

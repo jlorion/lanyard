@@ -20,25 +20,29 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
   const [selected, setSelected] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const commands = useMemo(() => buildCommands({
-    providers,
-    hosts,
-    keys,
-    navigate,
-    switchAccount: (p, name) => run('switch', () => api.accounts.use(p.id, name), `${p.name} now uses "${name}"`),
-    connect: (alias) => run('connect', () => api.app.connect(alias)),
-    setHostKey: (alias, k) => run('hostkey', () => api.hosts.setKey(alias, k.tildePath), `${alias} now uses ${k.name}`),
-    testActive: async () => {
-      const active = providers.filter((p) => p.active);
-      if (!active.length) return toast.info('No active accounts to test');
-      for (const p of active) {
-        const r = await run(`test:${p.id}`, () => api.accounts.test(p.id));
-        if (r) (r.ok ? toast.success : toast.error)(`${r.account}: ${r.message}`);
-      }
-    },
-    setTheme,
-    setAccent,
-  }), [providers, hosts, keys, navigate, run, toast, setTheme, setAccent]);
+  const commands = useMemo(
+    () =>
+      buildCommands({
+        providers,
+        hosts,
+        keys,
+        navigate,
+        switchAccount: (p, name) => run('switch', () => api.accounts.use(p.id, name), `${p.name} now uses "${name}"`),
+        connect: (alias) => run('connect', () => api.app.connect(alias)),
+        setHostKey: (alias, k) => run('hostkey', () => api.hosts.setKey(alias, k.tildePath), `${alias} now uses ${k.name}`),
+        testActive: async () => {
+          const active = providers.filter((p) => p.active);
+          if (!active.length) return toast.info('No active accounts to test');
+          for (const p of active) {
+            const r = await run(`test:${p.id}`, () => api.accounts.test(p.id));
+            if (r) (r.ok ? toast.success : toast.error)(`${r.account}: ${r.message}`);
+          }
+        },
+        setTheme,
+        setAccent,
+      }),
+    [providers, hosts, keys, navigate, run, toast, setTheme, setAccent],
+  );
 
   const results = useMemo(() => filterCommands(commands, query).slice(0, MAX_RESULTS), [commands, query]);
 
@@ -54,10 +58,19 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); setSelected((i) => Math.min(i + 1, results.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setSelected((i) => Math.max(i - 1, 0)); }
-    else if (e.key === 'Enter') { e.preventDefault(); execute(results[selected]); }
-    else if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelected((i) => Math.min(i + 1, results.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelected((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      execute(results[selected]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      onClose();
+    }
   };
 
   let lastGroup = '';
@@ -105,9 +118,15 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
           })}
         </div>
         <div className="palette-footer">
-          <span><kbd className="kbd">↑</kbd> <kbd className="kbd">↓</kbd> navigate</span>
-          <span><kbd className="kbd">↵</kbd> run</span>
-          <span><kbd className="kbd">esc</kbd> close</span>
+          <span>
+            <kbd className="kbd">↑</kbd> <kbd className="kbd">↓</kbd> navigate
+          </span>
+          <span>
+            <kbd className="kbd">↵</kbd> run
+          </span>
+          <span>
+            <kbd className="kbd">esc</kbd> close
+          </span>
         </div>
       </div>
     </div>

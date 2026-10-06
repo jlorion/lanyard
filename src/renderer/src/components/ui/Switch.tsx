@@ -1,4 +1,9 @@
-export function Switch({ checked, onChange, label, disabled }: {
+export function Switch({
+  checked,
+  onChange,
+  label,
+  disabled,
+}: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;

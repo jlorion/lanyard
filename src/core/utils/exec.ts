@@ -40,8 +40,12 @@ export function run(cmd: string, args: string[] = [], options: RunOptions = {}):
       timedOut = true;
       child.kill();
     }, timeout);
-    child.stdout.on('data', (d: Buffer) => { stdout += d; });
-    child.stderr.on('data', (d: Buffer) => { stderr += d; });
+    child.stdout.on('data', (d: Buffer) => {
+      stdout += d;
+    });
+    child.stderr.on('data', (d: Buffer) => {
+      stderr += d;
+    });
     child.on('error', (err: NodeJS.ErrnoException) => {
       clearTimeout(timer);
       if (err.code === 'ENOENT') err.message = `Command not found: ${cmd}. Is OpenSSH installed and on PATH?`;
@@ -58,7 +62,10 @@ export function run(cmd: string, args: string[] = [], options: RunOptions = {}):
 
 /** Error with a machine-readable code the UI/CLI can branch on. */
 export class LanyardError extends Error {
-  constructor(message: string, public readonly code: string) {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
     super(message);
     this.name = 'LanyardError';
   }

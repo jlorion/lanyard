@@ -123,7 +123,11 @@ export function createApi(ctx: ApiContext): LanyardApi {
       pickFile: () => pick(['openFile', 'showHiddenFiles'], core.paths.sshDir),
       connect: async (alias) => {
         const provider = core.hosts.gitProviderFor(core.hosts.assertAlias(alias));
-        if (provider) throw new core.LanyardError(`${alias} is a ${provider} git host: it accepts git over SSH but has no shell. Use Test instead.`, 'GIT_HOST');
+        if (provider)
+          throw new core.LanyardError(
+            `${alias} is a ${provider} git host: it accepts git over SSH but has no shell. Use Test instead.`,
+            'GIT_HOST',
+          );
         openInTerminal('ssh', [alias], `ssh ${alias}`);
       },
       addKeyInTerminal: async (ref) => {

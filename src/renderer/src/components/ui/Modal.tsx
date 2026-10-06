@@ -52,7 +52,13 @@ export function Modal({ title, icon, onClose, children, footer, wide, onSubmit }
   return (
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={ref} className={`modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true">
-        {onSubmit ? <form onSubmit={submit} style={{ display: 'contents' }}>{content}</form> : content}
+        {onSubmit ? (
+          <form onSubmit={submit} style={{ display: 'contents' }}>
+            {content}
+          </form>
+        ) : (
+          content
+        )}
       </div>
     </div>
   );

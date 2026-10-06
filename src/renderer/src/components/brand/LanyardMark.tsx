@@ -36,7 +36,14 @@ export function LanyardMark({ size = 32 }: { size?: number }) {
         <rect x="504" y="288" width="15" height="12" fill="#fff" />
         <rect x="500" y="296" width="23" height="50" rx="3" fill="#fff" />
         <circle cx="512" cy="311" r="4.5" fill={tile} />
-        <polyline points="472,398 500,427 472,457" fill="none" stroke={tile} strokeWidth="13" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline
+          points="472,398 500,427 472,457"
+          fill="none"
+          stroke={tile}
+          strokeWidth="13"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
         <rect x="511" y="458" width="48" height="10" rx="2" fill={tile} />
       </g>
     </svg>

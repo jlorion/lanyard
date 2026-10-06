@@ -10,7 +10,12 @@ import type { AddAccountResult, ProviderOverview } from '../../../../shared/type
  * form, then - when a key was generated - its public key with a link to the
  * provider's key settings and a Test button.
  */
-export function AddAccountFlow({ providers, initialProvider, onClose, onCreated }: {
+export function AddAccountFlow({
+  providers,
+  initialProvider,
+  onClose,
+  onCreated,
+}: {
   providers: ProviderOverview[];
   initialProvider?: string;
   onClose: () => void;

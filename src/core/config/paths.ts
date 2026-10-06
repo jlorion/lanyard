@@ -18,13 +18,27 @@ export function dataDirOverridden(): boolean {
 }
 
 export const paths = {
-  get sshDir() { return sshDir(); },
-  get config() { return path.join(sshDir(), 'config'); },
-  get knownHosts() { return path.join(sshDir(), 'known_hosts'); },
-  get dataDir() { return dataDir(); },
-  get state() { return path.join(dataDir(), 'state.json'); },
-  get backups() { return path.join(dataDir(), 'backups'); },
-  get trash() { return path.join(dataDir(), 'trash'); },
+  get sshDir() {
+    return sshDir();
+  },
+  get config() {
+    return path.join(sshDir(), 'config');
+  },
+  get knownHosts() {
+    return path.join(sshDir(), 'known_hosts');
+  },
+  get dataDir() {
+    return dataDir();
+  },
+  get state() {
+    return path.join(dataDir(), 'state.json');
+  },
+  get backups() {
+    return path.join(dataDir(), 'backups');
+  },
+  get trash() {
+    return path.join(dataDir(), 'trash');
+  },
 };
 
 export function describePaths(): LanyardPaths {

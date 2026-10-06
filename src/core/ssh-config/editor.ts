@@ -50,8 +50,8 @@ function blockInfo(block: Block, index: number, managed: boolean): HostEntry {
 
 /** All Host/Match blocks: managed ones first (read-only), then the user's. */
 export function listHosts(model: ConfigModel): HostEntry[] {
-  const managed = parseBlocks(model.managedLines).blocks
-    .map((b, i) => blockInfo(b, i, true))
+  const managed = parseBlocks(model.managedLines)
+    .blocks.map((b, i) => blockInfo(b, i, true))
     .filter((h) => h.patterns !== '*'); // the scope-reset terminator is an implementation detail
   const user = model.blocks.map((b, i) => blockInfo(b, i, false));
   return [...managed, ...user];
@@ -78,9 +78,7 @@ function validatePatterns(patterns: string): string {
  * appended after the last directive. Comment lines inside the body are kept.
  */
 function applyOptions(block: Block, options: HostOption[], indent: string): void {
-  const clean = options
-    .filter((o) => o.key && o.key.trim())
-    .map((o) => ({ key: o.key.trim(), value: String(o.value ?? '') }));
+  const clean = options.filter((o) => o.key && o.key.trim()).map((o) => ({ key: o.key.trim(), value: String(o.value ?? '') }));
   const byKey = new Map<string, HostOption[]>();
   for (const o of clean) {
     const k = o.key.toLowerCase();
@@ -89,7 +87,10 @@ function applyOptions(block: Block, options: HostOption[], indent: string): void
   const used = new Set<HostOption>();
   const body: Line[] = [];
   for (const line of block.body) {
-    if (line.type !== 'directive') { body.push(line); continue; }
+    if (line.type !== 'directive') {
+      body.push(line);
+      continue;
+    }
     const o = (byKey.get(line.key.toLowerCase()) ?? []).find((x) => !used.has(x));
     if (!o) continue; // option was removed
     used.add(o);
@@ -120,9 +121,7 @@ export function addHost(model: ConfigModel, input: HostInput): number {
     kind: 'Host',
     header: parseDirective(`Host ${p}`),
     leading: commentLines(input.comment ?? ''),
-    body: input.options
-      .filter((o) => o.key && o.key.trim())
-      .map((o) => makeDirective(o.key.trim(), o.value, indent)),
+    body: input.options.filter((o) => o.key && o.key.trim()).map((o) => makeDirective(o.key.trim(), o.value, indent)),
   };
   block.body.push(parseLine(''));
 

@@ -11,8 +11,9 @@ describe('remote URL rewriting', () => {
     expect(toAliasUrl('https://github.com/acme/app', 'github.com-work')).toBe('git@github.com-work:acme/app.git');
     expect(toAliasUrl('git@github.com:acme/app.git', 'github.com-me')).toBe('git@github.com-me:acme/app.git');
     expect(toAliasUrl('ssh://git@gitlab.com:22/g/sub/p.git', 'gitlab.com-x')).toBe('git@gitlab.com-x:g/sub/p.git');
-    expect(toAliasUrl('https://acme@dev.azure.com/acme/Proj/_git/repo', 'ssh.dev.azure.com-work'))
-      .toBe('git@ssh.dev.azure.com-work:v3/acme/Proj/repo');
+    expect(toAliasUrl('https://acme@dev.azure.com/acme/Proj/_git/repo', 'ssh.dev.azure.com-work')).toBe(
+      'git@ssh.dev.azure.com-work:v3/acme/Proj/repo',
+    );
     expect(parseRemote('nonsense')).toBeNull();
   });
 });
@@ -29,7 +30,10 @@ describe('key format', () => {
 
 describe('provider greetings', () => {
   it('recognises successful logins and usernames', () => {
-    const gh = interpretTest(provider('github'), result('', "Hi octocat! You've successfully authenticated, but GitHub does not provide shell access.", 1));
+    const gh = interpretTest(
+      provider('github'),
+      result('', "Hi octocat! You've successfully authenticated, but GitHub does not provide shell access.", 1),
+    );
     expect(gh).toMatchObject({ ok: true, username: 'octocat' });
     expect(interpretTest(provider('huggingface'), result('Hi julien, welcome to Hugging Face.')).username).toBe('julien');
   });

@@ -13,7 +13,14 @@ import { AddAccountFlow } from '../accounts/AddAccountFlow';
 import { IdentityCard } from './IdentityCard';
 import type { PageId } from '../../app/pages';
 
-function StatTile({ icon, label, value, detail, tone, onClick }: {
+function StatTile({
+  icon,
+  label,
+  value,
+  detail,
+  tone,
+  onClick,
+}: {
   icon: ReactNode;
   label: string;
   value: ReactNode;
@@ -56,12 +63,21 @@ export function OverviewPage() {
       <PageHeader
         title={greeting()}
         description="Who you are on each git host right now, and every host in your SSH config."
-        actions={<Button variant="primary" icon={<Plus size={15} />} onClick={() => setAddingAccount(true)}>Add account</Button>}
+        actions={
+          <Button variant="primary" icon={<Plus size={15} />} onClick={() => setAddingAccount(true)}>
+            Add account
+          </Button>
+        }
       />
 
       <div className="stat-row">
-        <StatTile icon={<GitBranch size={18} />} label="Git accounts" value={accountCount}
-          detail={`${withAccounts.length} provider${withAccounts.length === 1 ? '' : 's'}`} onClick={go('accounts')} />
+        <StatTile
+          icon={<GitBranch size={18} />}
+          label="Git accounts"
+          value={accountCount}
+          detail={`${withAccounts.length} provider${withAccounts.length === 1 ? '' : 's'}`}
+          onClick={go('accounts')}
+        />
         <StatTile
           icon={<Server size={18} />}
           label="Hosts"
@@ -69,8 +85,13 @@ export function OverviewPage() {
           detail={allGitHosts ? `${plural(allServers, 'server')} · ${plural(allGitHosts, 'git host')}` : 'in ~/.ssh/config'}
           onClick={go('hosts')}
         />
-        <StatTile icon={<KeyRound size={18} />} label="Keys" value={keys.length}
-          detail={`${keys.filter((k) => k.encrypted).length} with passphrase`} onClick={go('keys')} />
+        <StatTile
+          icon={<KeyRound size={18} />}
+          label="Keys"
+          value={keys.length}
+          detail={`${keys.filter((k) => k.encrypted).length} with passphrase`}
+          onClick={go('keys')}
+        />
         <StatTile
           icon={<ShieldCheck size={18} />}
           label="ssh-agent"
@@ -83,17 +104,27 @@ export function OverviewPage() {
 
       <div className="section-head">
         <h2>Identities</h2>
-        <Button size="sm" variant="ghost" onClick={go('accounts')}>Manage <ArrowRight size={14} /></Button>
+        <Button size="sm" variant="ghost" onClick={go('accounts')}>
+          Manage <ArrowRight size={14} />
+        </Button>
       </div>
-      {loading ? <Skeleton rows={1} height={150} /> : withAccounts.length ? (
+      {loading ? (
+        <Skeleton rows={1} height={150} />
+      ) : withAccounts.length ? (
         <div className="identity-grid">
-          {withAccounts.map((p) => <IdentityCard key={p.id} provider={p} />)}
+          {withAccounts.map((p) => (
+            <IdentityCard key={p.id} provider={p} />
+          ))}
         </div>
       ) : (
         <EmptyState
           icon={<GitBranch size={30} />}
           title="No git accounts yet"
-          action={<Button variant="primary" icon={<Plus size={15} />} onClick={() => setAddingAccount(true)}>Add your first account</Button>}
+          action={
+            <Button variant="primary" icon={<Plus size={15} />} onClick={() => setAddingAccount(true)}>
+              Add your first account
+            </Button>
+          }
         >
           Add a work and a personal account (or Hugging Face, GitLab…) and switch between them in one click.
         </EmptyState>
@@ -102,8 +133,12 @@ export function OverviewPage() {
       <div className="section-head">
         <h2>Hosts</h2>
         <div className="row" style={{ gap: 4 }}>
-          <Button size="sm" variant="ghost" icon={<Plus size={14} />} onClick={() => setAddingServer(true)}>Add server</Button>
-          <Button size="sm" variant="ghost" onClick={go('hosts')}>All hosts <ArrowRight size={14} /></Button>
+          <Button size="sm" variant="ghost" icon={<Plus size={14} />} onClick={() => setAddingServer(true)}>
+            Add server
+          </Button>
+          <Button size="sm" variant="ghost" onClick={go('hosts')}>
+            All hosts <ArrowRight size={14} />
+          </Button>
         </div>
       </div>
       <HostsTable compact onAddServer={() => setAddingServer(true)} />

@@ -7,7 +7,17 @@ import { Button } from '../../components/ui/Button';
 import { Callout } from '../../components/ui/Feedback';
 import { SearchInput } from '../../components/ui/SearchInput';
 
-const INTERESTING = ['hostname', 'user', 'port', 'identityfile', 'identitiesonly', 'proxyjump', 'proxycommand', 'forwardagent', 'userknownhostsfile'];
+const INTERESTING = [
+  'hostname',
+  'user',
+  'port',
+  'identityfile',
+  'identitiesonly',
+  'proxyjump',
+  'proxycommand',
+  'forwardagent',
+  'userknownhostsfile',
+];
 
 /** Shows what `ssh -G <alias>` resolves to after every matching block applies. */
 export function ResolveModal({ alias, onClose }: { alias: string; onClose: () => void }) {
@@ -19,9 +29,18 @@ export function ResolveModal({ alias, onClose }: { alias: string; onClose: () =>
     .sort((a, b) => Number(INTERESTING.includes(b.key)) - Number(INTERESTING.includes(a.key)));
 
   return (
-    <Modal title={`Effective config for ${alias}`} icon={<Eye size={18} />} onClose={onClose} wide footer={<Button onClick={onClose}>Close</Button>}>
+    <Modal
+      title={`Effective config for ${alias}`}
+      icon={<Eye size={18} />}
+      onClose={onClose}
+      wide
+      footer={<Button onClick={onClose}>Close</Button>}
+    >
       <div className="stack">
-        <p className="muted">Output of <code>ssh -G {alias}</code>: the final value of every option once all matching Host/Match blocks are applied. Key settings are listed first.</p>
+        <p className="muted">
+          Output of <code>ssh -G {alias}</code>: the final value of every option once all matching Host/Match blocks are applied. Key
+          settings are listed first.
+        </p>
         <SearchInput value={query} onChange={setQuery} placeholder="Filter options…" />
         {error && <Callout tone="danger">{error}</Callout>}
         {!loading && (
@@ -30,7 +49,9 @@ export function ResolveModal({ alias, onClose }: { alias: string; onClose: () =>
               <tbody>
                 {rows.map((o, i) => (
                   <tr key={`${o.key}-${i}`}>
-                    <td className="mono" style={{ width: 220, color: INTERESTING.includes(o.key) ? 'var(--accent)' : undefined }}>{o.key}</td>
+                    <td className="mono" style={{ width: 220, color: INTERESTING.includes(o.key) ? 'var(--accent)' : undefined }}>
+                      {o.key}
+                    </td>
                     <td className="mono selectable">{o.value}</td>
                   </tr>
                 ))}

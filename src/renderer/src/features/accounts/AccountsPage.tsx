@@ -38,8 +38,7 @@ export function AccountsPage() {
 
   const withAccounts = providers.filter((p) => p.accounts.length);
   const allCollapsed = withAccounts.length > 0 && withAccounts.every((p) => isCollapsed(p.id));
-  const setAllCollapsed = (value: boolean) =>
-    setExpanded(Object.fromEntries(withAccounts.map((p) => [p.id, !value])));
+  const setAllCollapsed = (value: boolean) => setExpanded(Object.fromEntries(withAccounts.map((p) => [p.id, !value])));
   const available = providers.filter((p) => !p.accounts.length);
 
   const test = async (a: AccountView) => {
@@ -57,13 +56,24 @@ export function AccountsPage() {
   };
 
   const use = (p: ProviderOverview, name: string | null) =>
-    run(`use:${p.id}`, () => api.accounts.use(p.id, name), (r) =>
-      r.active ? `${p.name} now uses "${r.active}"${r.gitIdentityApplied ? ' · git identity updated' : ''}` : `${p.name}: no active account`);
+    run(
+      `use:${p.id}`,
+      () => api.accounts.use(p.id, name),
+      (r) =>
+        r.active
+          ? `${p.name} now uses "${r.active}"${r.gitIdentityApplied ? ' · git identity updated' : ''}`
+          : `${p.name}: no active account`,
+    );
 
   const remove = async (a: AccountView) => {
     const ok = await confirm({
       title: `Remove ${a.id}?`,
-      message: <>The account and its <code>{a.alias}</code> host entry are removed from your SSH config. The key file <code>{a.keyPath}</code> is kept.</>,
+      message: (
+        <>
+          The account and its <code>{a.alias}</code> host entry are removed from your SSH config. The key file <code>{a.keyPath}</code> is
+          kept.
+        </>
+      ),
       confirmLabel: 'Remove account',
       danger: true,
     });
@@ -71,7 +81,14 @@ export function AccountsPage() {
   };
 
   const removeProvider = async (p: ProviderOverview) => {
-    if (await confirm({ title: `Remove provider ${p.name}?`, message: 'Only the provider definition is removed.', confirmLabel: 'Remove', danger: true })) {
+    if (
+      await confirm({
+        title: `Remove provider ${p.name}?`,
+        message: 'Only the provider definition is removed.',
+        confirmLabel: 'Remove',
+        danger: true,
+      })
+    ) {
       await run(`rmp:${p.id}`, () => api.accounts.removeProvider(p.id), `Removed ${p.name}`);
     }
   };
@@ -89,8 +106,13 @@ export function AccountsPage() {
     <>
       <PageHeader
         title="Git accounts"
-        description={<>Switch which key <code>git@github.com</code>, <code>hf.co</code>, <code>gitlab.com</code>… use. Every account also gets its own alias host, so several accounts can be used side by side.</>}
-        actions={(
+        description={
+          <>
+            Switch which key <code>git@github.com</code>, <code>hf.co</code>, <code>gitlab.com</code>… use. Every account also gets its own
+            alias host, so several accounts can be used side by side.
+          </>
+        }
+        actions={
           <>
             {withAccounts.length > 1 && (
               <Button
@@ -101,10 +123,16 @@ export function AccountsPage() {
                 {allCollapsed ? 'Expand all' : 'Collapse all'}
               </Button>
             )}
-            {withAccounts.some((p) => p.active) && <Button icon={<Activity size={15} />} onClick={testActive}>Test active</Button>}
-            <Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'add' })}>Add account</Button>
+            {withAccounts.some((p) => p.active) && (
+              <Button icon={<Activity size={15} />} onClick={testActive}>
+                Test active
+              </Button>
+            )}
+            <Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'add' })}>
+              Add account
+            </Button>
           </>
-        )}
+        }
       />
 
       {error && <Callout tone="danger">{error}</Callout>}
@@ -114,9 +142,14 @@ export function AccountsPage() {
         <EmptyState
           icon={<GitBranch size={30} />}
           title="No git accounts yet"
-          action={<Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'add' })}>Add your first account</Button>}
+          action={
+            <Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'add' })}>
+              Add your first account
+            </Button>
+          }
         >
-          Add an account per identity - for example a work and a personal GitHub account - and switch between them from here or from the tray icon.
+          Add an account per identity - for example a work and a personal GitHub account - and switch between them from here or from the
+          tray icon.
         </EmptyState>
       )}
 
@@ -148,7 +181,15 @@ export function AccountsPage() {
                   <Plus size={14} className="faint" />
                 </button>
                 {p.custom && (
-                  <Button size="sm" variant="ghost" iconOnly danger title="Remove provider" icon={<X size={13} />} onClick={() => void removeProvider(p)} />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    iconOnly
+                    danger
+                    title="Remove provider"
+                    icon={<X size={13} />}
+                    onClick={() => void removeProvider(p)}
+                  />
                 )}
               </div>
             ))}

@@ -66,7 +66,10 @@ function box(x, y, x0, y0, x1, y1, r = 0) {
 
 /** Capsule around segment a-b with half-width hw; negative inside. */
 function seg(x, y, ax, ay, bx, by, hw) {
-  const px = x - ax, py = y - ay, dx = bx - ax, dy = by - ay;
+  const px = x - ax,
+    py = y - ay,
+    dx = bx - ax,
+    dy = by - ay;
   const t = Math.max(0, Math.min(1, (px * dx + py * dy) / (dx * dx + dy * dy)));
   return Math.hypot(px - dx * t, py - dy * t) - hw;
 }
@@ -107,8 +110,7 @@ function glyph(x, y, level) {
     if (!full) return true;
     // Badge slot around the connector, with the connector drawn back on top.
     const slot = box(x, y, 493, 312, 530, 336, 3) < 0 || box(x, y, 485, 334, 538, 347, 3) < 0;
-    const connector = (box(x, y, 504, 288, 519, 300) < 0 || box(x, y, 500, 296, 523, 346, 3) < 0)
-      && Math.hypot(x - 512, y - 311) > 4.5;
+    const connector = (box(x, y, 504, 288, 519, 300) < 0 || box(x, y, 500, 296, 523, 346, 3) < 0) && Math.hypot(x - 512, y - 311) > 4.5;
     return !slot || connector;
   }
 
@@ -145,7 +147,10 @@ function render(size, style) {
   const small = size <= 32;
   for (let j = 0; j < size; j++) {
     for (let i = 0; i < size; i++) {
-      let r = 0, g = 0, b = 0, a = 0;
+      let r = 0,
+        g = 0,
+        b = 0,
+        a = 0;
       for (let sy = 0; sy < ss; sy++) {
         for (let sx = 0; sx < ss; sx++) {
           const u = (i + (sx + 0.5) / ss) / size;
@@ -160,7 +165,10 @@ function render(size, style) {
           if (box(u, v, inset, inset, 1 - inset, 1 - inset, small ? 0.2 : 0.18) > 0) continue;
           let c = [lerp(TILE_TOP[0], TILE_BOTTOM[0], v), lerp(TILE_TOP[1], TILE_BOTTOM[1], v), lerp(TILE_TOP[2], TILE_BOTTOM[2], v)];
           if (glyph(ax, ay, level)) c = [255, 255, 255];
-          r += c[0]; g += c[1]; b += c[2]; a += 1;
+          r += c[0];
+          g += c[1];
+          b += c[2];
+          a += 1;
         }
       }
       const n = ss * ss;

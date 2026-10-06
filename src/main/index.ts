@@ -52,13 +52,15 @@ function bootstrap(): void {
     // this up, and setting it here makes its accelerators work.
     Menu.setApplicationMenu(buildAppMenu({ window, quit }));
 
-    registerIpc(createApi({
-      window,
-      onSettingsChanged: () => {
-        applyLaunchAtLogin(core.settings.get().launchAtLogin);
-        tray?.refresh();
-      },
-    }));
+    registerIpc(
+      createApi({
+        window,
+        onSettingsChanged: () => {
+          applyLaunchAtLogin(core.settings.get().launchAtLogin);
+          tray?.refresh();
+        },
+      }),
+    );
 
     tray = new TrayController({
       window,

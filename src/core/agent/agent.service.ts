@@ -6,8 +6,8 @@ import * as keys from '../keys/keys.service';
 import type { AgentIdentity, AgentStatus } from '../../shared/types';
 
 const NOT_RUNNING_HINT = isWin
-  ? 'The OpenSSH Authentication Agent service is not running. In an elevated PowerShell run: '
-    + 'Get-Service ssh-agent | Set-Service -StartupType Automatic; Start-Service ssh-agent'
+  ? 'The OpenSSH Authentication Agent service is not running. In an elevated PowerShell run: ' +
+    'Get-Service ssh-agent | Set-Service -StartupType Automatic; Start-Service ssh-agent'
   : 'No agent found. Start one with: eval "$(ssh-agent -s)"';
 
 export async function status(): Promise<AgentStatus> {

@@ -60,8 +60,11 @@ describe('account identity', () => {
 
   it('accepts no-reply addresses, trims input, and refuses blanking on edit', async () => {
     const r = await core.accounts.add({
-      provider: 'github', name: 'noreply', keyPath: 'id_ed25519_github_work',
-      gitName: '  Jane  ', gitEmail: ' 12345+jane@users.noreply.github.com ',
+      provider: 'github',
+      name: 'noreply',
+      keyPath: 'id_ed25519_github_work',
+      gitName: '  Jane  ',
+      gitEmail: ' 12345+jane@users.noreply.github.com ',
     });
     expect(r.account).toMatchObject({ gitName: 'Jane', gitEmail: '12345+jane@users.noreply.github.com' });
     await expect(core.accounts.update('github', 'noreply', { gitEmail: '' })).rejects.toThrow(/valid git user\.email/);
@@ -71,7 +74,13 @@ describe('account identity', () => {
 
 describe('hosts', () => {
   it('supports CRUD through the service', () => {
-    core.hosts.save({ patterns: 'db', options: [{ key: 'HostName', value: 'db.internal' }, { key: 'User', value: 'me' }] });
+    core.hosts.save({
+      patterns: 'db',
+      options: [
+        { key: 'HostName', value: 'db.internal' },
+        { key: 'User', value: 'me' },
+      ],
+    });
     const db = core.hosts.list().find((h) => h.alias === 'db')!;
     expect(db.user).toBe('me');
     expect(() => core.hosts.save({ patterns: 'box', options: [] })).toThrow(/already uses/);
@@ -82,7 +91,14 @@ describe('hosts', () => {
   it('switches the key of a host in place and enforces IdentitiesOnly', async () => {
     await core.keys.generate({ name: 'id_a' });
     await core.keys.generate({ name: 'id_b' });
-    core.hosts.save({ patterns: 'srv', options: [{ key: 'HostName', value: 'srv.local' }, { key: 'IdentityFile', value: '~/old' }, { key: 'User', value: 'me' }] });
+    core.hosts.save({
+      patterns: 'srv',
+      options: [
+        { key: 'HostName', value: 'srv.local' },
+        { key: 'IdentityFile', value: '~/old' },
+        { key: 'User', value: 'me' },
+      ],
+    });
 
     let srv = core.hosts.setKey('srv', 'id_a');
     expect(srv.options.map((o) => o.key)).toEqual(['HostName', 'IdentityFile', 'User', 'IdentitiesOnly']);
@@ -103,7 +119,12 @@ describe('hosts', () => {
     core.hosts.save({ patterns: 'my-gh', options: [{ key: 'HostName', value: 'github.com' }] });
     core.hosts.save({ patterns: 'srv2', options: [{ key: 'HostName', value: '10.0.0.2' }] });
 
-    const byAlias = Object.fromEntries(core.hosts.list().filter((h) => !h.managed).map((h) => [h.alias, h.gitProvider]));
+    const byAlias = Object.fromEntries(
+      core.hosts
+        .list()
+        .filter((h) => !h.managed)
+        .map((h) => [h.alias, h.gitProvider]),
+    );
     expect(byAlias).toMatchObject({ 'github.com': 'github', 'my-gh': 'github', srv2: null });
     expect(core.hosts.gitProviderFor('hf.co')).toBe('Hugging Face'); // not in the config at all
     expect(core.hosts.connectable().map((h) => h.alias)).toEqual(expect.not.arrayContaining(['github.com', 'my-gh']));

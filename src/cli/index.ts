@@ -25,7 +25,9 @@ export function buildProgram(): Command {
 
   for (const register of COMMAND_MODULES) register(program, core);
 
-  program.addHelpText('after', `
+  program.addHelpText(
+    'after',
+    `
 Examples:
   $ lanyard                             # open the desktop app
   $ lanyard accounts add github work --generate --git-name "Jane Doe" --git-email jane@work.com --set-git-identity
@@ -34,7 +36,8 @@ Examples:
   $ lanyard test                         # verify every active account
   $ git clone $(lanyard url github work https://github.com/acme/app)
   $ lanyard hosts add prod -H 203.0.113.10 -u deploy -k ~/.ssh/id_ed25519
-  $ lanyard connect prod`);
+  $ lanyard connect prod`,
+  );
   return program;
 }
 

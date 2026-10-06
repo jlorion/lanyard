@@ -8,7 +8,10 @@ import { Button } from '../../components/ui/Button';
 import { Field, Input, Select } from '../../components/ui/Field';
 import type { KeyInfo, KeyType } from '../../../../shared/types';
 
-export function GenerateKeyModal({ onClose, onGenerated }: {
+export function GenerateKeyModal({
+  onClose,
+  onGenerated,
+}: {
   onClose: () => void;
   onGenerated: (key: KeyInfo, publicKey: string) => void;
 }) {
@@ -25,16 +28,24 @@ export function GenerateKeyModal({ onClose, onGenerated }: {
   const nameOk = !!check && check.valid && !check.exists;
   const valid = nameOk && !mismatch;
 
-  const nameError = check && !nameOk ? (
-    <>
-      <span>{check.message}</span>
-      {check.suggestion && (
-        <button type="button" className="link-button" onClick={() => { setNameTouched(true); setName(check.suggestion!); }}>
-          Use {check.suggestion}
-        </button>
-      )}
-    </>
-  ) : undefined;
+  const nameError =
+    check && !nameOk ? (
+      <>
+        <span>{check.message}</span>
+        {check.suggestion && (
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => {
+              setNameTouched(true);
+              setName(check.suggestion!);
+            }}
+          >
+            Use {check.suggestion}
+          </button>
+        )}
+      </>
+    ) : undefined;
 
   const changeType = (t: KeyType) => {
     setType(t);
@@ -56,12 +67,14 @@ export function GenerateKeyModal({ onClose, onGenerated }: {
       icon={<KeyRound size={18} />}
       onClose={onClose}
       onSubmit={submit}
-      footer={(
+      footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={!valid} loading={isBusy('gen')}>Generate</Button>
+          <Button type="submit" variant="primary" disabled={!valid} loading={isBusy('gen')}>
+            Generate
+          </Button>
         </>
-      )}
+      }
     >
       <div className="form-grid">
         <Field label="Type" required>
@@ -72,7 +85,14 @@ export function GenerateKeyModal({ onClose, onGenerated }: {
           </Select>
         </Field>
         <Field label="File name" required hint={`Saved in ~/.ssh/${name || '…'}`} error={nameError}>
-          <Input mono value={name} onChange={(e) => { setNameTouched(true); setName(e.target.value.trim()); }} />
+          <Input
+            mono
+            value={name}
+            onChange={(e) => {
+              setNameTouched(true);
+              setName(e.target.value.trim());
+            }}
+          />
         </Field>
         <Field label="Comment" className="full" hint="Usually your email; shown next to the key on servers and git hosts">
           <Input value={comment} placeholder="you@example.com" onChange={(e) => setComment(e.target.value)} />

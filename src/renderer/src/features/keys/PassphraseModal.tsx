@@ -16,8 +16,11 @@ export function PassphraseModal({ keyInfo, onClose }: { keyInfo: KeyInfo; onClos
 
   const submit = async () => {
     if (mismatch) return;
-    const ok = await run('save', () => api.keys.changePassphrase(keyInfo.tildePath, current, next),
-      next ? 'Passphrase changed' : 'Passphrase removed');
+    const ok = await run(
+      'save',
+      () => api.keys.changePassphrase(keyInfo.tildePath, current, next),
+      next ? 'Passphrase changed' : 'Passphrase removed',
+    );
     if (ok) onClose();
   };
 
@@ -27,12 +30,14 @@ export function PassphraseModal({ keyInfo, onClose }: { keyInfo: KeyInfo; onClos
       icon={<Lock size={18} />}
       onClose={onClose}
       onSubmit={submit}
-      footer={(
+      footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={mismatch} loading={isBusy('save')}>Save</Button>
+          <Button type="submit" variant="primary" disabled={mismatch} loading={isBusy('save')}>
+            Save
+          </Button>
         </>
-      )}
+      }
     >
       <div className="stack">
         {keyInfo.encrypted && (

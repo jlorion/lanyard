@@ -83,116 +83,146 @@ export const register: CommandModule = (program, core) => {
     .command('list', { isDefault: true })
     .description('list hosts')
     .option('-a, --all', 'include managed provider entries and wildcard patterns')
-    .action(out.action((o: { all?: boolean }) => {
-      const list = core.hosts.list().filter((h) => o.all || (!h.managed && !h.isPattern));
-      out.emit(list, () => out.table(list, [
-        { key: 'patterns', label: 'Host', format: (v, h) => (h.managed ? c.magenta(v) : c.bold(v)) },
-        { key: 'hostName', label: 'HostName' },
-        { key: 'user', label: 'User' },
-        { key: 'port', label: 'Port' },
-        { key: 'identityFile', label: 'IdentityFile' },
-        { key: 'managed', label: '', format: (v) => (v ? c.dim('managed') : '') },
-      ]));
-    }));
+    .action(
+      out.action((o: { all?: boolean }) => {
+        const list = core.hosts.list().filter((h) => o.all || (!h.managed && !h.isPattern));
+        out.emit(list, () =>
+          out.table(list, [
+            { key: 'patterns', label: 'Host', format: (v, h) => (h.managed ? c.magenta(v) : c.bold(v)) },
+            { key: 'hostName', label: 'HostName' },
+            { key: 'user', label: 'User' },
+            { key: 'port', label: 'Port' },
+            { key: 'identityFile', label: 'IdentityFile' },
+            { key: 'managed', label: '', format: (v) => (v ? c.dim('managed') : '') },
+          ]),
+        );
+      }),
+    );
 
   hosts
     .command('show <alias>')
     .description('show a host block')
-    .action(out.action((alias: string) => {
-      const h = findHost(core, alias);
-      out.emit(h, () => {
-        if (h.comment) out.print(c.dim(h.comment.split('\n').map((l) => `# ${l}`).join('\n')));
-        out.print(c.bold(`${h.kind} ${h.patterns}`) + (h.managed ? c.dim('  (managed by Lanyard)') : ''));
-        for (const opt of h.options) out.print(`    ${opt.key} ${opt.value}`);
-      });
-    }));
+    .action(
+      out.action((alias: string) => {
+        const h = findHost(core, alias);
+        out.emit(h, () => {
+          if (h.comment)
+            out.print(
+              c.dim(
+                h.comment
+                  .split('\n')
+                  .map((l) => `# ${l}`)
+                  .join('\n'),
+              ),
+            );
+          out.print(c.bold(`${h.kind} ${h.patterns}`) + (h.managed ? c.dim('  (managed by Lanyard)') : ''));
+          for (const opt of h.options) out.print(`    ${opt.key} ${opt.value}`);
+        });
+      }),
+    );
 
-  withHostOptions(hosts.command('add <alias>').description('add a host'))
-    .action(out.action((alias: string, o: HostFlags) => {
+  withHostOptions(hosts.command('add <alias>').description('add a host')).action(
+    out.action((alias: string, o: HostFlags) => {
       core.hosts.save({ patterns: alias, options: mergeOptions([], o, core.keys.configPath), comment: o.comment });
       out.ok(`Added host ${c.bold(alias)}`);
-    }));
+    }),
+  );
 
   withHostOptions(hosts.command('edit <alias>').description('change a host (only the given options)'))
     .option('--rename <alias>', 'new alias')
-    .action(out.action((alias: string, o: HostFlags & { rename?: string }) => {
-      const h = findHost(core, alias);
-      assertUserHost(h);
-      core.hosts.save({
-        index: h.index,
-        originalPatterns: h.patterns,
-        patterns: o.rename ?? h.patterns,
-        options: mergeOptions(h.options, o, core.keys.configPath),
-        comment: o.comment,
-      });
-      out.ok(`Updated host ${c.bold(o.rename ?? alias)}`);
-    }));
+    .action(
+      out.action((alias: string, o: HostFlags & { rename?: string }) => {
+        const h = findHost(core, alias);
+        assertUserHost(h);
+        core.hosts.save({
+          index: h.index,
+          originalPatterns: h.patterns,
+          patterns: o.rename ?? h.patterns,
+          options: mergeOptions(h.options, o, core.keys.configPath),
+          comment: o.comment,
+        });
+        out.ok(`Updated host ${c.bold(o.rename ?? alias)}`);
+      }),
+    );
 
   hosts
     .command('rm <alias>')
     .description('remove a host')
-    .action(out.action((alias: string) => {
-      const h = findHost(core, alias);
-      assertUserHost(h);
-      core.hosts.remove(h.index, h.patterns);
-      out.ok(`Removed host ${alias}`);
-    }));
+    .action(
+      out.action((alias: string) => {
+        const h = findHost(core, alias);
+        assertUserHost(h);
+        core.hosts.remove(h.index, h.patterns);
+        out.ok(`Removed host ${alias}`);
+      }),
+    );
 
   hosts
     .command('key <alias> [key]')
     .description('show or switch the SSH key a host uses (sets IdentityFile + IdentitiesOnly)')
     .option('--default', 'remove IdentityFile so ssh falls back to its default keys')
-    .action(out.action((alias: string, key: string | undefined, o: { default?: boolean }) => {
-      if (!key && !o.default) {
-        const h = core.hosts.find(alias);
-        const keys = core.keys.list().filter((k) => k.hasPrivate);
-        const current = keys.find((k) => core.keys.isKeyAt(k, h.identityFile));
-        out.emit({ alias, identityFile: h.identityFile || null, key: current?.name ?? null, available: keys.map((k) => k.name) }, () => {
-          out.print(`${c.bold(alias)} uses ${h.identityFile ? c.green(current?.name ?? h.identityFile) : c.dim('the default SSH keys')}`, '');
-          for (const k of keys) out.print(`  ${k === current ? c.green('●') : ' '} ${k.name} ${c.dim(k.type)}`);
-          out.print('', c.dim(`Switch with: lanyard hosts key ${alias} <key>`));
-        });
-        return;
-      }
-      const h = core.hosts.setKey(alias, o.default ? null : key!);
-      out.emit(h, () => out.ok(`${alias} now uses ${h.identityFile || 'the default SSH keys'}`));
-    }));
+    .action(
+      out.action((alias: string, key: string | undefined, o: { default?: boolean }) => {
+        if (!key && !o.default) {
+          const h = core.hosts.find(alias);
+          const keys = core.keys.list().filter((k) => k.hasPrivate);
+          const current = keys.find((k) => core.keys.isKeyAt(k, h.identityFile));
+          out.emit({ alias, identityFile: h.identityFile || null, key: current?.name ?? null, available: keys.map((k) => k.name) }, () => {
+            out.print(
+              `${c.bold(alias)} uses ${h.identityFile ? c.green(current?.name ?? h.identityFile) : c.dim('the default SSH keys')}`,
+              '',
+            );
+            for (const k of keys) out.print(`  ${k === current ? c.green('●') : ' '} ${k.name} ${c.dim(k.type)}`);
+            out.print('', c.dim(`Switch with: lanyard hosts key ${alias} <key>`));
+          });
+          return;
+        }
+        const h = core.hosts.setKey(alias, o.default ? null : key!);
+        out.emit(h, () => out.ok(`${alias} now uses ${h.identityFile || 'the default SSH keys'}`));
+      }),
+    );
 
   hosts
     .command('test <alias>')
     .description('try a non-interactive login')
-    .action(out.action(async (alias: string) => {
-      const r = await core.hosts.test(alias);
-      out.emit(r, () => {
-        out.print(`${r.ok ? c.green('✔') : c.red('✖')} ${alias}: ${r.message}`);
-        if (!r.ok && r.output) out.print(c.dim(r.output));
-      });
-      if (!r.ok) process.exitCode = 1;
-    }));
+    .action(
+      out.action(async (alias: string) => {
+        const r = await core.hosts.test(alias);
+        out.emit(r, () => {
+          out.print(`${r.ok ? c.green('✔') : c.red('✖')} ${alias}: ${r.message}`);
+          if (!r.ok && r.output) out.print(c.dim(r.output));
+        });
+        if (!r.ok) process.exitCode = 1;
+      }),
+    );
 
   hosts
     .command('resolve <alias>')
     .description('print the effective settings ssh will use (ssh -G)')
-    .action(out.action(async (alias: string) => {
-      const opts = await core.hosts.resolve(alias);
-      out.emit(opts, () => opts.forEach((o) => out.print(`${c.dim(o.key.padEnd(28))} ${o.value}`)));
-    }));
+    .action(
+      out.action(async (alias: string) => {
+        const opts = await core.hosts.resolve(alias);
+        out.emit(opts, () => opts.forEach((o) => out.print(`${c.dim(o.key.padEnd(28))} ${o.value}`)));
+      }),
+    );
 
   program
     .command('connect <alias> [sshArgs...]')
     .alias('c')
     .description('open an SSH session to a host')
-    .action(out.action(async (alias: string, sshArgs: string[] = []) => {
-      core.hosts.assertAlias(alias);
-      const provider = core.hosts.gitProviderFor(alias);
-      if (provider && !sshArgs.length) {
-        // Git hosts refuse shells ("PTY allocation request failed"); show the login check instead.
-        out.warn(`${alias} is a ${provider} git host - it has no shell. Testing the login instead:`);
-        const r = await core.hosts.test(alias);
-        out.print(`${r.ok ? c.green('✔') : c.red('✖')} ${alias}: ${r.message}`);
-        if (!r.ok) process.exitCode = 1;
-        return;
-      }
-      process.exitCode = interactive('ssh', [alias, ...sshArgs]);
-    }));
+    .action(
+      out.action(async (alias: string, sshArgs: string[] = []) => {
+        core.hosts.assertAlias(alias);
+        const provider = core.hosts.gitProviderFor(alias);
+        if (provider && !sshArgs.length) {
+          // Git hosts refuse shells ("PTY allocation request failed"); show the login check instead.
+          out.warn(`${alias} is a ${provider} git host - it has no shell. Testing the login instead:`);
+          const r = await core.hosts.test(alias);
+          out.print(`${r.ok ? c.green('✔') : c.red('✖')} ${alias}: ${r.message}`);
+          if (!r.ok) process.exitCode = 1;
+          return;
+        }
+        process.exitCode = interactive('ssh', [alias, ...sshArgs]);
+      }),
+    );
 };

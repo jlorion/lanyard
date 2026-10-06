@@ -69,7 +69,9 @@ export class MainWindow {
       win.hide();
       this.notifyStillRunning();
     });
-    win.once('ready-to-show', () => { this.ready = true; });
+    win.once('ready-to-show', () => {
+      this.ready = true;
+    });
     win.on('closed', () => {
       this.win = null;
       this.ready = false;

@@ -30,7 +30,11 @@ export function KeysPage() {
   useIntent('generate-key', () => setDialog({ kind: 'generate' }));
 
   const list = keys.data ?? [];
-  const usage = keyUsage(list, (accounts.data ?? []).flatMap((p) => p.accounts), hosts.data ?? []);
+  const usage = keyUsage(
+    list,
+    (accounts.data ?? []).flatMap((p) => p.accounts),
+    hosts.data ?? [],
+  );
 
   const addToAgent = async (k: KeyInfo) => {
     try {
@@ -53,7 +57,12 @@ export function KeysPage() {
     }
     const ok = await confirm({
       title: `Delete ${k.name}?`,
-      message: <>The key pair is moved to <code>~/.lanyard/trash</code>, so it can still be recovered. Anything that relies on this key will stop working.</>,
+      message: (
+        <>
+          The key pair is moved to <code>~/.lanyard/trash</code>, so it can still be recovered. Anything that relies on this key will stop
+          working.
+        </>
+      ),
       confirmLabel: 'Move to trash',
       danger: true,
     });
@@ -70,16 +79,26 @@ export function KeysPage() {
       <PageHeader
         title="Keys"
         description="Key pairs in ~/.ssh. Fingerprints are computed locally; deleting moves keys to ~/.lanyard/trash."
-        actions={<Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'generate' })}>Generate key</Button>}
+        actions={
+          <Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'generate' })}>
+            Generate key
+          </Button>
+        }
       />
 
       {keys.error && <Callout tone="danger">{keys.error}</Callout>}
 
-      {keys.loading ? <Skeleton rows={4} /> : !list.length ? (
+      {keys.loading ? (
+        <Skeleton rows={4} />
+      ) : !list.length ? (
         <EmptyState
           icon={<KeyRound size={30} />}
           title="No SSH keys found"
-          action={<Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'generate' })}>Generate key</Button>}
+          action={
+            <Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'generate' })}>
+              Generate key
+            </Button>
+          }
         >
           Generate an Ed25519 key to authenticate with servers and git providers.
         </EmptyState>
@@ -101,18 +120,36 @@ export function KeysPage() {
                   <tr key={k.name}>
                     <td>
                       <div className="row" style={{ gap: 6 }}>
-                        <span className="mono" style={{ fontWeight: 600 }}>{k.name}</span>
+                        <span className="mono" style={{ fontWeight: 600 }}>
+                          {k.name}
+                        </span>
                         <Badge>{k.type}</Badge>
-                        {k.encrypted && <Badge title="Protected with a passphrase"><Lock size={11} /></Badge>}
+                        {k.encrypted && (
+                          <Badge title="Protected with a passphrase">
+                            <Lock size={11} />
+                          </Badge>
+                        )}
                         {!k.hasPrivate && <Badge tone="warning">public only</Badge>}
                       </div>
-                      <div className="faint truncate" style={{ maxWidth: 320 }}>{k.comment || '(no comment)'} · {timeAgo(k.modifiedAt)}</div>
+                      <div className="faint truncate" style={{ maxWidth: 320 }}>
+                        {k.comment || '(no comment)'} · {timeAgo(k.modifiedAt)}
+                      </div>
                     </td>
-                    <td className="mono faint selectable" style={{ whiteSpace: 'nowrap' }} title={k.fingerprint}>{shortFingerprint(k.fingerprint)}</td>
+                    <td className="mono faint selectable" style={{ whiteSpace: 'nowrap' }} title={k.fingerprint}>
+                      {shortFingerprint(k.fingerprint)}
+                    </td>
                     <td>
-                      {users.length
-                        ? <div className="row" style={{ flexWrap: 'wrap', gap: 4 }}>{users.map((u) => <Badge key={u} tone="accent">{u}</Badge>)}</div>
-                        : <span className="faint">-</span>}
+                      {users.length ? (
+                        <div className="row" style={{ flexWrap: 'wrap', gap: 4 }}>
+                          {users.map((u) => (
+                            <Badge key={u} tone="accent">
+                              {u}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="faint">-</span>
+                      )}
                     </td>
                     <td className="actions">
                       <ActionMenu
@@ -120,13 +157,38 @@ export function KeysPage() {
                         label={`Actions for ${k.name}`}
                         items={[
                           { label: 'Show public key', icon: <Copy size={15} />, onSelect: () => void showPublic(k) },
-                          ...(k.hasPrivate ? [
-                            { label: 'Add to ssh-agent', icon: <ShieldPlus size={15} />, onSelect: () => void addToAgent(k) },
-                            { label: k.encrypted ? 'Change passphrase' : 'Set passphrase', icon: <Lock size={15} />, onSelect: () => setDialog({ kind: 'passphrase', key: k }) },
-                            { label: 'Restrict permissions to you', icon: <ShieldCheck size={15} />, onSelect: () => void run(`perm:${k.name}`, () => api.keys.fixPermissions(k.tildePath), (r) => r.message) },
-                          ] : []),
-                          { label: 'Show in folder', icon: <FolderOpen size={15} />, onSelect: () => void run('reveal', () => api.app.revealPath(k.path ?? k.publicPath!)) },
-                          { label: 'Delete (move to trash)', icon: <Trash2 size={15} />, onSelect: () => void remove(k), danger: true, separated: true },
+                          ...(k.hasPrivate
+                            ? [
+                                { label: 'Add to ssh-agent', icon: <ShieldPlus size={15} />, onSelect: () => void addToAgent(k) },
+                                {
+                                  label: k.encrypted ? 'Change passphrase' : 'Set passphrase',
+                                  icon: <Lock size={15} />,
+                                  onSelect: () => setDialog({ kind: 'passphrase', key: k }),
+                                },
+                                {
+                                  label: 'Restrict permissions to you',
+                                  icon: <ShieldCheck size={15} />,
+                                  onSelect: () =>
+                                    void run(
+                                      `perm:${k.name}`,
+                                      () => api.keys.fixPermissions(k.tildePath),
+                                      (r) => r.message,
+                                    ),
+                                },
+                              ]
+                            : []),
+                          {
+                            label: 'Show in folder',
+                            icon: <FolderOpen size={15} />,
+                            onSelect: () => void run('reveal', () => api.app.revealPath(k.path ?? k.publicPath!)),
+                          },
+                          {
+                            label: 'Delete (move to trash)',
+                            icon: <Trash2 size={15} />,
+                            onSelect: () => void remove(k),
+                            danger: true,
+                            separated: true,
+                          },
                         ]}
                       />
                     </td>
@@ -139,10 +201,7 @@ export function KeysPage() {
       )}
 
       {dialog?.kind === 'generate' && (
-        <GenerateKeyModal
-          onClose={() => setDialog(null)}
-          onGenerated={(key, publicKey) => setDialog({ kind: 'public', key, publicKey })}
-        />
+        <GenerateKeyModal onClose={() => setDialog(null)} onGenerated={(key, publicKey) => setDialog({ kind: 'public', key, publicKey })} />
       )}
       {dialog?.kind === 'passphrase' && <PassphraseModal keyInfo={dialog.key} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'public' && (

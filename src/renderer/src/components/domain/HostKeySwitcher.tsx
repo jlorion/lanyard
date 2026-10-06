@@ -22,8 +22,11 @@ export function HostKeySwitcher({ host, keys }: { host: HostEntry; keys: KeyInfo
   const value = current ? current.tildePath : host.identityFile || DEFAULT;
 
   const change = (next: string) =>
-    run('key', () => api.hosts.setKey(host.alias, next === DEFAULT ? null : next), (h) =>
-      `${host.alias} now uses ${h.identityFile ? next.split('/').pop() : 'the default SSH keys'}`);
+    run(
+      'key',
+      () => api.hosts.setKey(host.alias, next === DEFAULT ? null : next),
+      (h) => `${host.alias} now uses ${h.identityFile ? next.split('/').pop() : 'the default SSH keys'}`,
+    );
 
   return (
     <select
@@ -36,7 +39,10 @@ export function HostKeySwitcher({ host, keys }: { host: HostEntry; keys: KeyInfo
       <option value={DEFAULT}>Default SSH keys</option>
       {host.identityFile && !current && <option value={host.identityFile}>{host.identityFile} (missing)</option>}
       {keys.map((k) => (
-        <option key={k.tildePath} value={k.tildePath}>{k.name}{k.encrypted ? ' 🔒' : ''}</option>
+        <option key={k.tildePath} value={k.tildePath}>
+          {k.name}
+          {k.encrypted ? ' 🔒' : ''}
+        </option>
       ))}
     </select>
   );

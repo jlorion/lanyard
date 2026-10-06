@@ -29,11 +29,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setTimeout(() => setItems((list) => list.filter((t) => t.id !== id)), kind === 'error' ? 7000 : 3500);
   }, []);
 
-  const toaster = useMemo<Toaster>(() => ({
-    success: (m) => push('success', m),
-    error: (m) => push('error', m),
-    info: (m) => push('info', m),
-  }), [push]);
+  const toaster = useMemo<Toaster>(
+    () => ({
+      success: (m) => push('success', m),
+      error: (m) => push('error', m),
+      info: (m) => push('info', m),
+    }),
+    [push],
+  );
 
   return (
     <ToastContext.Provider value={toaster}>
