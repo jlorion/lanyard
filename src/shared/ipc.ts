@@ -55,6 +55,17 @@ export interface AppInfo {
   cliHint: string;
 }
 
+export interface CliInstallStatus {
+  /** `lanyard` / `lny` launchers exist in binDir. */
+  installed: boolean;
+  /** binDir is on the (user) PATH. */
+  onPath: boolean;
+  binDir: string;
+  commands: string[];
+  /** Shell line to add binDir to PATH when it is missing (macOS / Linux). */
+  pathHint?: string;
+}
+
 export interface LanyardApi {
   accounts: {
     overview(): Promise<ProviderOverview[]>;
@@ -129,6 +140,11 @@ export interface LanyardApi {
     revealPath(path: string): Promise<void>;
     /** Match native window chrome to the renderer theme. */
     setTheme(mode: 'system' | 'light' | 'dark'): Promise<void>;
+    /** Is the `lanyard` command installed on PATH? */
+    cliStatus(): Promise<CliInstallStatus>;
+    /** Put `lanyard` / `lny` on the PATH (no npm needed). */
+    installCli(): Promise<CliInstallStatus>;
+    uninstallCli(): Promise<CliInstallStatus>;
     /** Colour the native window buttons drawn over the custom title bar. */
     setTitleBarColors(color: string, symbolColor: string): Promise<void>;
   };

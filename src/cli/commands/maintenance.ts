@@ -8,22 +8,28 @@ import type { CommandModule } from '../types';
 
 const { c } = out;
 
-function launchGui(): void {
-  // Packaged app: the shim runs the CLI inside the app binary and tells us where it is.
+const NO_DESKTOP_APP = 'The desktop app is not part of this install (e.g. `npx lanyard-ssh`). '
+  + 'Install the Lanyard desktop app to get the window and tray - every feature is also available as a command: `lanyard --help`.';
+
+/**
+ * Open the desktop app. Three ways the CLI can be installed:
+ *   - desktop app shim: runs inside the app binary, which tells us its path
+ *   - source checkout: start Electron from node_modules against the built app
+ *   - npm / npx package: CLI only, no window to open
+ */
+export function launchGui(): void {
   if (process.env.LANYARD_APP_EXE) {
     detached(process.env.LANYARD_APP_EXE, [], { ELECTRON_RUN_AS_NODE: undefined });
     return;
   }
-  // Development checkout: this file is out/main/cli.js; start Electron from node_modules.
+  // This file is out/main/cli.js, so the project root is two levels up.
   const root = path.resolve(__dirname, '..', '..');
-  if (!fs.existsSync(path.join(root, 'out', 'renderer', 'index.html'))) {
-    throw new Error('The app is not built yet. Run `npm run build` first.');
-  }
+  if (!fs.existsSync(path.join(root, 'out', 'renderer', 'index.html'))) throw new Error(NO_DESKTOP_APP);
   let electronPath: string;
   try {
     electronPath = require('electron') as unknown as string;
   } catch {
-    throw new Error('Electron is not installed. Run `npm install`, or install the desktop app.');
+    throw new Error(NO_DESKTOP_APP);
   }
   detached(electronPath, [root]);
 }

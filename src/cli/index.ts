@@ -27,6 +27,7 @@ export function buildProgram(): Command {
 
   program.addHelpText('after', `
 Examples:
+  $ lanyard                             # open the desktop app
   $ lanyard accounts add github work --generate --git-email me@work.com --set-git-identity
   $ lanyard accounts add github personal --key ~/.ssh/id_ed25519
   $ lanyard use github personal          # git@github.com:... now authenticates as "personal"
@@ -38,5 +39,7 @@ Examples:
 }
 
 export async function run(argv: string[] = process.argv): Promise<void> {
+  // Bare `lanyard` opens the desktop app (like `code`); `lanyard --help` lists commands.
+  if (argv.length <= 2) argv = [...argv, 'gui'];
   await buildProgram().parseAsync(argv);
 }

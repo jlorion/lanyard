@@ -1,14 +1,36 @@
 {
-  "name": "lanyard",
+  "name": "lanyard-ssh",
   "productName": "Lanyard",
   "version": "1.0.0",
-  "description": "Lanyard: switch git provider accounts and manage SSH hosts, keys, ssh-agent and known_hosts, from the system tray or the command line.",
+  "description": "Lanyard: switch git accounts (GitHub, GitLab, Hugging Face, ...) and manage SSH hosts, keys, ssh-agent and known_hosts, from the system tray or the command line.",
+  "keywords": [
+    "ssh",
+    "ssh-config",
+    "git",
+    "github",
+    "gitlab",
+    "huggingface",
+    "multiple-accounts",
+    "ssh-keys",
+    "cli",
+    "electron"
+  ],
   "author": "riomar",
   "license": "MIT",
   "main": "out/main/index.js",
   "bin": {
     "lanyard": "bin/lanyard.js",
-    "lny": "bin/lanyard.js"
+    "lny": "bin/lanyard.js",
+    "lanyard-ssh": "bin/lanyard.js"
+  },
+  "files": [
+    "bin/",
+    "out/main/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
     "dev": "electron-vite dev",
@@ -19,7 +41,8 @@
     "test:watch": "vitest",
     "icons": "node scripts/make-icons.mjs",
     "dist": "npm run typecheck && npm run build && electron-builder",
-    "lanyard": "node bin/lanyard.js"
+    "lanyard": "node bin/lanyard.js",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "commander": "^12.1.0"

@@ -55,13 +55,23 @@ npm test           # vitest, runs against a throwaway ~/.ssh
 npm run typecheck
 npm run build      # compiles main, preload, renderer and the CLI into out/
 npm run dist       # installer in release/ (NSIS on Windows, dmg on macOS, AppImage on Linux)
+npm publish        # CLI-only npm package `lanyard-ssh` (prepack builds it first)
 ```
 
 Set `LANYARD_SSH_DIR` and `LANYARD_HOME` to point the app and the CLI at a sandbox instead of `~/.ssh` and `~/.lanyard`.
 
 ## CLI
 
-After `npm run build`, run `npm link` once to put `lanyard` (and the short alias `lny`) on your PATH. An installed app also ships a shim at `resources/cli/lanyard.cmd` (Windows) or `resources/cli/lanyard` (macOS/Linux). It runs the CLI with the app's own binary, so it doesn't need Node.js.
+The command is `lanyard` (short alias `lny`). Running it with no arguments opens the desktop app; `lanyard --help` lists every command. Pick whichever way of getting it suits you:
+
+| How | Needs | Command name |
+|---|---|---|
+| **Desktop app → Settings → Command line → Install command** | nothing (uses the app's own runtime) | `lanyard`, `lny` |
+| **`npx lanyard-ssh <command>`**, e.g. `npx lanyard-ssh status` | Node.js 20+, nothing installed | `lanyard-ssh` |
+| **`npm install -g lanyard-ssh`** | Node.js 20+ | `lanyard`, `lny` |
+| **From source**: `npm run build`, then `npm link` | this repo | `lanyard`, `lny` |
+
+The in-app installer writes small launcher scripts to `%LOCALAPPDATA%\Lanyardin` (added to your *user* PATH) on Windows, or `~/.local/bin` on macOS/Linux. It only ever touches files it created, and Settings can uninstall them again. The npm package contains just the CLI (about 36 kB); `lanyard` with no arguments explains how to get the desktop app.
 
 ```bash
 lanyard status                                   # active account per provider

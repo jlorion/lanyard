@@ -10,6 +10,7 @@ import { app, clipboard, dialog, nativeTheme, shell } from 'electron';
 import * as core from '../../core';
 import type { AppInfo, LanyardApi } from '../../shared/ipc';
 import type { MainWindow } from '../window';
+import * as cliInstall from '../cli-install';
 
 export interface ApiContext {
   window: MainWindow;
@@ -126,6 +127,9 @@ export function createApi(ctx: ApiContext): LanyardApi {
         const { cmd, args } = core.agent.interactiveAddCommand(ref);
         openInTerminal(cmd, args, 'ssh-add');
       },
+      cliStatus: () => cliInstall.status(),
+      installCli: () => cliInstall.install(),
+      uninstallCli: () => cliInstall.uninstall(),
       setTheme: async (mode) => {
         nativeTheme.themeSource = mode;
       },

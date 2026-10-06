@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Copy, FolderOpen } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useResource } from '../../hooks/useResource';
 import { useTask } from '../../hooks/useTask';
@@ -9,21 +9,13 @@ import { Input, Segmented, Select } from '../../components/ui/Field';
 import { AccentPicker } from '../../components/appearance/AccentPicker';
 import { useAppearance } from '../../app/appearance';
 import type { ThemeMode } from '../../lib/appearance';
-import { CodeBlock, PageHeader } from '../../components/ui/Feedback';
+import { PageHeader } from '../../components/ui/Feedback';
 import { Switch } from '../../components/ui/Switch';
+import { CommandLineSection } from './CommandLineSection';
 import type { Settings } from '../../../../shared/types';
 
 const WINDOWS_OPENSSH = 'C:/Windows/System32/OpenSSH/ssh.exe';
 
-const CLI_EXAMPLES = [
-  'status',
-  'use github work',
-  'accounts add github personal --generate --git-email me@example.com',
-  'test --all',
-  'url github work https://github.com/acme/app',
-  'hosts add prod -H 203.0.113.10 -u deploy',
-  'connect prod',
-];
 
 function Row({ title, description, children }: { title: string; description?: ReactNode; children: ReactNode }) {
   return (
@@ -55,7 +47,6 @@ export function SettingsPage() {
     await identity.reload();
   };
 
-  const cli = (args: string) => `${info.cliHint} ${args}`;
 
   return (
     <>
@@ -128,17 +119,7 @@ export function SettingsPage() {
       </div>
 
       <div className="section-title">Command line</div>
-      <div className="card settings-section">
-        <div className="card-body stack">
-          <p className="muted">Everything here is also available from the <code>lanyard</code> CLI. From this installation run:</p>
-          <div className="row">
-            <code className="selectable truncate" style={{ flex: 1 }}>{info.cliHint}</code>
-            <Button size="sm" icon={<Copy size={14} />} onClick={() => run('copy', () => api.app.copy(info.cliHint), 'Copied')}>Copy</Button>
-          </div>
-          <CodeBlock>{CLI_EXAMPLES.map((e) => `lanyard ${e}`).join('\n')}</CodeBlock>
-          <p className="faint">Tip: <code>npm link</code> in the project folder puts <code>lanyard</code> on your PATH. Use <code>--json</code> for scripting; <code>{cli('--help')}</code> lists every command.</p>
-        </div>
-      </div>
+      <CommandLineSection />
 
       <div className="section-title">Files</div>
       <div className="card settings-section">
