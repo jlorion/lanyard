@@ -69,9 +69,11 @@ export function buildAppMenu({ window, quit }: AppMenuDeps): Menu {
       submenu: [
         { label: 'Command Palette…', ...shown('CmdOrCtrl+K'), click: () => window.command('palette') },
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        // Zoom keys are handled by the window (see zoom.ts), which matches the
+        // typed character on any layout; the menu only shows the shortcuts.
+        { role: 'resetZoom', ...shown('CmdOrCtrl+0') },
+        { role: 'zoomIn', ...shown('CmdOrCtrl+Plus') },
+        { role: 'zoomOut', ...shown('CmdOrCtrl+-') },
         { type: 'separator' },
         { role: 'togglefullscreen' },
         ...(dev ? [{ type: 'separator' as const }, { role: 'reload' as const }, { role: 'toggleDevTools' as const }] : []),

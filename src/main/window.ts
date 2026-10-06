@@ -4,6 +4,7 @@ import path from 'node:path';
 import { BrowserWindow, Notification, shell } from 'electron';
 import { IPC_CHANNELS, type AppCommand } from '../shared/ipc';
 import { appIcon } from './assets';
+import { handleZoomKeys } from './zoom';
 
 export interface MainWindowOptions {
   /** Whether closing the window should hide it to the tray (read on every close). */
@@ -58,6 +59,7 @@ export class MainWindow {
       return { action: 'deny' };
     });
     win.webContents.on('will-navigate', (event) => event.preventDefault());
+    handleZoomKeys(win.webContents);
 
     win.on('close', (event) => {
       if (this.quitting) return;
