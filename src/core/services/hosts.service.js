@@ -55,6 +55,10 @@ function getRaw() {
   return repo.readRaw();
 }
 
+function validate(text = repo.readRaw()) {
+  return repo.validate(text);
+}
+
 async function saveRaw(text, { force = false } = {}) {
   if (!force) {
     const v = await repo.validate(text);
@@ -98,4 +102,4 @@ async function resolve(alias) {
     .map((m) => ({ key: m[1], value: m[2] }));
 }
 
-module.exports = { ALIAS_RE, assertAlias, list, connectable, save, remove, getRaw, saveRaw, test, resolve };
+module.exports = { ALIAS_RE, assertAlias, list, connectable, save, remove, getRaw, validate, saveRaw, test, resolve };
