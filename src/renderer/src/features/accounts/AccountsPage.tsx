@@ -142,7 +142,7 @@ export function AccountsPage() {
             {available.map((p) => (
               <div key={p.id} className="provider-chip">
                 <button type="button" onClick={() => setDialog({ kind: 'add', provider: p.id })}>
-                  <ProviderMark name={p.name} color={p.color} size={24} />
+                  <ProviderMark id={p.id} name={p.name} color={p.color} size={24} />
                   <span>{p.name}</span>
                   <Plus size={14} className="faint" />
                 </button>

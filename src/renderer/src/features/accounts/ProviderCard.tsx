@@ -31,7 +31,7 @@ export function ProviderCard({ provider, collapsed, onToggle, isBusy, onAdd, onO
           onClick={onToggle}
         >
           <ChevronDown size={16} className="provider-chevron" />
-          <ProviderMark name={p.name} color={p.color} />
+          <ProviderMark id={p.id} name={p.name} color={p.color} />
           <span className="provider-title">
             <span className="row" style={{ gap: 8 }}>
               <span className="provider-name">{p.name}</span>

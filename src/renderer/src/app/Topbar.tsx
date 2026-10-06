@@ -25,7 +25,7 @@ export function Topbar({ onSearch }: { onSearch: (query?: string) => void }) {
             title={`${p.name}: ${p.active} - click to switch`}
             onClick={() => onSearch(`${p.name} use`)}
           >
-            <ProviderMark name={p.name} color={p.color} size={20} />
+            <ProviderMark id={p.id} name={p.name} color={p.color} size={20} />
             <span>{p.active}</span>
           </button>
         ))}

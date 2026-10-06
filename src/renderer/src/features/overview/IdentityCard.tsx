@@ -28,7 +28,7 @@ export function IdentityCard({ provider: p }: { provider: ProviderOverview }) {
   return (
     <div className="identity-card">
       <div className="identity-head">
-        <ProviderMark name={p.name} color={p.color} size={36} />
+        <ProviderMark id={p.id} name={p.name} color={p.color} size={36} />
         <div style={{ minWidth: 0 }}>
           <div className="identity-provider">{p.name}</div>
           <div className="faint mono truncate">{p.user}@{p.hosts[0]}</div>
