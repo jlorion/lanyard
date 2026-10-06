@@ -31,3 +31,12 @@ linux:
   executableName: lanyard
   icon: resources/icon.png
   category: Development
+# Electron fuses, flipped in the packaged binary. RunAsNode stays on because the
+# installed `lanyard` command runs Lanyard.exe with ELECTRON_RUN_AS_NODE.
+electronFuses:
+  runAsNode: true
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true

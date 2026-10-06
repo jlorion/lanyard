@@ -14,6 +14,7 @@ import { createApi, openInTerminal } from './ipc/api';
 import { registerIpc } from './ipc/register';
 import { buildAppMenu } from './app-menu';
 import * as cliInstall from './cli-install';
+import { hardenSessions } from './security';
 
 const APP_ID = 'dev.riomar.lanyard';
 
@@ -48,6 +49,7 @@ function bootstrap(): void {
   app.on('window-all-closed', () => {});
 
   void app.whenReady().then(() => {
+    hardenSessions();
     // No visible menu bar (frameless window); the title bar's menu button pops
     // this up, and setting it here makes its accelerators work.
     Menu.setApplicationMenu(buildAppMenu({ window, quit }));

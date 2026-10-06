@@ -4,6 +4,7 @@ import path from 'node:path';
 import { BrowserWindow, Notification, shell } from 'electron';
 import { IPC_CHANNELS, type AppCommand } from '../shared/ipc';
 import { appIcon } from './assets';
+import { rendererSource } from './security';
 import { handleZoomKeys } from './zoom';
 
 export interface MainWindowOptions {
@@ -79,9 +80,9 @@ export class MainWindow {
       this.ready = false;
     });
 
-    const devUrl = process.env.ELECTRON_RENDERER_URL;
-    if (devUrl) void win.loadURL(devUrl);
-    else void win.loadFile(path.join(__dirname, '../renderer/index.html'));
+    const source = rendererSource();
+    if (source.kind === 'url') void win.loadURL(source.url);
+    else void win.loadFile(source.file);
     return win;
   }
 

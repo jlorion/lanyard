@@ -2,6 +2,7 @@
 
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { IPC_CHANNELS, type IpcResponse, type LanyardApi } from '../../shared/ipc';
+import { isRendererUrl } from '../security';
 
 type AnyFn = (...args: unknown[]) => Promise<unknown>;
 
@@ -14,11 +15,10 @@ function lookup(api: LanyardApi, namespace: unknown, method: unknown): AnyFn | n
   return typeof fn === 'function' ? (fn as AnyFn) : null;
 }
 
-/** Only accept calls from our own renderer (file:// in production, the dev server in dev). */
+/** Only accept calls from the top frame of our own renderer page. */
 function trustedSender(event: IpcMainInvokeEvent): boolean {
-  const url = event.senderFrame?.url ?? '';
-  const devUrl = process.env.ELECTRON_RENDERER_URL;
-  return url.startsWith('file://') || (!!devUrl && url.startsWith(devUrl));
+  const frame = event.senderFrame;
+  return !!frame && !frame.parent && isRendererUrl(frame.url);
 }
 
 export function registerIpc(api: LanyardApi): void {

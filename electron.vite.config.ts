@@ -1,6 +1,17 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'electron-vite';
+import type { PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
+
+/**
+ * The CSP in index.html allows what the Vite dev server needs (inline <style>
+ * injection and the HMR websocket). Production builds drop both.
+ */
+const productionCsp: PluginOption = {
+  name: 'lanyard:production-csp',
+  apply: 'build',
+  transformIndexHtml: (html) => html.replace(" 'unsafe-inline'", '').replace(' ws://localhost:*', ''),
+};
 
 export default defineConfig({
   main: {
@@ -23,7 +34,7 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
-    plugins: [react()],
+    plugins: [react(), productionCsp],
     build: {
       // electron-vite leaves output unminified by default; the renderer is the only bundle where size matters.
       minify: true,
