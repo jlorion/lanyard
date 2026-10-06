@@ -1,0 +1,77 @@
+{
+  "name": "ssh-manager",
+  "productName": "SSH Manager",
+  "version": "1.0.0",
+  "description": "Desktop + CLI tool to manage SSH config hosts, keys, the ssh-agent, known_hosts and per-provider git accounts (GitHub, GitLab, Bitbucket, Hugging Face, ...).",
+  "author": "riomar",
+  "license": "MIT",
+  "main": "src/main/index.js",
+  "bin": {
+    "sshm": "bin/sshm.js"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n vite,electron -c magenta,cyan \"vite\" \"wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
+    "build": "vite build",
+    "start": "vite build && electron .",
+    "icons": "node scripts/make-icons.js",
+    "test": "node --test \"test/**/*.test.js\"",
+    "dist": "vite build && electron-builder",
+    "cli": "node bin/sshm.js"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^6.0.7",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "dev.riomar.sshmanager",
+    "productName": "SSH Manager",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/core/**",
+      "src/main/**",
+      "src/preload/**",
+      "src/cli/**",
+      "bin/**",
+      "dist/renderer/**",
+      "resources/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/cli",
+        "to": "cli"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "resources/icon.png",
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "resources/icon.png",
+      "category": "Development"
+    }
+  }
+}
