@@ -2,6 +2,8 @@
 
 import * as sshConfig from '../ssh-config';
 import * as repo from '../ssh-config/config.repository';
+import * as keys from '../keys/keys.service';
+import { toTilde } from '../config/paths';
 import { run, SshmError } from '../utils/exec';
 import type { ConfigValidation, HostEntry, HostInput, HostOption, TestResult } from '../../shared/types';
 
@@ -38,6 +40,45 @@ export function save(host: HostInput): HostEntry[] {
     repo.save(model, `edit-${host.patterns}`);
   }
   return list();
+}
+
+/** A user-defined (non-managed) host by alias. */
+export function find(alias: string): HostEntry {
+  const host = list().find((h) => !h.managed && h.aliases.includes(alias));
+  if (!host) throw new Error(`No host "${alias}" in your SSH config.`);
+  return host;
+}
+
+/**
+ * Switch the key a host authenticates with. The first IdentityFile line is
+ * rewritten in place (further ones are dropped) and IdentitiesOnly is turned
+ * on so ssh offers exactly this key instead of whatever the agent holds.
+ * Pass null to go back to ssh's default keys.
+ */
+export function setKey(alias: string, keyRef: string | null): HostEntry {
+  const host = find(alias);
+  const keyPath = keyRef ? toTilde(keys.resolve(keyRef)) : null;
+  const isKey = (o: HostOption, k: string) => o.key.toLowerCase() === k;
+
+  let replaced = false;
+  const options: HostOption[] = [];
+  for (const o of host.options) {
+    if (isKey(o, 'identityfile')) {
+      if (keyPath && !replaced) options.push({ key: o.key, value: keyPath });
+      replaced = true;
+    } else if (isKey(o, 'identitiesonly')) {
+      if (keyPath) options.push({ key: o.key, value: 'yes' });
+    } else {
+      options.push(o);
+    }
+  }
+  if (keyPath && !replaced) options.push({ key: 'IdentityFile', value: keyPath });
+  if (keyPath && !options.some((o) => isKey(o, 'identitiesonly'))) options.push({ key: 'IdentitiesOnly', value: 'yes' });
+
+  const model = repo.load();
+  sshConfig.updateHost(model, host.index, host.patterns, { options });
+  repo.save(model, `key-${alias}`);
+  return find(alias);
 }
 
 export function remove(index: number, patterns: string): HostEntry[] {

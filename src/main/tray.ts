@@ -1,13 +1,13 @@
 /**
  * System tray: stays alive while the window is hidden and offers one-click
- * account switching, quick connect and account tests.
+ * account switching, per-host key switching, quick connect and tests.
  */
 
 import { Menu, Notification, Tray, type MenuItemConstructorOptions } from 'electron';
 import * as core from '../core';
 import { appIcon, trayIcon } from './assets';
 import type { MainWindow } from './window';
-import type { ProviderOverview } from '../shared/types';
+import type { HostEntry, KeyInfo, ProviderOverview } from '../shared/types';
 
 export interface TrayDeps {
   window: MainWindow;
@@ -58,7 +58,7 @@ export class TrayController {
         : [{ label: 'No git accounts yet', enabled: false }]),
       { label: 'Test active accounts', enabled: providers.some((p) => p.active), click: () => void this.testActive(providers) },
       { type: 'separator' },
-      { label: 'Quick connect', submenu: this.connectMenu() },
+      { label: 'Hosts', submenu: this.hostsMenu() },
       { type: 'separator' },
       { label: 'Manage hosts…', click: () => window.show('hosts') },
       { label: 'Manage keys…', click: () => window.show('keys') },
@@ -90,18 +90,60 @@ export class TrayController {
     };
   }
 
-  private connectMenu(): MenuItemConstructorOptions[] {
-    let hosts: { alias: string; hostName: string }[] = [];
+  /** One submenu per host: connect, test, and a radio list to switch its SSH key. */
+  private hostsMenu(): MenuItemConstructorOptions[] {
+    let hosts: HostEntry[] = [];
+    let keys: KeyInfo[] = [];
     try {
       hosts = core.hosts.connectable().filter((h) => !h.managed);
+      keys = core.keys.list().filter((k) => k.hasPrivate);
     } catch {
       // unreadable config - the window will show the error
     }
     if (!hosts.length) return [{ label: 'No hosts in ~/.ssh/config', enabled: false }];
-    return hosts.slice(0, 30).map((h) => ({
-      label: h.hostName ? `${h.alias}  →  ${h.hostName}` : h.alias,
-      click: () => this.deps.connect(h.alias),
-    }));
+
+    return hosts.slice(0, 30).map((h): MenuItemConstructorOptions => {
+      const current = keys.find((k) => core.keys.isKeyAt(k, h.identityFile));
+      const keyLabel = current?.name ?? (h.identityFile ? h.identityFile.split(/[\\/]/).pop() : 'default keys');
+      return {
+        label: `${h.alias}  ·  ${keyLabel}`,
+        submenu: [
+          { label: `Connect to ${h.hostName || h.alias}`, click: () => this.deps.connect(h.alias) },
+          { label: 'Test login', click: () => void this.testHost(h.alias) },
+          { type: 'separator' },
+          { label: 'SSH key', enabled: false },
+          ...keys.slice(0, 25).map((k): MenuItemConstructorOptions => ({
+            label: `${k.name}${k.encrypted ? '  🔒' : ''}`,
+            type: 'radio',
+            checked: k === current,
+            click: () => void this.setHostKey(h.alias, k),
+          })),
+          ...(h.identityFile && !current
+            ? [{ label: `${keyLabel} (not in ~/.ssh)`, type: 'radio', checked: true, enabled: false } as MenuItemConstructorOptions]
+            : []),
+          { label: 'SSH default keys', type: 'radio', checked: !h.identityFile, click: () => void this.setHostKey(h.alias, null) },
+        ],
+      };
+    });
+  }
+
+  private async setHostKey(alias: string, key: KeyInfo | null): Promise<void> {
+    try {
+      core.hosts.setKey(alias, key ? key.path : null);
+      notify(alias, key ? `Now uses ${key.name}` : 'Now uses the default SSH keys');
+    } catch (err) {
+      notify(`${alias}: key switch failed`, (err as Error).message);
+    }
+    this.refresh();
+  }
+
+  private async testHost(alias: string): Promise<void> {
+    try {
+      const r = await core.hosts.test(alias);
+      notify(`${r.ok ? '✔' : '✖'} ${alias}`, r.message);
+    } catch (err) {
+      notify(`${alias}: test failed`, (err as Error).message);
+    }
   }
 
   private async switchTo(p: ProviderOverview, name: string | null): Promise<void> {

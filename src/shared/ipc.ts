@@ -71,6 +71,8 @@ export interface SshmApi {
     list(): Promise<HostEntry[]>;
     save(host: HostInput): Promise<HostEntry[]>;
     remove(index: number, patterns: string): Promise<HostEntry[]>;
+    /** Switch the IdentityFile of a host; null returns to ssh's default keys. */
+    setKey(alias: string, keyRef: string | null): Promise<HostEntry>;
     getRaw(): Promise<string>;
     validate(text: string): Promise<ConfigValidation>;
     saveRaw(text: string, options?: { force?: boolean }): Promise<{ saved: boolean }>;

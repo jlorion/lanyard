@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { paths, expandTilde, toTilde } from '../config/paths';
+import { paths, expandTilde, toTilde, samePath } from '../config/paths';
 import { run } from '../utils/exec';
 import { ensureDir, isWin, timestamp } from '../utils/fs-safe';
 import { parsePublicKey, isEncrypted, looksLikePrivateKey } from './key-format';
@@ -67,6 +67,20 @@ export function resolve(ref: string): string {
   const priv = candidate.replace(/\.pub$/, '');
   if (!fs.existsSync(priv) && !fs.existsSync(priv + '.pub')) throw new Error(`Key not found: ${ref}`);
   return priv;
+}
+
+/** Does an IdentityFile value (any spelling: ~, quotes, slashes, case on Windows) point at this key? */
+export function isKeyAt(key: KeyInfo, identityFile: string): boolean {
+  return !!identityFile && !!key.path && samePath(key.path, identityFile);
+}
+
+/** Normalise a key reference for ssh_config ("~/.ssh/name") when the file exists. */
+export function configPath(ref: string): string {
+  try {
+    return toTilde(resolve(ref));
+  } catch {
+    return ref;
+  }
 }
 
 export function get(ref: string): KeyInfo {

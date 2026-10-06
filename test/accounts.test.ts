@@ -58,6 +58,25 @@ describe('hosts', () => {
     expect(core.hosts.list().some((h) => h.alias === 'db')).toBe(false);
   });
 
+  it('switches the key of a host in place and enforces IdentitiesOnly', async () => {
+    await core.keys.generate({ name: 'id_a' });
+    await core.keys.generate({ name: 'id_b' });
+    core.hosts.save({ patterns: 'srv', options: [{ key: 'HostName', value: 'srv.local' }, { key: 'IdentityFile', value: '~/old' }, { key: 'User', value: 'me' }] });
+
+    let srv = core.hosts.setKey('srv', 'id_a');
+    expect(srv.options.map((o) => o.key)).toEqual(['HostName', 'IdentityFile', 'User', 'IdentitiesOnly']);
+    expect(srv.identityFile).toMatch(/\/id_a$/);
+
+    srv = core.hosts.setKey('srv', 'id_b');
+    expect(srv.identityFile).toMatch(/\/id_b$/);
+    expect(srv.options.filter((o) => o.key === 'IdentitiesOnly')).toHaveLength(1);
+
+    srv = core.hosts.setKey('srv', null);
+    expect(srv.options.map((o) => o.key)).toEqual(['HostName', 'User']);
+    expect(() => core.hosts.setKey('srv', 'id_missing')).toThrow(/not found/);
+    core.hosts.remove(srv.index, 'srv');
+  });
+
   it('validates configs with OpenSSH', async () => {
     expect((await core.hosts.validate('Host a\n  HostName b\n')).ok).toBe(true);
     expect((await core.hosts.validate('Host a\n  NotARealOption yes\n')).ok).toBe(false);

@@ -43,7 +43,7 @@ function withHostOptions(cmd: Command): Command {
 }
 
 /** Merge CLI flags into an option list, replacing keys that are set. */
-function mergeOptions(existing: HostOption[], o: HostFlags): HostOption[] {
+function mergeOptions(existing: HostOption[], o: HostFlags, configPath: (ref: string) => string): HostOption[] {
   const options = existing.map((x) => ({ ...x }));
   const set = (key: string, value: string) => {
     const i = options.findIndex((x) => x.key.toLowerCase() === key.toLowerCase());
@@ -54,6 +54,9 @@ function mergeOptions(existing: HostOption[], o: HostFlags): HostOption[] {
     const v = o[flag];
     if (typeof v === 'string') set(key, v);
   }
+  // Store keys as "~/.ssh/name" no matter how the shell expanded the argument.
+  const identity = options.find((x) => x.key.toLowerCase() === 'identityfile');
+  if (identity && o.key) identity.value = configPath(identity.value);
   for (const kv of o.option ?? []) {
     const m = kv.match(/^([A-Za-z]+)\s*[= ]\s*(.+)$/);
     if (!m) throw new Error(`Bad option "${kv}". Use Key=Value.`);
@@ -106,7 +109,7 @@ export const register: CommandModule = (program, core) => {
 
   withHostOptions(hosts.command('add <alias>').description('add a host'))
     .action(out.action((alias: string, o: HostFlags) => {
-      core.hosts.save({ patterns: alias, options: mergeOptions([], o), comment: o.comment });
+      core.hosts.save({ patterns: alias, options: mergeOptions([], o, core.keys.configPath), comment: o.comment });
       out.ok(`Added host ${c.bold(alias)}`);
     }));
 
@@ -119,7 +122,7 @@ export const register: CommandModule = (program, core) => {
         index: h.index,
         originalPatterns: h.patterns,
         patterns: o.rename ?? h.patterns,
-        options: mergeOptions(h.options, o),
+        options: mergeOptions(h.options, o, core.keys.configPath),
         comment: o.comment,
       });
       out.ok(`Updated host ${c.bold(o.rename ?? alias)}`);
@@ -133,6 +136,26 @@ export const register: CommandModule = (program, core) => {
       assertUserHost(h);
       core.hosts.remove(h.index, h.patterns);
       out.ok(`Removed host ${alias}`);
+    }));
+
+  hosts
+    .command('key <alias> [key]')
+    .description('show or switch the SSH key a host uses (sets IdentityFile + IdentitiesOnly)')
+    .option('--default', 'remove IdentityFile so ssh falls back to its default keys')
+    .action(out.action((alias: string, key: string | undefined, o: { default?: boolean }) => {
+      if (!key && !o.default) {
+        const h = core.hosts.find(alias);
+        const keys = core.keys.list().filter((k) => k.hasPrivate);
+        const current = keys.find((k) => core.keys.isKeyAt(k, h.identityFile));
+        out.emit({ alias, identityFile: h.identityFile || null, key: current?.name ?? null, available: keys.map((k) => k.name) }, () => {
+          out.print(`${c.bold(alias)} uses ${h.identityFile ? c.green(current?.name ?? h.identityFile) : c.dim('the default SSH keys')}`, '');
+          for (const k of keys) out.print(`  ${k === current ? c.green('●') : ' '} ${k.name} ${c.dim(k.type)}`);
+          out.print('', c.dim(`Switch with: sshm hosts key ${alias} <key>`));
+        });
+        return;
+      }
+      const h = core.hosts.setKey(alias, o.default ? null : key!);
+      out.emit(h, () => out.ok(`${alias} now uses ${h.identityFile || 'the default SSH keys'}`));
     }));
 
   hosts

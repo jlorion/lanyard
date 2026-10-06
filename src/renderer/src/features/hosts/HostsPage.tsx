@@ -12,6 +12,7 @@ import { SearchInput } from '../../components/ui/SearchInput';
 import { HostEditorModal } from './HostEditorModal';
 import { ResolveModal } from './ResolveModal';
 import { RawConfigEditor } from './RawConfigEditor';
+import { HostKeySwitcher } from './HostKeySwitcher';
 import type { HostEntry } from '../../../../shared/types';
 
 function target(h: HostEntry): string {
@@ -22,6 +23,8 @@ function target(h: HostEntry): string {
 export function HostsPage() {
   const [view, setView] = useState<'list' | 'raw'>('list');
   const { data: hosts = [], error, loading } = useResource(() => api.hosts.list(), ['config']);
+  const { data: allKeys = [] } = useResource(() => api.keys.list(), ['keys']);
+  const keys = allKeys.filter((k) => k.hasPrivate);
   const [query, setQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [editing, setEditing] = useState<HostEntry | 'new' | null>(null);
@@ -88,7 +91,7 @@ export function HostsPage() {
                   <tr>
                     <th>Host</th>
                     <th>Target</th>
-                    <th>Key</th>
+                    <th>SSH key</th>
                     <th className="actions" />
                   </tr>
                 </thead>
@@ -104,7 +107,11 @@ export function HostsPage() {
                         {h.comment && <div className="faint truncate" style={{ maxWidth: 360 }}>{h.comment}</div>}
                       </td>
                       <td className="host-target selectable">{target(h)}</td>
-                      <td className="mono faint truncate" style={{ maxWidth: 260 }} title={h.identityFile}>{h.identityFile.split(/[\/]/).pop()}</td>
+                      <td>
+                        {h.managed || h.isPattern
+                          ? <span className="mono faint">{h.identityFile.split(/[\\/]/).pop()}</span>
+                          : <HostKeySwitcher host={h} keys={keys} />}
+                      </td>
                       <td className="actions">
                         <div className="row">
                           {!h.isPattern && !h.managed && (

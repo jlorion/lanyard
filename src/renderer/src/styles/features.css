@@ -246,3 +246,9 @@
   transform: translateX(16px);
 }
 
+.key-switcher {
+  width: 230px;
+  height: 28px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}

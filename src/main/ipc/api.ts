@@ -56,6 +56,7 @@ export function createApi(ctx: ApiContext): SshmApi {
       list: async () => core.hosts.list(),
       save: async (host) => core.hosts.save(host),
       remove: async (index, patterns) => core.hosts.remove(index, patterns),
+      setKey: async (alias, keyRef) => core.hosts.setKey(alias, keyRef),
       getRaw: async () => core.hosts.getRaw(),
       validate: (text) => core.hosts.validate(text),
       saveRaw: (text, options) => core.hosts.saveRaw(text, options),
