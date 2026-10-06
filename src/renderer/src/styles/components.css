@@ -394,6 +394,20 @@ table.table {
   -webkit-app-region: no-drag; /* overlays must not inherit the title bar's drag region */
 }
 
+/*
+ * Dialogs dim the window below the title bar only: the title bar (and the
+ * native window buttons drawn over it, which cannot be dimmed) stay as they
+ * are. Its controls are disabled while a dialog is open; dragging still works.
+ */
+.modal-backdrop,
+.palette-backdrop {
+  top: var(--topbar-height) !important;
+}
+
+:root:has(.modal-backdrop, .palette-backdrop) :is(.topbar, .brand) :is(button, input, a) {
+  pointer-events: none;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
