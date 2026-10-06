@@ -73,6 +73,10 @@ function bootstrap(): void {
   });
 }
 
+// A separate profile (single-instance lock, window state) lets a sandboxed
+// instance - with LANYARD_SSH_DIR / LANYARD_HOME - run beside your real one.
+if (process.env.LANYARD_USER_DATA) app.setPath('userData', process.env.LANYARD_USER_DATA);
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {

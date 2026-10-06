@@ -750,9 +750,14 @@ table.table {
   cursor: pointer;
 }
 
-.action-menu-item svg {
+.action-menu-item > svg,
+.action-menu-item > .monogram {
   flex-shrink: 0;
   margin-top: 1px; /* align with the first line of the label */
+}
+
+/* Only plain icons are faded; provider logos keep their brand colours. */
+.action-menu-item > svg {
   color: var(--text-faint);
 }
 
@@ -763,7 +768,7 @@ table.table {
 }
 
 .action-menu-item.danger,
-.action-menu-item.danger svg {
+.action-menu-item.danger > svg {
   color: var(--danger);
 }
 

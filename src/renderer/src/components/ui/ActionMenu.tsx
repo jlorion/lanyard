@@ -17,11 +17,14 @@ export interface ActionItem {
  * <body> with fixed positioning so table clipping can't cut it off, and flips
  * upward when there is no room below.
  */
-export function ActionMenu({ items, busy, label = 'Actions' }: {
+export function ActionMenu({ items, busy, label = 'Actions', trigger, triggerClassName }: {
   items: ActionItem[];
   /** Show a spinner on the button while one of the actions runs. */
   busy?: boolean;
   label?: string;
+  /** Custom button content (defaults to a "..." icon). */
+  trigger?: ReactNode;
+  triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -77,7 +80,7 @@ export function ActionMenu({ items, busy, label = 'Actions' }: {
       <button
         ref={buttonRef}
         type="button"
-        className={`btn btn-ghost btn-sm btn-icon action-menu-trigger${open ? ' open' : ''}`}
+        className={`${triggerClassName ?? 'btn btn-ghost btn-sm btn-icon'} action-menu-trigger${open ? ' open' : ''}`}
         aria-label={label}
         title={label}
         aria-haspopup="menu"
@@ -87,7 +90,7 @@ export function ActionMenu({ items, busy, label = 'Actions' }: {
           setOpen((o) => !o);
         }}
       >
-        {busy ? <LoaderCircle size={15} className="spin" /> : <MoreHorizontal size={16} />}
+        {busy ? <LoaderCircle size={15} className="spin" /> : trigger ?? <MoreHorizontal size={16} />}
       </button>
       {open && createPortal(
         <div

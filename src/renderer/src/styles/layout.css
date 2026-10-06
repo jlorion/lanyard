@@ -224,10 +224,30 @@
 }
 
 .identity-chips {
+  position: relative;
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
+  gap: 6px; /* keep in sync with CHIP_GAP in Topbar.tsx */
+  min-width: 0;
+}
+
+/* Invisible copy of every chip, used only to measure how many fit. */
+.identity-measure {
+  position: absolute;
+  top: 0;
+  right: 0;
   display: flex;
   gap: 6px;
-  min-width: 0;
-  margin-left: auto;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.identity-more {
+  justify-content: center;
+  min-width: 34px;
+  padding: 0 10px;
+  color: var(--text-muted);
 }
 
 .identity-chip {
@@ -255,7 +275,7 @@
   border-radius: 50%;
 }
 
-.identity-chip > span:last-child {
+.identity-chip:not(.identity-more) > span:last-child {
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -267,7 +287,7 @@
     padding: 0 4px;
   }
 
-  .identity-chip > span:last-child {
+  .identity-chip:not(.identity-more) > span:last-child {
     display: none;
   }
 }
