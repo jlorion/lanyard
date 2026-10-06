@@ -75,8 +75,8 @@ The installer runs `Lanyard.exe --install-cli`, which writes small launcher scri
 
 ```bash
 lanyard status                                   # active account per provider
-lanyard accounts add github work --generate --git-email me@work.com --set-git-identity
-lanyard accounts add github personal --key ~/.ssh/id_ed25519
+lanyard accounts add github work --generate --git-name "Jane Doe" --git-email jane@work.com --set-git-identity
+lanyard accounts add github personal --key ~/.ssh/id_ed25519 --git-name "Jane Doe" --git-email jane@personal.dev
 lanyard use github personal                      # switch
 lanyard test --all                               # ssh -T every account
 git clone $(lanyard url github work https://github.com/acme/app)

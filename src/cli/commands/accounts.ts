@@ -94,8 +94,8 @@ export const register: CommandModule = (program, core) => {
     generate?: boolean;
     type: KeyType;
     passphrase: string;
-    gitName?: string;
-    gitEmail?: string;
+    gitName: string;
+    gitEmail: string;
     setGitIdentity?: boolean;
     activate?: boolean;
   }
@@ -106,8 +106,8 @@ export const register: CommandModule = (program, core) => {
     .option('-g, --generate', 'generate a new key for this account')
     .option('-t, --type <type>', 'key type for --generate: ed25519 | rsa | ecdsa', 'ed25519')
     .option('-N, --passphrase <passphrase>', 'passphrase for --generate', '')
-    .option('--git-name <name>', 'git user.name for this account')
-    .option('--git-email <email>', 'git user.email for this account')
+    .requiredOption('--git-name <name>', 'git user.name for commits made as this account')
+    .requiredOption('--git-email <email>', 'git user.email for commits made as this account (also the key comment)')
     .option('--set-git-identity', 'set the global git identity when this account becomes active')
     .option('--activate', 'make it the active account right away')
     .action(out.action(async (provider: string, name: string, o: AddOpts) => {

@@ -11,6 +11,7 @@ process.env.LANYARD_HOME = path.join(sandbox, '.lanyard');
 
 const core = await import('../src/core');
 
+const ME = { gitName: 'Jane Doe', gitEmail: 'jane@example.com' };
 const USER_CONFIG = 'IdentityFile ~/.ssh/id_global\n\nHost box\n    HostName 1.2.3.4\n';
 const readConfig = () => fs.readFileSync(core.paths.config, 'utf8');
 
@@ -22,11 +23,11 @@ afterAll(() => fs.rmSync(sandbox, { recursive: true, force: true }));
 
 describe('accounts', () => {
   it('adds accounts, switches between them and keeps user config intact', async () => {
-    const work = await core.accounts.add({ provider: 'github', name: 'work', generate: { type: 'ed25519' } });
+    const work = await core.accounts.add({ provider: 'github', name: 'work', generate: { type: 'ed25519' }, ...ME });
     expect(work.publicKey).toMatch(/^ssh-ed25519 /);
     expect(work.account.active).toBe(true); // first account becomes active
 
-    await core.accounts.add({ provider: 'github', name: 'personal', generate: { type: 'ed25519' } });
+    await core.accounts.add({ provider: 'github', name: 'personal', generate: { type: 'ed25519' }, ...ME });
     let cfg = readConfig();
     expect(cfg).toMatch(/Host github\.com\n {4}User git\n {4}IdentityFile \S+\/id_ed25519_github_work\n/);
     expect(cfg).toMatch(/Host github\.com-personal\n {4}HostName github\.com/);
@@ -45,6 +46,26 @@ describe('accounts', () => {
     await core.accounts.remove('github', 'work');
     expect(readConfig()).toBe(USER_CONFIG); // managed section disappears with the last account
     expect(core.keys.list().map((k) => k.name)).toEqual(['id_ed25519_github_work']);
+  });
+});
+
+describe('account identity', () => {
+  it('requires a git user.name and a valid user.email', async () => {
+    const base = { provider: 'github', name: 'x', keyPath: 'id_ed25519_github_work' };
+    await expect(core.accounts.add({ ...base })).rejects.toThrow(/user\.name is required/);
+    await expect(core.accounts.add({ ...base, gitName: 'Jane' })).rejects.toThrow(/valid git user\.email/);
+    await expect(core.accounts.add({ ...base, gitName: 'Jane', gitEmail: 'not-an-email' })).rejects.toThrow(/valid git user\.email/);
+    expect(core.accounts.list('github').some((a) => a.name === 'x')).toBe(false); // nothing half-created
+  });
+
+  it('accepts no-reply addresses, trims input, and refuses blanking on edit', async () => {
+    const r = await core.accounts.add({
+      provider: 'github', name: 'noreply', keyPath: 'id_ed25519_github_work',
+      gitName: '  Jane  ', gitEmail: ' 12345+jane@users.noreply.github.com ',
+    });
+    expect(r.account).toMatchObject({ gitName: 'Jane', gitEmail: '12345+jane@users.noreply.github.com' });
+    await expect(core.accounts.update('github', 'noreply', { gitEmail: '' })).rejects.toThrow(/valid git user\.email/);
+    await core.accounts.remove('github', 'noreply');
   });
 });
 

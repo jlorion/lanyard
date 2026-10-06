@@ -19,6 +19,7 @@ import * as gitService from '../git/git.service';
 import { toAliasUrl } from '../git/remote-url';
 import { toTilde, samePath } from '../config/paths';
 import { run } from '../utils/exec';
+import { isValidEmail } from '../../shared/validation';
 import type { State } from '../state/store';
 import type { Provider } from '../providers';
 import type { ManagedEntry } from '../ssh-config';
@@ -40,6 +41,19 @@ import type {
 } from '../../shared/types';
 
 const NAME_RE = /^[a-z0-9][a-z0-9._-]*$/i;
+
+/**
+ * Every account carries the commit identity it should be used with - the SSH
+ * key decides who can push, user.name / user.email who the commits say wrote
+ * them - so both are required.
+ */
+function validateIdentity(gitName: string | undefined, gitEmail: string | undefined): { gitName: string; gitEmail: string } {
+  const name = (gitName ?? '').trim();
+  const email = (gitEmail ?? '').trim();
+  if (!name) throw new Error('A git user.name is required for the account.');
+  if (!isValidEmail(email)) throw new Error('A valid git user.email is required for the account (e.g. you@example.com).');
+  return { gitName: name, gitEmail: email };
+}
 const PROVIDER_ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 
 // ---------------------------------------------------------------- rendering
@@ -150,6 +164,7 @@ export async function add(input: AddAccountInput): Promise<AddAccountResult> {
   const p = providers.getProvider(state, input.provider);
   const name = (input.name ?? '').trim();
   if (!NAME_RE.test(name)) throw new Error('Account name may only contain letters, digits, ".", "_" and "-".');
+  const identity = validateIdentity(input.gitName, input.gitEmail);
   if (state.accounts.some((a) => a.provider === p.id && a.name === name)) {
     throw new Error(`${p.name} already has an account named "${name}".`);
   }
@@ -161,7 +176,7 @@ export async function add(input: AddAccountInput): Promise<AddAccountResult> {
     const key = await keys.generate({
       name: input.generate.fileName || `id_${type}_${p.id}_${name}`,
       type,
-      comment: input.generate.comment || input.gitEmail || `${name}@${providers.primaryHost(p)}`,
+      comment: input.generate.comment || identity.gitEmail,
       passphrase: input.generate.passphrase ?? '',
     });
     keyPath = key.tildePath;
@@ -176,8 +191,8 @@ export async function add(input: AddAccountInput): Promise<AddAccountResult> {
     provider: p.id,
     name,
     keyPath,
-    gitName: input.gitName ?? '',
-    gitEmail: input.gitEmail ?? '',
+    gitName: identity.gitName,
+    gitEmail: identity.gitEmail,
     setGitIdentity: !!input.setGitIdentity,
     createdAt: new Date().toISOString(),
   };
@@ -205,8 +220,11 @@ export async function update(providerId: string, name: string, patch: UpdateAcco
     account.id = `${providerId}:${patch.name}`;
   }
   if (patch.keyPath) account.keyPath = toTilde(keys.resolve(patch.keyPath));
-  if (patch.gitName !== undefined) account.gitName = patch.gitName;
-  if (patch.gitEmail !== undefined) account.gitEmail = patch.gitEmail;
+  if (patch.gitName !== undefined || patch.gitEmail !== undefined) {
+    const identity = validateIdentity(patch.gitName ?? account.gitName, patch.gitEmail ?? account.gitEmail);
+    account.gitName = identity.gitName;
+    account.gitEmail = identity.gitEmail;
+  }
   if (patch.setGitIdentity !== undefined) account.setGitIdentity = patch.setGitIdentity;
   store.save(state);
   sync(state, `edit-${providerId}-${account.name}`);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { UserPlus, UserPen } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useTask } from '../../hooks/useTask';
@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { Checkbox, Field, Input, RequiredMark, Segmented, Select } from '../../components/ui/Field';
 import { Callout } from '../../components/ui/Feedback';
 import { KeySelect } from '../../components/domain/KeySelect';
+import { isValidEmail } from '../../../../shared/validation';
 import type { AccountView, AddAccountResult, KeyType, ProviderOverview } from '../../../../shared/types';
 
 const NAME_RE = /^[a-z0-9][a-z0-9._-]*$/i;
@@ -29,7 +30,15 @@ export function AccountFormModal(props: Props) {
   const [passphrase, setPassphrase] = useState('');
   const [gitName, setGitName] = useState(editing?.gitName ?? '');
   const [gitEmail, setGitEmail] = useState(editing?.gitEmail ?? '');
-  const [setGitIdentity, setSetGitIdentity] = useState(editing?.setGitIdentity ?? false);
+  // On by default: the commit identity is what makes switching accounts complete.
+  const [setGitIdentity, setSetGitIdentity] = useState(editing?.setGitIdentity ?? true);
+  const [touched, setTouched] = useState<{ gitName?: boolean; gitEmail?: boolean }>({});
+
+  // Your name is usually the same on every account, so start from the global git config.
+  useEffect(() => {
+    if (editing) return;
+    api.git.identity().then((id) => setGitName((current) => current || id.name), () => {});
+  }, [editing]);
   const selected = providers.find((p) => p.id === provider);
   const [activate, setActivate] = useState(!selected?.active);
 
@@ -44,7 +53,9 @@ export function AccountFormModal(props: Props) {
   const fileCheck = useKeyNameCheck(keyFile, generating && nameValid);
   const fileFree = !!fileCheck && fileCheck.valid && !fileCheck.exists;
 
-  const canSubmit = nameValid && (generating ? fileFree : !!keyPath);
+  const gitNameValid = gitName.trim().length > 0;
+  const gitEmailValid = isValidEmail(gitEmail);
+  const canSubmit = nameValid && gitNameValid && gitEmailValid && (generating ? fileFree : !!keyPath);
 
   const submit = async () => {
     if (!canSubmit) return;
@@ -153,11 +164,34 @@ export function AccountFormModal(props: Props) {
           </Field>
         )}
 
-        <Field label="Git user.name">
-          <Input value={gitName} placeholder="Jane Doe" onChange={(e) => setGitName(e.target.value)} />
+        <Field
+          label="Git user.name"
+          required
+          hint="Shown as the author of commits made with this account"
+          error={touched.gitName && !gitNameValid ? 'Enter the name to put on your commits' : undefined}
+        >
+          <Input
+            value={gitName}
+            placeholder="Jane Doe"
+            onChange={(e) => setGitName(e.target.value)}
+            onBlur={() => setTouched((t) => ({ ...t, gitName: true }))}
+          />
         </Field>
-        <Field label="Git user.email" hint={keySource === 'generate' && !editing ? 'Also used as the key comment' : undefined}>
-          <Input type="email" value={gitEmail} placeholder="jane@company.com" onChange={(e) => setGitEmail(e.target.value)} />
+        <Field
+          label="Git user.email"
+          required
+          hint={`An email verified on this ${selected?.name ?? ''} account (or its no-reply address)${generating ? ' - also the key comment' : ''}`}
+          error={touched.gitEmail && !gitEmailValid
+            ? (gitEmail.trim() ? "That doesn't look like an email address" : 'Enter the email to put on your commits')
+            : undefined}
+        >
+          <Input
+            type="email"
+            value={gitEmail}
+            placeholder="jane@company.com"
+            onChange={(e) => setGitEmail(e.target.value)}
+            onBlur={() => setTouched((t) => ({ ...t, gitEmail: true }))}
+          />
         </Field>
 
         <div className="full stack" style={{ gap: 10 }}>
