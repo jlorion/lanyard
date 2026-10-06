@@ -198,8 +198,8 @@
 .identity-chips {
   display: flex;
   gap: 6px;
+  min-width: 0;
   margin-left: auto;
-  overflow: hidden;
 }
 
 .identity-chip {
@@ -223,7 +223,25 @@
 }
 
 .identity-chip .monogram {
+  flex-shrink: 0;
   border-radius: 50%;
+}
+
+.identity-chip > span:last-child {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Narrow windows: chips shrink to just the provider mark (name stays in the tooltip). */
+@media (max-width: 1100px) {
+  .identity-chip {
+    padding: 0 4px;
+  }
+
+  .identity-chip > span:last-child {
+    display: none;
+  }
 }
 
 .main {

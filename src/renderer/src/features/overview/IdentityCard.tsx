@@ -43,20 +43,26 @@ export function IdentityCard({ provider: p }: { provider: ProviderOverview }) {
         disabled={isBusy('use')}
         onChange={(e) => void switchTo(e.target.value)}
       >
-        {p.accounts.map((a) => <option key={a.id} value={a.name}>{a.name}{a.gitEmail ? ` · ${a.gitEmail}` : ''}</option>)}
+        {p.accounts.map((a) => <option key={a.id} value={a.name}>{a.name}</option>)}
         <option value={NONE}>No active account</option>
       </select>
+      <div className="identity-email faint truncate" title={active?.gitEmail}>
+        {active?.gitEmail || (active ? 'no git email set' : ' ')}
+      </div>
 
       <div className="identity-foot">
         {last ? (
-          <span className={last.ok ? 'test-ok' : 'test-fail'}>
+          <span className={`identity-status ${last.ok ? 'test-ok' : 'test-fail'}`} title={last.message}>
             {last.ok ? <CircleCheck size={14} /> : <CircleAlert size={14} />}
-            {last.ok ? (last.username ? `verified as ${last.username}` : 'verified') : 'last test failed'} · {timeAgo(last.at)}
+            <span className="truncate">
+              {last.ok ? (last.username ? `verified as ${last.username}` : 'verified') : 'last test failed'} · {timeAgo(last.at)}
+            </span>
           </span>
         ) : (
-          <span className="faint">{active ? 'not tested yet' : 'plain URLs use default keys'}</span>
+          <span className="identity-status faint">
+            <span className="truncate">{active ? 'not tested yet' : 'plain URLs use default keys'}</span>
+          </span>
         )}
-        <span className="spacer" />
         {active && (
           <Button size="sm" variant="ghost" icon={<Activity size={14} />} loading={isBusy('test')} onClick={() => void test()}>
             Test

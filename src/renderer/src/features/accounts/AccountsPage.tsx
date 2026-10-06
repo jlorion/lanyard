@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Activity, Building2, GitBranch, Plus, X } from 'lucide-react';
+import { Activity, Building2, ChevronsDownUp, ChevronsUpDown, GitBranch, Plus, X } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useResource } from '../../hooks/useResource';
 import { useTask } from '../../hooks/useTask';
@@ -11,6 +11,7 @@ import { PublicKeyModal } from '../../components/domain/PublicKeyModal';
 import { ProviderMark } from '../../components/domain/ProviderMark';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useIntent } from '../../app/navigation';
+import { usePersistentState } from '../../hooks/usePersistentState';
 import { ProviderCard } from './ProviderCard';
 import { AccountFormModal } from './AccountFormModal';
 import { ProviderFormModal } from './ProviderFormModal';
@@ -30,9 +31,14 @@ export function AccountsPage() {
   const toast = useToast();
   const confirm = useConfirm();
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  const [collapsed, setCollapsed] = usePersistentState<Record<string, boolean>>('lanyard.accounts.collapsed', {});
+  const setProviderCollapsed = (id: string, value: boolean) => setCollapsed((c) => ({ ...c, [id]: value }));
   useIntent('add-account', () => setDialog({ kind: 'add' }));
 
   const withAccounts = providers.filter((p) => p.accounts.length);
+  const allCollapsed = withAccounts.length > 0 && withAccounts.every((p) => collapsed[p.id]);
+  const setAllCollapsed = (value: boolean) =>
+    setCollapsed(Object.fromEntries(withAccounts.map((p) => [p.id, value])));
   const available = providers.filter((p) => !p.accounts.length);
 
   const test = async (a: AccountView) => {
@@ -85,6 +91,15 @@ export function AccountsPage() {
         description={<>Switch which key <code>git@github.com</code>, <code>hf.co</code>, <code>gitlab.com</code>… use. Every account also gets its own alias host, so several accounts can be used side by side.</>}
         actions={(
           <>
+            {withAccounts.length > 1 && (
+              <Button
+                variant="ghost"
+                icon={allCollapsed ? <ChevronsUpDown size={15} /> : <ChevronsDownUp size={15} />}
+                onClick={() => setAllCollapsed(!allCollapsed)}
+              >
+                {allCollapsed ? 'Expand all' : 'Collapse all'}
+              </Button>
+            )}
             {withAccounts.some((p) => p.active) && <Button icon={<Activity size={15} />} onClick={testActive}>Test active</Button>}
             <Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'add' })}>Add account</Button>
           </>
@@ -109,6 +124,8 @@ export function AccountsPage() {
           <ProviderCard
             key={p.id}
             provider={p}
+            collapsed={!!collapsed[p.id]}
+            onToggle={() => setProviderCollapsed(p.id, !collapsed[p.id])}
             isBusy={isBusy}
             onAdd={() => setDialog({ kind: 'add', provider: p.id })}
             onOpenKeys={() => void run('open', () => api.app.openExternal(p.keysUrl))}
@@ -151,6 +168,7 @@ export function AccountsPage() {
           initialProvider={dialog.provider}
           onClose={() => setDialog(null)}
           onCreated={(result) => {
+            setProviderCollapsed(result.account.provider, false);
             const provider = providers.find((p) => p.id === result.account.provider)!;
             if (result.publicKey) setDialog({ kind: 'created', result, provider });
             else {
