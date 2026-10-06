@@ -5,10 +5,13 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { app, clipboard, dialog, nativeTheme, shell } from 'electron';
 import * as core from '../../core';
-import type { AppInfo, LanyardApi } from '../../shared/ipc';
+import { toolVersions } from '../../core/utils/tool-versions';
+import pkg from '../../../package.json';
+import type { AboutInfo, AppInfo, LanyardApi } from '../../shared/ipc';
 import type { MainWindow } from '../window';
 import * as cliInstall from '../cli-install';
 
@@ -127,6 +130,16 @@ export function createApi(ctx: ApiContext): LanyardApi {
         const { cmd, args } = core.agent.interactiveAddCommand(ref);
         openInTerminal(cmd, args, 'ssh-add');
       },
+      about: async (): Promise<AboutInfo> => ({
+        name: pkg.productName,
+        version: app.getVersion(),
+        description: pkg.description,
+        license: pkg.license,
+        runtime: { electron: process.versions.electron, chrome: process.versions.chrome, node: process.versions.node },
+        os: `${os.type()} ${os.release()} (${os.arch()})`,
+        tools: await toolVersions(),
+        packaged: app.isPackaged,
+      }),
       cliStatus: () => cliInstall.status(),
       installCli: () => cliInstall.install(),
       uninstallCli: () => cliInstall.uninstall(),

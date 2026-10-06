@@ -60,7 +60,9 @@ export function Sidebar({ version }: { version: string }) {
 
       <div className="sidebar-footer">
         <ThemeSwitcher />
-        <span className="sidebar-version">v{version}</span>
+        <button type="button" className="sidebar-version" title="About Lanyard" onClick={() => navigate('settings', 'about')}>
+          v{version}
+        </button>
       </div>
     </aside>
   );

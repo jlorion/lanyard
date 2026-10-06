@@ -55,6 +55,18 @@ export interface AppInfo {
   cliHint: string;
 }
 
+/** Settings > About: what this build is and what it runs on. */
+export interface AboutInfo {
+  name: string;
+  version: string;
+  description: string;
+  license: string;
+  runtime: { electron: string; chrome: string; node: string };
+  os: string;
+  tools: { ssh: string | null; git: string | null };
+  packaged: boolean;
+}
+
 export interface CliInstallStatus {
   /** `lanyard` / `lny` launchers exist in binDir. */
   installed: boolean;
@@ -129,6 +141,8 @@ export interface LanyardApi {
   };
   app: {
     info(): Promise<AppInfo>;
+    /** Versions and environment for Settings > About (slower: runs ssh -V / git --version). */
+    about(): Promise<AboutInfo>;
     openExternal(url: string): Promise<void>;
     copy(text: string): Promise<void>;
     pickDirectory(): Promise<string | null>;

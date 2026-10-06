@@ -133,8 +133,18 @@
 }
 
 .sidebar-version {
+  padding: 2px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-faint);
   font-size: 12px;
+  cursor: pointer;
+}
+
+.sidebar-version:hover {
+  background: var(--sidebar-hover);
+  color: var(--text);
 }
 
 .theme-switcher {

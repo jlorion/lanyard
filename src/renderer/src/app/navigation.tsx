@@ -6,7 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { isPageId, type PageId } from './pages';
 
-export type Intent = 'add-account' | 'add-host' | 'generate-key' | 'scan-host' | 'raw-config';
+export type Intent = 'add-account' | 'add-host' | 'generate-key' | 'scan-host' | 'raw-config' | 'about';
 
 interface Navigation {
   page: PageId;

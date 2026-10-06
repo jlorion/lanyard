@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useResource } from '../../hooks/useResource';
@@ -12,6 +12,8 @@ import type { ThemeMode } from '../../lib/appearance';
 import { PageHeader } from '../../components/ui/Feedback';
 import { Switch } from '../../components/ui/Switch';
 import { CommandLineSection } from './CommandLineSection';
+import { AboutSection } from './AboutSection';
+import { useIntent } from '../../app/navigation';
 import type { Settings } from '../../../../shared/types';
 
 const WINDOWS_OPENSSH = 'C:/Windows/System32/OpenSSH/ssh.exe';
@@ -31,6 +33,9 @@ function Row({ title, description, children }: { title: string; description?: Re
 
 export function SettingsPage() {
   const info = useAppInfo();
+  // The version in the sidebar footer opens Settings scrolled to About.
+  const [focusAbout, setFocusAbout] = useState(false);
+  useIntent('about', () => setFocusAbout(true));
   const settings = useResource(() => api.settings.get(), ['state']);
   const identity = useResource(() => api.git.identity());
   const { run } = useTask();
@@ -129,6 +134,9 @@ export function SettingsPage() {
           </Row>
         ))}
       </div>
+
+      <div className="section-title">About</div>
+      <AboutSection focus={focusAbout} onFocused={() => setFocusAbout(false)} />
     </>
   );
 }
