@@ -4,7 +4,7 @@ import { api } from '../../lib/api';
 import { useTask } from '../../hooks/useTask';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { Checkbox, Field, Input } from '../../components/ui/Field';
+import { Checkbox, Field, Input, RequiredMark } from '../../components/ui/Field';
 import { Callout, CodeBlock } from '../../components/ui/Feedback';
 import type { AccountView, RepoRewriteResult } from '../../../../shared/types';
 
@@ -44,9 +44,12 @@ export function RepoModal({ account, onClose }: { account: AccountView; onClose:
       <div className="stack" style={{ gap: 18 }}>
         <section className="stack">
           <h3 style={{ fontSize: 14 }}>Clone with this account</h3>
-          <div className="row">
-            <Input mono value={repoUrl} placeholder="https://github.com/acme/app or git@github.com:acme/app.git" onChange={(e) => setRepoUrl(e.target.value)} />
-            <Button icon={<ArrowRight size={15} />} disabled={!repoUrl} loading={isBusy('convert')} onClick={convert}>Convert</Button>
+          <div className="field">
+            <span className="field-label">Repository URL<RequiredMark /></span>
+            <div className="row">
+              <Input mono aria-required value={repoUrl} placeholder="https://github.com/acme/app or git@github.com:acme/app.git" onChange={(e) => setRepoUrl(e.target.value)} />
+              <Button icon={<ArrowRight size={15} />} disabled={!repoUrl} loading={isBusy('convert')} onClick={convert}>Convert</Button>
+            </div>
           </div>
           {aliasUrl && (
             <>
@@ -63,13 +66,13 @@ export function RepoModal({ account, onClose }: { account: AccountView; onClose:
           <h3 style={{ fontSize: 14 }}>Switch an existing repository</h3>
           <p className="muted">Rewrites the remote to <code>{account.alias}</code> so this repo always uses this account, regardless of which one is active.</p>
           <div className="form-grid">
-            <Field label="Repository folder" className="full">
+            <Field label="Repository folder" required className="full">
               <div className="row">
                 <Input mono value={dir} placeholder="C:\code\my-repo" onChange={(e) => setDir(e.target.value)} />
                 <Button iconOnly title="Browse" icon={<FolderOpen size={15} />} onClick={browse} />
               </div>
             </Field>
-            <Field label="Remote">
+            <Field label="Remote" required>
               <Input mono value={remote} onChange={(e) => setRemote(e.target.value)} />
             </Field>
             <div className="field" style={{ justifyContent: 'flex-end' }}>

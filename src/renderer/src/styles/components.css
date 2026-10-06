@@ -839,3 +839,9 @@ table.table {
   margin: 5px 6px;
   background: var(--border);
 }
+
+.field-required {
+  margin-left: 3px;
+  color: var(--danger);
+  font-weight: 700;
+}

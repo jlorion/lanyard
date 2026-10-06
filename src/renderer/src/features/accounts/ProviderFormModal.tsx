@@ -38,7 +38,7 @@ export function ProviderFormModal({ onClose }: { onClose: () => void }) {
       )}
     >
       <div className="form-grid">
-        <Field label="SSH hostname" className="full" hint="For example git.company.com">
+        <Field label="SSH hostname" required className="full" hint="For example git.company.com">
           <Input mono value={hostname} onChange={(e) => setHostname(e.target.value.trim())} />
         </Field>
         <Field label="Display name">
@@ -53,7 +53,7 @@ export function ProviderFormModal({ onClose }: { onClose: () => void }) {
         <Field label="Port" hint="Leave empty for 22">
           <Input mono value={port} inputMode="numeric" onChange={(e) => setPort(e.target.value.replace(/\D/g, ''))} />
         </Field>
-        <Field label="SSH keys page (optional)" className="full">
+        <Field label="SSH keys page" className="full">
           <Input mono value={keysUrl} placeholder="https://git.company.com/-/user_settings/ssh_keys" onChange={(e) => setKeysUrl(e.target.value.trim())} />
         </Field>
       </div>

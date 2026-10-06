@@ -72,7 +72,7 @@ export function HostEditorModal({ host, onClose }: { host: HostEntry | null; onC
       )}
     >
       <div className="form-grid">
-        <Field label="Alias (Host)" hint="Name you type after ssh. Several aliases or patterns can be space-separated.">
+        <Field label="Alias (Host)" required hint="Name you type after ssh. Several aliases or patterns can be space-separated.">
           <Input mono value={patterns} placeholder="prod-web" onChange={(e) => setPatterns(e.target.value)} />
         </Field>
         <Field label="Comment" hint="Written as # lines above the block">

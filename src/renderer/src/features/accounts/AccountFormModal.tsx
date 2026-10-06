@@ -5,7 +5,7 @@ import { useTask } from '../../hooks/useTask';
 import { useKeyNameCheck } from '../../hooks/useKeyNameCheck';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { Checkbox, Field, Input, Segmented, Select } from '../../components/ui/Field';
+import { Checkbox, Field, Input, RequiredMark, Segmented, Select } from '../../components/ui/Field';
 import { Callout } from '../../components/ui/Feedback';
 import { KeySelect } from '../../components/domain/KeySelect';
 import type { AccountView, AddAccountResult, KeyType, ProviderOverview } from '../../../../shared/types';
@@ -84,7 +84,7 @@ export function AccountFormModal(props: Props) {
       )}
     >
       <div className="form-grid">
-        <Field label="Provider">
+        <Field label="Provider" required>
           <Select
             value={provider}
             disabled={!!editing}
@@ -98,13 +98,14 @@ export function AccountFormModal(props: Props) {
         </Field>
         <Field
           label="Account name"
+          required
           hint={name && !nameValid ? 'Letters, digits, ".", "_" and "-" only' : `Alias host: ${selected?.hostname ?? selected?.hosts[0]}-${name || 'name'}`}
         >
           <Input value={name} placeholder="work, personal…" onChange={(e) => setName(e.target.value.trim())} />
         </Field>
 
         <div className="field full">
-          <span className="field-label">SSH key</span>
+          <span className="field-label">SSH key<RequiredMark /></span>
           {!editing && (
             <Segmented
               value={keySource}
@@ -116,7 +117,7 @@ export function AccountFormModal(props: Props) {
 
         {keySource === 'generate' ? (
           <>
-            <Field label="Key type">
+            <Field label="Key type" required>
               <Select value={keyType} onChange={(e) => setKeyType(e.target.value as KeyType)}>
                 <option value="ed25519">Ed25519 (recommended)</option>
                 <option value="rsa">RSA 4096</option>

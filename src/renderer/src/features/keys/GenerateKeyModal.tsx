@@ -64,14 +64,14 @@ export function GenerateKeyModal({ onClose, onGenerated }: {
       )}
     >
       <div className="form-grid">
-        <Field label="Type">
+        <Field label="Type" required>
           <Select value={type} onChange={(e) => changeType(e.target.value as KeyType)}>
             <option value="ed25519">Ed25519 (recommended)</option>
             <option value="rsa">RSA 4096</option>
             <option value="ecdsa">ECDSA P-521</option>
           </Select>
         </Field>
-        <Field label="File name" hint={`Saved in ~/.ssh/${name || '…'}`} error={nameError}>
+        <Field label="File name" required hint={`Saved in ~/.ssh/${name || '…'}`} error={nameError}>
           <Input mono value={name} onChange={(e) => { setNameTouched(true); setName(e.target.value.trim()); }} />
         </Field>
         <Field label="Comment" className="full" hint="Usually your email; shown next to the key on servers and git hosts">

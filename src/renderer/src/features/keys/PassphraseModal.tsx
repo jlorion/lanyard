@@ -36,7 +36,7 @@ export function PassphraseModal({ keyInfo, onClose }: { keyInfo: KeyInfo; onClos
     >
       <div className="stack">
         {keyInfo.encrypted && (
-          <Field label="Current passphrase">
+          <Field label="Current passphrase" required>
             <Input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
           </Field>
         )}

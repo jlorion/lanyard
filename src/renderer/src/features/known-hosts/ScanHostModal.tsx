@@ -46,7 +46,7 @@ export function ScanHostModal({ onClose }: { onClose: () => void }) {
     >
       <div className="stack">
         <div className="form-grid" style={{ gridTemplateColumns: '1fr 120px' }}>
-          <Field label="Host">
+          <Field label="Host" required>
             <Input mono value={host} placeholder="github.com" onChange={(e) => { setHost(e.target.value); setKeys(null); }} />
           </Field>
           <Field label="Port">
