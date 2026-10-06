@@ -77,15 +77,26 @@ export class TrayController {
   private providerMenu(p: ProviderOverview): MenuItemConstructorOptions {
     return {
       label: `${p.name}  ·  ${p.active ?? 'none'}`,
+      // One radio group: Electron starts a new group after a separator and
+      // auto-checks the first item of a group with nothing checked, which made
+      // "none" look selected next to the real active account.
       submenu: [
         ...p.accounts.map((a): MenuItemConstructorOptions => ({
           label: a.name + (a.lastTest?.username ? `  (${a.lastTest.username})` : ''),
           type: 'radio',
           checked: a.active,
-          click: () => void this.switchTo(p, a.name),
+          click: () => {
+            if (!a.active) void this.switchTo(p, a.name);
+          },
         })),
-        { type: 'separator' },
-        { label: 'No active account', type: 'radio', checked: !p.active, click: () => void this.switchTo(p, null) },
+        {
+          label: 'None (use default SSH keys)',
+          type: 'radio',
+          checked: !p.active,
+          click: () => {
+            if (p.active) void this.switchTo(p, null);
+          },
+        },
       ],
     };
   }
@@ -149,7 +160,7 @@ export class TrayController {
   private async switchTo(p: ProviderOverview, name: string | null): Promise<void> {
     try {
       const r = await core.accounts.use(p.id, name);
-      notify(p.name, r.active ? `Now using "${r.active}"${r.gitIdentityApplied ? ' (git identity updated)' : ''}` : 'No active account');
+      notify(p.name, r.active ? `Now using "${r.active}"${r.gitIdentityApplied ? ' (git identity updated)' : ''}` : 'No active account - plain URLs use your default SSH keys');
     } catch (err) {
       notify(`${p.name}: switch failed`, (err as Error).message);
     }
