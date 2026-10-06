@@ -11,8 +11,9 @@
   flex-direction: column;
   min-height: 0;
   padding: 16px 10px 12px;
-  background: linear-gradient(180deg, var(--sidebar-bg-2), var(--sidebar-bg));
-  color: var(--sidebar-text);
+  border-right: 1px solid var(--border);
+  background: var(--sidebar-bg);
+  color: var(--text);
 }
 
 .brand {
@@ -29,7 +30,7 @@
 }
 
 .brand-sub {
-  color: var(--sidebar-muted);
+  color: var(--text-faint);
   font-size: 12px;
 }
 
@@ -44,12 +45,13 @@
 
 .nav-section {
   padding: 0 12px 6px;
-  color: var(--sidebar-muted);
+  color: var(--text-faint);
   font-size: 12px;
   font-weight: 700;
 }
 
 .nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -59,35 +61,52 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--sidebar-muted);
+  color: var(--text-muted);
   font-size: 15px;
   text-align: left;
   cursor: pointer;
 }
 
+.nav-item svg {
+  color: var(--text-faint);
+}
+
 .nav-item:hover {
   background: var(--sidebar-hover);
-  color: var(--sidebar-text);
+  color: var(--text);
 }
 
 .nav-item.active {
-  background: var(--sidebar-active);
-  color: #fff;
+  background: var(--accent-soft);
+  color: var(--text);
   font-weight: 700;
+}
+
+.nav-item.active svg {
+  color: var(--accent);
+}
+
+/* Accent marker on the active page. */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent-solid);
 }
 
 .nav-count {
   margin-left: auto;
   padding: 0 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-3);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 700;
   line-height: 18px;
-}
-
-.nav-item.active .nav-count {
-  background: rgba(255, 255, 255, 0.22);
 }
 
 .sidebar-footer {
@@ -95,19 +114,20 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 6px 0;
-  border-top: 1px solid var(--sidebar-border);
+  border-top: 1px solid var(--border);
 }
 
 .sidebar-version {
-  color: var(--sidebar-muted);
+  color: var(--text-faint);
   font-size: 12px;
 }
 
 .theme-switcher {
   display: inline-flex;
   padding: 2px;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--surface-2);
 }
 
 .theme-switcher button {
@@ -118,17 +138,18 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--sidebar-muted);
+  color: var(--text-faint);
   cursor: pointer;
 }
 
 .theme-switcher button:hover {
-  color: var(--sidebar-text);
+  color: var(--text);
 }
 
 .theme-switcher button.active {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ------------------------------------------------------------ workspace */

@@ -5,11 +5,12 @@ import '@fontsource/lato/latin-400-italic.css';
 import '@fontsource/lato/latin-700.css';
 import '@fontsource/lato/latin-900.css';
 import './styles/index.css';
-import { applyTheme, storedTheme } from './lib/theme';
+import { applyAccent, applyTheme, storedAccent, storedTheme } from './lib/appearance';
 import { App } from './App';
 
-// Apply the theme before the first paint to avoid a light/dark flash.
+// Apply theme and accent before the first paint to avoid a flash of the defaults.
 applyTheme(storedTheme());
+applyAccent(storedAccent());
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

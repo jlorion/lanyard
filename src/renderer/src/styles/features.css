@@ -242,7 +242,7 @@
 }
 
 .switch[aria-checked='true'] {
-  background: var(--accent-strong);
+  background: var(--accent-solid);
 }
 
 .switch[aria-checked='true']::after {
@@ -423,4 +423,33 @@
   .stat-row {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* ------------------------------------------------------------ appearance */
+
+.accent-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.accent-swatch {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.accent-swatch:hover {
+  transform: scale(1.08);
+}
+
+.accent-swatch.selected {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--swatch);
 }

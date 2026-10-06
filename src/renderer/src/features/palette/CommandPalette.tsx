@@ -5,6 +5,7 @@ import { useTask } from '../../hooks/useTask';
 import { useToast } from '../../components/feedback/ToastProvider';
 import { useNavigation } from '../../app/navigation';
 import { useWorkspace } from '../../app/workspace';
+import { useAppearance } from '../../app/appearance';
 import { buildCommands, filterCommands, type PaletteCommand } from './commands';
 
 const MAX_RESULTS = 60;
@@ -12,6 +13,7 @@ const MAX_RESULTS = 60;
 export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: string; onClose: () => void }) {
   const { navigate } = useNavigation();
   const { providers, hosts, keys } = useWorkspace();
+  const { setTheme, setAccent } = useAppearance();
   const { run } = useTask();
   const toast = useToast();
   const [query, setQuery] = useState(initialQuery);
@@ -34,7 +36,9 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
         if (r) (r.ok ? toast.success : toast.error)(`${r.account}: ${r.message}`);
       }
     },
-  }), [providers, hosts, keys, navigate, run, toast]);
+    setTheme,
+    setAccent,
+  }), [providers, hosts, keys, navigate, run, toast, setTheme, setAccent]);
 
   const results = useMemo(() => filterCommands(commands, query).slice(0, MAX_RESULTS), [commands, query]);
 

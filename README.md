@@ -13,7 +13,7 @@ Your SSH identities on a lanyard: a desktop app (Electron + React + TypeScript) 
 - **Overview**: who you are on each git host right now, switchable inline, plus your most-used hosts.
 - **Command palette**: press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> to switch accounts, connect to a host, change a host's key, or jump anywhere.
 - **Shortcuts**: <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>1</kbd>–<kbd>8</kbd> open the pages in sidebar order.
-- **Theme**: system, light or dark, from the bottom of the sidebar. The UI is set in Lato (Slack's UI typeface, bundled locally) with a Monaco / Menlo / Consolas monospace stack.
+- **Appearance**: system, light or dark theme (bottom of the sidebar), and eight accent colours (Settings → Appearance, or type `accent` in the palette). The UI is set in Lato (Slack's UI typeface, bundled locally) with a Monaco / Menlo / Consolas monospace stack.
 
 ## How account switching works
 

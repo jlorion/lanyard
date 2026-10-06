@@ -33,7 +33,8 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent);
+  background: var(--accent-strong);
+  filter: brightness(1.1);
 }
 
 .btn-danger {
@@ -230,7 +231,7 @@
 
 .checkbox input {
   margin: 2px 0 0;
-  accent-color: var(--accent);
+  accent-color: var(--accent-solid);
 }
 
 .form-grid {

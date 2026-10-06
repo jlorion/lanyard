@@ -6,6 +6,7 @@ import { ROUTES } from './app/routes';
 import { AppInfoProvider } from './app/AppInfoContext';
 import { NavigationProvider, useNavigation } from './app/navigation';
 import { WorkspaceProvider } from './app/workspace';
+import { AppearanceProvider } from './app/appearance';
 import { ToastProvider } from './components/feedback/ToastProvider';
 import { ConfirmProvider } from './components/feedback/ConfirmProvider';
 import { Callout } from './components/ui/Feedback';
@@ -65,15 +66,17 @@ export function App() {
 
   return (
     <AppInfoProvider value={info}>
-      <ToastProvider>
-        <ConfirmProvider>
-          <NavigationProvider>
-            <WorkspaceProvider>
-              <Shell info={info} />
-            </WorkspaceProvider>
-          </NavigationProvider>
-        </ConfirmProvider>
-      </ToastProvider>
+      <AppearanceProvider>
+        <ToastProvider>
+          <ConfirmProvider>
+            <NavigationProvider>
+              <WorkspaceProvider>
+                <Shell info={info} />
+              </WorkspaceProvider>
+            </NavigationProvider>
+          </ConfirmProvider>
+        </ToastProvider>
+      </AppearanceProvider>
     </AppInfoProvider>
   );
 }

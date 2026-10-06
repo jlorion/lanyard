@@ -1,12 +1,13 @@
 import type { ComponentType } from 'react';
-import { ArrowRightLeft, KeyRound, Plus, Radar, SquareTerminal, Activity, FileCode2 } from 'lucide-react';
+import { ArrowRightLeft, KeyRound, Plus, Radar, SquareTerminal, Activity, FileCode2, Palette, SunMoon } from 'lucide-react';
+import { ACCENTS, type AccentId, type ThemeMode } from '../../lib/appearance';
 import { ROUTES, type PageId } from '../../app/routes';
 import type { Intent } from '../../app/navigation';
 import type { HostEntry, KeyInfo, ProviderOverview } from '../../../../shared/types';
 
 export interface PaletteCommand {
   id: string;
-  group: 'Switch account' | 'Connect' | 'Host key' | 'Actions' | 'Go to';
+  group: 'Switch account' | 'Connect' | 'Host key' | 'Actions' | 'Appearance' | 'Go to';
   label: string;
   detail?: string;
   icon: ComponentType<{ size?: number }>;
@@ -23,6 +24,8 @@ export interface CommandDeps {
   connect: (alias: string) => Promise<unknown>;
   setHostKey: (alias: string, key: KeyInfo) => Promise<unknown>;
   testActive: () => Promise<unknown>;
+  setTheme: (mode: ThemeMode) => void;
+  setAccent: (accent: AccentId) => void;
 }
 
 export function buildCommands(d: CommandDeps): PaletteCommand[] {
@@ -81,6 +84,13 @@ export function buildCommands(d: CommandDeps): PaletteCommand[] {
     commands.push({ id: `action:${label}`, group: 'Actions', label, icon, keywords, run });
   }
 
+  for (const mode of ['system', 'light', 'dark'] as const) {
+    commands.push({ id: `theme:${mode}`, group: 'Appearance', label: `Theme: ${mode[0].toUpperCase()}${mode.slice(1)}`, icon: SunMoon, keywords: 'dark light mode colour color', run: () => d.setTheme(mode) });
+  }
+  for (const a of ACCENTS) {
+    commands.push({ id: `accent:${a.id}`, group: 'Appearance', label: `Accent: ${a.label}`, icon: Palette, keywords: 'colour color theme', run: () => d.setAccent(a.id) });
+  }
+
   for (const r of ROUTES) {
     commands.push({ id: `goto:${r.id}`, group: 'Go to', label: r.label, icon: r.icon, keywords: 'page open', run: () => d.navigate(r.id) });
   }
@@ -90,7 +100,7 @@ export function buildCommands(d: CommandDeps): PaletteCommand[] {
 /** Every whitespace-separated term must appear somewhere in the command's text. */
 export function filterCommands(commands: PaletteCommand[], query: string): PaletteCommand[] {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!terms.length) return commands.filter((c) => c.group !== 'Host key');
+  if (!terms.length) return commands.filter((c) => c.group !== 'Host key' && c.group !== 'Appearance');
   return commands.filter((c) => {
     const text = `${c.group} ${c.label} ${c.detail ?? ''} ${c.keywords ?? ''}`.toLowerCase();
     return terms.every((t) => text.includes(t));

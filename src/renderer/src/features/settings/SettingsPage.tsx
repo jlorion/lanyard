@@ -5,7 +5,10 @@ import { useResource } from '../../hooks/useResource';
 import { useTask } from '../../hooks/useTask';
 import { useAppInfo } from '../../app/AppInfoContext';
 import { Button } from '../../components/ui/Button';
-import { Input, Select } from '../../components/ui/Field';
+import { Input, Segmented, Select } from '../../components/ui/Field';
+import { AccentPicker } from '../../components/appearance/AccentPicker';
+import { useAppearance } from '../../app/appearance';
+import type { ThemeMode } from '../../lib/appearance';
 import { CodeBlock, PageHeader } from '../../components/ui/Feedback';
 import { Switch } from '../../components/ui/Switch';
 import type { Settings } from '../../../../shared/types';
@@ -40,6 +43,7 @@ export function SettingsPage() {
   const identity = useResource(() => api.git.identity());
   const { run } = useTask();
   const s = settings.data;
+  const { theme, accent, setTheme, setAccent } = useAppearance();
 
   const update = async (patch: Partial<Settings>) => {
     await run('settings', () => api.settings.update(patch));
@@ -56,6 +60,20 @@ export function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" description="Preferences are stored in ~/.lanyard/state.json and shared with the lanyard CLI." />
+
+      <div className="section-title">Appearance</div>
+      <div className="card settings-section">
+        <Row title="Theme" description="Follow the system, or always use light or dark.">
+          <Segmented<ThemeMode>
+            value={theme}
+            onChange={setTheme}
+            options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]}
+          />
+        </Row>
+        <Row title="Accent colour" description="Used for the active page, primary buttons, focus rings and selections.">
+          <AccentPicker value={accent} onChange={setAccent} />
+        </Row>
+      </div>
 
       {s && (
         <>

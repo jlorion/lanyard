@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { Monitor, Moon, Sun } from 'lucide-react';
-import { applyTheme, storedTheme, type ThemeMode } from '../lib/theme';
+import { useAppearance } from './appearance';
+import type { ThemeMode } from '../lib/appearance';
 
 const OPTIONS: { mode: ThemeMode; label: string; icon: typeof Sun }[] = [
   { mode: 'system', label: 'System theme', icon: Monitor },
@@ -9,21 +9,18 @@ const OPTIONS: { mode: ThemeMode; label: string; icon: typeof Sun }[] = [
 ];
 
 export function ThemeSwitcher() {
-  const [mode, setMode] = useState<ThemeMode>(storedTheme);
+  const { theme, setTheme } = useAppearance();
   return (
     <div className="theme-switcher" role="radiogroup" aria-label="Theme">
-      {OPTIONS.map(({ mode: m, label, icon: Icon }) => (
+      {OPTIONS.map(({ mode, label, icon: Icon }) => (
         <button
-          key={m}
+          key={mode}
           type="button"
           role="radio"
-          aria-checked={mode === m}
+          aria-checked={theme === mode}
           title={label}
-          className={mode === m ? 'active' : ''}
-          onClick={() => {
-            setMode(m);
-            applyTheme(m);
-          }}
+          className={theme === mode ? 'active' : ''}
+          onClick={() => setTheme(mode)}
         >
           <Icon size={14} />
         </button>
