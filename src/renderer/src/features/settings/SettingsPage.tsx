@@ -1,0 +1,135 @@
+import type { ReactNode } from 'react';
+import { Copy, FolderOpen } from 'lucide-react';
+import { api } from '../../lib/api';
+import { useResource } from '../../hooks/useResource';
+import { useTask } from '../../hooks/useTask';
+import { useAppInfo } from '../../app/AppInfoContext';
+import { Button } from '../../components/ui/Button';
+import { Input, Select } from '../../components/ui/Field';
+import { CodeBlock, PageHeader } from '../../components/ui/Feedback';
+import { Switch } from '../../components/ui/Switch';
+import type { Settings } from '../../../../shared/types';
+
+const WINDOWS_OPENSSH = 'C:/Windows/System32/OpenSSH/ssh.exe';
+
+const CLI_EXAMPLES = [
+  'status',
+  'use github work',
+  'accounts add github personal --generate --git-email me@example.com',
+  'test --all',
+  'url github work https://github.com/acme/app',
+  'hosts add prod -H 203.0.113.10 -u deploy',
+  'connect prod',
+];
+
+function Row({ title, description, children }: { title: string; description?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="settings-row">
+      <div className="label">
+        <div style={{ fontWeight: 600 }}>{title}</div>
+        {description && <div className="faint">{description}</div>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+export function SettingsPage() {
+  const info = useAppInfo();
+  const settings = useResource(() => api.settings.get(), ['state']);
+  const identity = useResource(() => api.git.identity());
+  const { run } = useTask();
+  const s = settings.data;
+
+  const update = async (patch: Partial<Settings>) => {
+    await run('settings', () => api.settings.update(patch));
+    await settings.reload();
+  };
+
+  const setSshCommand = async (command: string) => {
+    await run('git', () => api.git.setSshCommand(command), command ? 'Git now uses Windows OpenSSH' : 'core.sshCommand removed');
+    await identity.reload();
+  };
+
+  const cli = (args: string) => `${info.cliHint} ${args}`;
+
+  return (
+    <>
+      <PageHeader title="Settings" description="Preferences are stored in ~/.sshm/state.json and shared with the sshm CLI." />
+
+      {s && (
+        <>
+          <div className="section-title">Window &amp; tray</div>
+          <div className="card settings-section">
+            <Row title="Keep running in the tray when closed" description="Closing the window hides it; quit from the tray menu.">
+              <Switch label="Close to tray" checked={s.closeToTray} onChange={(v) => void update({ closeToTray: v })} />
+            </Row>
+            <Row title="Start hidden" description="Launch straight into the tray without opening the window.">
+              <Switch label="Start hidden" checked={s.startHidden} onChange={(v) => void update({ startHidden: v })} />
+            </Row>
+            <Row title="Start at login" description="Starts hidden in the tray when you sign in.">
+              <Switch label="Start at login" checked={s.launchAtLogin} onChange={(v) => void update({ launchAtLogin: v })} />
+            </Row>
+          </div>
+
+          <div className="section-title">Behaviour</div>
+          <div className="card settings-section">
+            <Row title="Terminal" description="Used for Connect and for typing key passphrases.">
+              <Select value={s.terminal} style={{ width: 200 }} onChange={(e) => void update({ terminal: e.target.value })}>
+                {info.terminalChoices.map((t) => <option key={t} value={t}>{t}</option>)}
+              </Select>
+            </Row>
+            <Row title="Backups to keep" description="Per file (config and known_hosts).">
+              <Input
+                type="number"
+                min={1}
+                max={500}
+                defaultValue={s.backupLimit}
+                style={{ width: 100 }}
+                onBlur={(e) => {
+                  const n = Number(e.target.value);
+                  if (n >= 1 && n !== s.backupLimit) void update({ backupLimit: Math.round(n) });
+                }}
+              />
+            </Row>
+          </div>
+        </>
+      )}
+
+      <div className="section-title">Git</div>
+      <div className="card settings-section">
+        <Row title="Global identity" description="Updated on switch for accounts with “set git identity” enabled.">
+          <span className="mono selectable">{identity.data ? `${identity.data.name || '-'} <${identity.data.email || '-'}>` : '…'}</span>
+        </Row>
+        <Row title="core.sshCommand" description={info.platform === 'win32' ? 'Point git at Windows OpenSSH so it shares the Windows ssh-agent service.' : 'Custom ssh binary git uses.'}>
+          <span className="mono faint">{identity.data?.sshCommand || '(default)'}</span>
+          {info.platform === 'win32' && (identity.data?.sshCommand
+            ? <Button size="sm" onClick={() => void setSshCommand('')}>Reset</Button>
+            : <Button size="sm" onClick={() => void setSshCommand(WINDOWS_OPENSSH)}>Use Windows OpenSSH</Button>)}
+        </Row>
+      </div>
+
+      <div className="section-title">Command line</div>
+      <div className="card settings-section">
+        <div className="card-body stack">
+          <p className="muted">Everything here is also available from the <code>sshm</code> CLI. From this installation run:</p>
+          <div className="row">
+            <code className="selectable truncate" style={{ flex: 1 }}>{info.cliHint}</code>
+            <Button size="sm" icon={<Copy size={14} />} onClick={() => run('copy', () => api.app.copy(info.cliHint), 'Copied')}>Copy</Button>
+          </div>
+          <CodeBlock>{CLI_EXAMPLES.map((e) => `sshm ${e}`).join('\n')}</CodeBlock>
+          <p className="faint">Tip: <code>npm link</code> in the project folder puts <code>sshm</code> on your PATH. Use <code>--json</code> for scripting; <code>{cli('--help')}</code> lists every command.</p>
+        </div>
+      </div>
+
+      <div className="section-title">Files</div>
+      <div className="card settings-section">
+        {Object.entries(info.paths).map(([key, path]) => (
+          <Row key={key} title={key} description={<span className="mono selectable">{path}</span>}>
+            <Button size="sm" variant="ghost" iconOnly title="Show in folder" icon={<FolderOpen size={14} />} onClick={() => run('reveal', () => api.app.revealPath(path))} />
+          </Row>
+        ))}
+      </div>
+    </>
+  );
+}

@@ -1,0 +1,248 @@
+/* ------------------------------------------------------------ accounts */
+
+.provider-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.account-list {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius);
+}
+
+.account-row:hover {
+  background: var(--surface-2);
+}
+
+.account-row.active {
+  background: var(--accent-soft);
+}
+
+.account-radio {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.account-radio:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.account-radio:disabled {
+  cursor: default;
+}
+
+.account-row.active .account-radio {
+  color: var(--accent);
+}
+
+.account-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-name {
+  font-weight: 600;
+}
+
+.account-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 12px;
+  min-width: 0;
+}
+
+.account-meta code {
+  color: var(--text-muted);
+}
+
+.test-ok {
+  color: var(--success);
+  white-space: nowrap;
+}
+
+.test-fail {
+  color: var(--danger);
+  white-space: nowrap;
+}
+
+.account-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0.55;
+  transition: opacity 0.12s;
+}
+
+.account-row:hover .account-actions,
+.account-actions:focus-within {
+  opacity: 1;
+}
+
+.provider-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.provider-chip {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.provider-chip > button:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px 0 6px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.provider-chip:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.provider-chip .monogram {
+  border-radius: 50%;
+}
+
+/* ------------------------------------------------------------ hosts */
+
+.host-alias {
+  font-weight: 600;
+}
+
+.host-target {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.raw-editor {
+  min-height: 460px;
+  height: calc(100vh - 280px);
+}
+
+.option-row {
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  gap: 8px;
+}
+
+/* ------------------------------------------------------------ backups */
+
+.split {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.list-item:last-child {
+  border-bottom: 0;
+}
+
+.list-item:hover {
+  background: var(--surface-2);
+}
+
+.list-item.active {
+  background: var(--accent-soft);
+}
+
+/* ------------------------------------------------------------ settings */
+
+.settings-section {
+  margin-bottom: 14px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-row:last-child {
+  border-bottom: 0;
+}
+
+.settings-row .label {
+  flex: 1;
+}
+
+.settings-row .label .faint {
+  font-size: 12px;
+}
+
+.switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+
+.switch[aria-checked='true'] {
+  background: var(--accent-strong);
+}
+
+.switch[aria-checked='true']::after {
+  transform: translateX(16px);
+}
+

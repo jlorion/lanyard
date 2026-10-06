@@ -1,0 +1,152 @@
+import { useState } from 'react';
+import { UserPlus, UserPen } from 'lucide-react';
+import { api } from '../../lib/api';
+import { useTask } from '../../hooks/useTask';
+import { Modal } from '../../components/ui/Modal';
+import { Button } from '../../components/ui/Button';
+import { Checkbox, Field, Input, Segmented, Select } from '../../components/ui/Field';
+import { Callout } from '../../components/ui/Feedback';
+import { KeySelect } from '../../components/domain/KeySelect';
+import type { AccountView, AddAccountResult, KeyType, ProviderOverview } from '../../../../shared/types';
+
+const NAME_RE = /^[a-z0-9][a-z0-9._-]*$/i;
+
+type Props =
+  | { mode: 'create'; providers: ProviderOverview[]; initialProvider?: string; onClose: () => void; onCreated: (r: AddAccountResult) => void }
+  | { mode: 'edit'; providers: ProviderOverview[]; account: AccountView; onClose: () => void };
+
+export function AccountFormModal(props: Props) {
+  const { providers, onClose } = props;
+  const editing = props.mode === 'edit' ? props.account : null;
+  const { run, isBusy } = useTask();
+
+  const [provider, setProvider] = useState(editing?.provider ?? (props.mode === 'create' ? props.initialProvider : undefined) ?? providers[0]?.id ?? 'github');
+  const [name, setName] = useState(editing?.name ?? '');
+  const [keySource, setKeySource] = useState<'generate' | 'existing'>(editing ? 'existing' : 'generate');
+  const [keyPath, setKeyPath] = useState(editing?.keyPath ?? '');
+  const [keyType, setKeyType] = useState<KeyType>('ed25519');
+  const [passphrase, setPassphrase] = useState('');
+  const [gitName, setGitName] = useState(editing?.gitName ?? '');
+  const [gitEmail, setGitEmail] = useState(editing?.gitEmail ?? '');
+  const [setGitIdentity, setSetGitIdentity] = useState(editing?.setGitIdentity ?? false);
+  const selected = providers.find((p) => p.id === provider);
+  const [activate, setActivate] = useState(!selected?.active);
+
+  const nameValid = NAME_RE.test(name);
+  const canSubmit = nameValid && (keySource === 'generate' || !!keyPath);
+
+  const submit = async () => {
+    if (!canSubmit) return;
+    if (props.mode === 'edit') {
+      const ok = await run('save', () => api.accounts.update(props.account.provider, props.account.name, {
+        name, keyPath, gitName, gitEmail, setGitIdentity,
+      }), 'Account updated');
+      if (ok) onClose();
+      return;
+    }
+    const result = await run('save', () => api.accounts.add({
+      provider,
+      name,
+      keyPath: keySource === 'existing' ? keyPath : undefined,
+      generate: keySource === 'generate' ? { type: keyType, passphrase, comment: gitEmail || undefined } : null,
+      gitName,
+      gitEmail,
+      setGitIdentity,
+      activate,
+    }));
+    if (result) props.onCreated(result);
+  };
+
+  return (
+    <Modal
+      title={editing ? `Edit ${editing.providerName} account` : 'Add git account'}
+      icon={editing ? <UserPen size={18} /> : <UserPlus size={18} />}
+      onClose={onClose}
+      onSubmit={submit}
+      footer={(
+        <>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" variant="primary" disabled={!canSubmit} loading={isBusy('save')}>
+            {editing ? 'Save' : keySource === 'generate' ? 'Generate key & add' : 'Add account'}
+          </Button>
+        </>
+      )}
+    >
+      <div className="form-grid">
+        <Field label="Provider">
+          <Select
+            value={provider}
+            disabled={!!editing}
+            onChange={(e) => {
+              setProvider(e.target.value);
+              setActivate(!providers.find((p) => p.id === e.target.value)?.active);
+            }}
+          >
+            {providers.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.hosts[0]})</option>)}
+          </Select>
+        </Field>
+        <Field
+          label="Account name"
+          hint={name && !nameValid ? 'Letters, digits, ".", "_" and "-" only' : `Alias host: ${selected?.hostname ?? selected?.hosts[0]}-${name || 'name'}`}
+        >
+          <Input value={name} placeholder="work, personal…" onChange={(e) => setName(e.target.value.trim())} />
+        </Field>
+
+        <div className="field full">
+          <span className="field-label">SSH key</span>
+          {!editing && (
+            <Segmented
+              value={keySource}
+              onChange={setKeySource}
+              options={[{ value: 'generate', label: 'Generate a new key' }, { value: 'existing', label: 'Use an existing key' }]}
+            />
+          )}
+        </div>
+
+        {keySource === 'generate' ? (
+          <>
+            <Field label="Key type">
+              <Select value={keyType} onChange={(e) => setKeyType(e.target.value as KeyType)}>
+                <option value="ed25519">Ed25519 (recommended)</option>
+                <option value="rsa">RSA 4096</option>
+                <option value="ecdsa">ECDSA P-521</option>
+              </Select>
+            </Field>
+            <Field label="Passphrase" hint="Optional. Keys with a passphrase must be loaded into ssh-agent.">
+              <Input type="password" value={passphrase} autoComplete="new-password" onChange={(e) => setPassphrase(e.target.value)} />
+            </Field>
+            {selected?.keyHint && <div className="full"><Callout tone="warning">{selected.keyHint}</Callout></div>}
+          </>
+        ) : (
+          <Field className="full" hint="Private key file; its .pub must be registered with the provider.">
+            <KeySelect value={keyPath} onChange={setKeyPath} />
+          </Field>
+        )}
+
+        <Field label="Git user.name">
+          <Input value={gitName} placeholder="Jane Doe" onChange={(e) => setGitName(e.target.value)} />
+        </Field>
+        <Field label="Git user.email" hint={keySource === 'generate' && !editing ? 'Also used as the key comment' : undefined}>
+          <Input type="email" value={gitEmail} placeholder="jane@company.com" onChange={(e) => setGitEmail(e.target.value)} />
+        </Field>
+
+        <div className="full stack" style={{ gap: 10 }}>
+          <Checkbox
+            checked={setGitIdentity}
+            onChange={setSetGitIdentity}
+            label="Set the global git identity when this account becomes active"
+            hint="Runs git config --global user.name / user.email on switch."
+          />
+          {!editing && (
+            <Checkbox
+              checked={activate}
+              onChange={setActivate}
+              label={`Make it the active ${selected?.name ?? ''} account`}
+              hint={`Plain ${selected?.user ?? 'git'}@${selected?.hosts[0] ?? ''} URLs will authenticate with this key.`}
+            />
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+}

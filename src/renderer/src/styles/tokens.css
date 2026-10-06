@@ -1,0 +1,68 @@
+/* Design tokens. Dark is the default; light follows the OS preference. */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #0c0e13;
+  --surface: #13161e;
+  --surface-2: #191d27;
+  --surface-3: #212633;
+  --border: #252a37;
+  --border-strong: #343b4c;
+
+  --text: #e7e9ef;
+  --text-muted: #a0a8b8;
+  --text-faint: #6c7486;
+
+  --accent: #8b7cf8;
+  --accent-strong: #7461f2;
+  --accent-soft: rgba(139, 124, 248, 0.14);
+  --accent-text: #ffffff;
+
+  --success: #3ecf8e;
+  --success-soft: rgba(62, 207, 142, 0.13);
+  --danger: #f2706f;
+  --danger-soft: rgba(242, 112, 111, 0.13);
+  --warning: #f4b740;
+  --warning-soft: rgba(244, 183, 64, 0.13);
+
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --font-sans: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+
+  --sidebar-width: 224px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    --bg: #f5f6f9;
+    --surface: #ffffff;
+    --surface-2: #f6f7fa;
+    --surface-3: #eceef3;
+    --border: #e2e5ec;
+    --border-strong: #cdd2dc;
+
+    --text: #161a23;
+    --text-muted: #555e70;
+    --text-faint: #8a92a3;
+
+    --accent: #6d5ae6;
+    --accent-strong: #5b47d6;
+    --accent-soft: rgba(109, 90, 230, 0.1);
+
+    --success: #12a26b;
+    --success-soft: rgba(18, 162, 107, 0.1);
+    --danger: #d64545;
+    --danger-soft: rgba(214, 69, 69, 0.09);
+    --warning: #b7791f;
+    --warning-soft: rgba(183, 121, 31, 0.12);
+
+    --shadow: 0 12px 32px rgba(22, 26, 35, 0.14);
+  }
+}
