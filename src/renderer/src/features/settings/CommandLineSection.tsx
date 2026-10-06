@@ -1,10 +1,10 @@
-import { CircleCheck, Copy, Terminal, Trash2 } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Copy, Terminal } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useResource } from '../../hooks/useResource';
 import { useTask } from '../../hooks/useTask';
-import { useAppInfo } from '../../app/AppInfoContext';
 import { Button } from '../../components/ui/Button';
-import { Callout, CodeBlock } from '../../components/ui/Feedback';
+import { Badge, CodeBlock } from '../../components/ui/Feedback';
 
 const EXAMPLES = [
   'lanyard                      # open this app',
@@ -17,22 +17,32 @@ const EXAMPLES = [
 
 const NPX = 'npx lanyard-ssh status';
 
-/** Settings > Command line: install `lanyard` / `lny` on PATH from the app. */
+/**
+ * Settings > Command line: a reference, not an installer. The Windows
+ * installer adds `lanyard` / `lny` to the PATH; elsewhere this explains the
+ * one command to run.
+ */
 export function CommandLineSection() {
-  const { platform } = useAppInfo();
-  const status = useResource(() => api.app.cliStatus());
-  const { run, isBusy } = useTask();
-  const s = status.data;
+  const { data: s } = useResource(() => api.app.cliStatus());
+  const { run } = useTask();
+  const copy = (text: string) => run('copy', () => api.app.copy(text), 'Copied');
+  const ready = !!s?.installed && s.onPath;
 
-  const install = async () => {
-    const r = await run('install', () => api.app.installCli());
-    if (!r) return;
-    await status.reload();
-  };
-  const uninstall = async () => {
-    await run('uninstall', () => api.app.uninstallCli(), '`lanyard` command removed');
-    await status.reload();
-  };
+  let hint: ReactNode = null;
+  if (s && !ready) {
+    if (!s.packaged) {
+      hint = <>Development build: run <code>npm link</code> in the project folder to get the commands.</>;
+    } else if (s.installed && s.pathHint) {
+      hint = <>Add <span className="mono">{s.binDir}</span> to your PATH: <code className="selectable">{s.pathHint}</code></>;
+    } else if (s.installCommand) {
+      hint = (
+        <span className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
+          Run once to add them: <code className="selectable">{s.installCommand}</code>
+          <Button size="sm" variant="ghost" iconOnly title="Copy" icon={<Copy size={14} />} onClick={() => void copy(s.installCommand!)} />
+        </span>
+      );
+    }
+  }
 
   return (
     <div className="card settings-section">
@@ -42,41 +52,18 @@ export function CommandLineSection() {
             <Terminal size={16} /> <code>lanyard</code> and <code>lny</code> commands
           </div>
           <div className="faint">
-            {s?.installed
-              ? <span className="row" style={{ gap: 5 }}><CircleCheck size={13} style={{ color: 'var(--success)' }} /> Installed in <span className="mono selectable">{s.binDir}</span></span>
-              : 'Use every feature from any terminal. No Node.js or npm required.'}
+            {ready ? 'Added to your PATH when Lanyard was installed - open a new terminal and run lanyard.' : hint}
           </div>
         </div>
-        {s?.installed ? (
-          <>
-            <Button size="sm" loading={isBusy('install')} onClick={() => void install()}>Reinstall</Button>
-            <Button size="sm" variant="ghost" icon={<Trash2 size={14} />} loading={isBusy('uninstall')} onClick={() => void uninstall()}>Uninstall</Button>
-          </>
-        ) : (
-          <Button variant="primary" size="sm" loading={isBusy('install') || status.loading} onClick={() => void install()}>Install command</Button>
-        )}
+        {s && <Badge tone={ready ? 'success' : 'warning'}>{ready ? 'On your PATH' : 'Not on PATH'}</Badge>}
       </div>
 
       <div className="card-body stack">
-        {s?.installed && s.onPath && platform === 'win32' && (
-          <Callout tone="success">Ready. Open a new terminal window and run <code>lanyard</code>; terminals that were already open keep their old PATH.</Callout>
-        )}
-        {s?.installed && !s.onPath && s.pathHint && (
-          <Callout tone="warning">
-            <div><span className="mono">{s.binDir}</span> is not on your PATH yet. Add this line to your shell profile (<code>~/.zshrc</code> or <code>~/.bashrc</code>):</div>
-            <div className="row" style={{ marginTop: 6 }}>
-              <code className="selectable">{s.pathHint}</code>
-              <Button size="sm" variant="ghost" iconOnly title="Copy" icon={<Copy size={14} />} onClick={() => run('copy', () => api.app.copy(s.pathHint!), 'Copied')} />
-            </div>
-          </Callout>
-        )}
-        {status.error && <Callout tone="danger">{status.error}</Callout>}
-
         <CodeBlock>{EXAMPLES.join('\n')}</CodeBlock>
         <div className="row faint" style={{ flexWrap: 'wrap' }}>
           <span>Without installing anything:</span>
           <code className="selectable">{NPX}</code>
-          <Button size="sm" variant="ghost" iconOnly title="Copy" icon={<Copy size={14} />} onClick={() => run('copy-npx', () => api.app.copy(NPX), 'Copied')} />
+          <Button size="sm" variant="ghost" iconOnly title="Copy" icon={<Copy size={14} />} onClick={() => void copy(NPX)} />
           <span>· add <code>--json</code> to any command for scripting.</span>
         </div>
       </div>

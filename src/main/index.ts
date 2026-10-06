@@ -13,6 +13,7 @@ import { applyLaunchAtLogin, HIDDEN_FLAG } from './login-item';
 import { createApi, openInTerminal } from './ipc/api';
 import { registerIpc } from './ipc/register';
 import { buildAppMenu } from './app-menu';
+import * as cliInstall from './cli-install';
 
 const APP_ID = 'dev.riomar.lanyard';
 
@@ -80,7 +81,23 @@ function bootstrap(): void {
 // instance - with LANYARD_SSH_DIR / LANYARD_HOME - run beside your real one.
 if (process.env.LANYARD_USER_DATA) app.setPath('userData', process.env.LANYARD_USER_DATA);
 
-if (!app.requestSingleInstanceLock()) {
+// Installer / uninstaller hooks (build/installer.nsh): put the `lanyard` and
+// `lny` commands on the PATH (or remove them) and exit - no window, no tray.
+// Handled before the single-instance lock so it works while Lanyard is open.
+const cliFlag = process.argv.find((a) => a === '--install-cli' || a === '--uninstall-cli');
+
+if (cliFlag) {
+  void app.whenReady().then(async () => {
+    try {
+      const status = cliFlag === '--install-cli' ? await cliInstall.install() : await cliInstall.uninstall();
+      console.log(`lanyard ${cliFlag}: ${status.installed ? 'installed' : 'removed'} (${status.binDir})`);
+      app.exit(0);
+    } catch (err) {
+      console.error(`lanyard ${cliFlag} failed:`, err);
+      app.exit(1);
+    }
+  });
+} else if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   // Windows ties taskbar icons and notifications to the App User Model ID. The

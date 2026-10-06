@@ -1,6 +1,8 @@
 /**
- * "Install command" (Settings > Command line): puts `lanyard` and `lny` on the
- * user's PATH without npm, the way VS Code installs `code`.
+ * Puts `lanyard` and `lny` on the user's PATH without npm, the way VS Code
+ * installs `code`. The Windows installer runs `Lanyard.exe --install-cli` and
+ * the uninstaller `--uninstall-cli` (build/installer.nsh); on macOS / Linux,
+ * where there is no installer step, Settings shows that command to run once.
  *
  *   Windows       %LOCALAPPDATA%\Lanyard\bin, added to the *user* PATH
  *   macOS/Linux   ~/.local/bin (the conventional per-user bin directory)
@@ -80,6 +82,8 @@ export async function status(): Promise<CliInstallStatus> {
     binDir: dir,
     commands: [...COMMAND_NAMES],
     pathHint: !isWin && !onPath ? `export PATH="$HOME/.local/bin:$PATH"` : undefined,
+    packaged: app.isPackaged,
+    installCommand: app.isPackaged ? `"${process.execPath}" --install-cli` : undefined,
   };
 }
 

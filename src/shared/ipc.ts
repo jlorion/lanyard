@@ -86,6 +86,10 @@ export interface CliInstallStatus {
   commands: string[];
   /** Shell line to add binDir to PATH when it is missing (macOS / Linux). */
   pathHint?: string;
+  /** Installed app (the installer manages the commands) vs. a source checkout. */
+  packaged: boolean;
+  /** Command that (re-)registers the commands, e.g. `"C:\...\Lanyard.exe" --install-cli`. */
+  installCommand?: string;
 }
 
 export interface LanyardApi {
@@ -164,11 +168,8 @@ export interface LanyardApi {
     revealPath(path: string): Promise<void>;
     /** Match native window chrome to the renderer theme. */
     setTheme(mode: 'system' | 'light' | 'dark'): Promise<void>;
-    /** Is the `lanyard` command installed on PATH? */
+    /** Are the `lanyard` / `lny` commands on the PATH? (The installer manages them.) */
     cliStatus(): Promise<CliInstallStatus>;
-    /** Put `lanyard` / `lny` on the PATH (no npm needed). */
-    installCli(): Promise<CliInstallStatus>;
-    uninstallCli(): Promise<CliInstallStatus>;
     /** Pop up the application menu (File, Edit, View, ...) at a point in the window. */
     showAppMenu(x: number, y: number): Promise<void>;
     /** Colour the native window buttons drawn over the custom title bar. */

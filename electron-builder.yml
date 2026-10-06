@@ -20,6 +20,8 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  # Adds / removes the `lanyard` and `lny` commands on the user's PATH.
+  include: build/installer.nsh
 mac:
   target: dmg
   icon: resources/icon.png

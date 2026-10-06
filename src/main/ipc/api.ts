@@ -145,8 +145,6 @@ export function createApi(ctx: ApiContext): LanyardApi {
         if (win) Menu.getApplicationMenu()?.popup({ window: win, x: Math.round(x), y: Math.round(y) });
       },
       cliStatus: () => cliInstall.status(),
-      installCli: () => cliInstall.install(),
-      uninstallCli: () => cliInstall.uninstall(),
       setTheme: async (mode) => {
         nativeTheme.themeSource = mode;
       },
