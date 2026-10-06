@@ -6,6 +6,7 @@ import { useTask } from '../../hooks/useTask';
 import { useConfirm } from '../../components/feedback/ConfirmProvider';
 import { useToast } from '../../components/feedback/ToastProvider';
 import { Button } from '../../components/ui/Button';
+import { ActionMenu } from '../../components/ui/ActionMenu';
 import { Badge, Callout, EmptyState, PageHeader } from '../../components/ui/Feedback';
 import { PublicKeyModal } from '../../components/domain/PublicKeyModal';
 import { shortFingerprint, timeAgo } from '../../lib/format';
@@ -114,18 +115,20 @@ export function KeysPage() {
                         : <span className="faint">-</span>}
                     </td>
                     <td className="actions">
-                      <div className="row">
-                        <Button size="sm" variant="ghost" icon={<Copy size={14} />} loading={isBusy(`pub:${k.name}`)} onClick={() => void showPublic(k)}>Public key</Button>
-                        {k.hasPrivate && (
-                          <>
-                            <Button size="sm" variant="ghost" iconOnly title="Add to ssh-agent" icon={<ShieldPlus size={14} />} onClick={() => void addToAgent(k)} />
-                            <Button size="sm" variant="ghost" iconOnly title={k.encrypted ? 'Change passphrase' : 'Set passphrase'} icon={<Lock size={14} />} onClick={() => setDialog({ kind: 'passphrase', key: k })} />
-                            <Button size="sm" variant="ghost" iconOnly title="Restrict file permissions to you" icon={<ShieldCheck size={14} />} onClick={() => run(`perm:${k.name}`, () => api.keys.fixPermissions(k.tildePath), (r) => r.message)} />
-                          </>
-                        )}
-                        <Button size="sm" variant="ghost" iconOnly title="Show in folder" icon={<FolderOpen size={14} />} onClick={() => run('reveal', () => api.app.revealPath(k.path ?? k.publicPath!))} />
-                        <Button size="sm" variant="ghost" iconOnly danger title="Delete (move to trash)" icon={<Trash2 size={14} />} onClick={() => void remove(k)} />
-                      </div>
+                      <ActionMenu
+                        busy={isBusy(`pub:${k.name}`) || isBusy(`perm:${k.name}`)}
+                        label={`Actions for ${k.name}`}
+                        items={[
+                          { label: 'Show public key', icon: <Copy size={15} />, onSelect: () => void showPublic(k) },
+                          ...(k.hasPrivate ? [
+                            { label: 'Add to ssh-agent', icon: <ShieldPlus size={15} />, onSelect: () => void addToAgent(k) },
+                            { label: k.encrypted ? 'Change passphrase' : 'Set passphrase', icon: <Lock size={15} />, onSelect: () => setDialog({ kind: 'passphrase', key: k }) },
+                            { label: 'Restrict permissions to you', icon: <ShieldCheck size={15} />, onSelect: () => void run(`perm:${k.name}`, () => api.keys.fixPermissions(k.tildePath), (r) => r.message) },
+                          ] : []),
+                          { label: 'Show in folder', icon: <FolderOpen size={15} />, onSelect: () => void run('reveal', () => api.app.revealPath(k.path ?? k.publicPath!)) },
+                          { label: 'Delete (move to trash)', icon: <Trash2 size={15} />, onSelect: () => void remove(k), danger: true, separated: true },
+                        ]}
+                      />
                     </td>
                   </tr>
                 );

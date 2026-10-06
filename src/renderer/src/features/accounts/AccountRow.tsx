@@ -1,5 +1,5 @@
-import { Activity, CircleCheck, Circle, Copy, FolderGit2, Lock, Pencil, Trash2 } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
+import { Activity, ArrowRightLeft, CircleCheck, Circle, Copy, FolderGit2, Lock, Pencil, Trash2 } from 'lucide-react';
+import { ActionMenu } from '../../components/ui/ActionMenu';
 import { Badge } from '../../components/ui/Feedback';
 import { timeAgo } from '../../lib/format';
 import type { AccountView } from '../../../../shared/types';
@@ -52,15 +52,18 @@ export function AccountRow({ account, user, testing, switching, actions }: {
         </div>
       </div>
 
-      <div className="account-actions">
-        <Button size="sm" variant="ghost" icon={<Activity size={14} />} loading={testing} onClick={actions.onTest} title="Test with ssh -T">
-          Test
-        </Button>
-        <Button size="sm" variant="ghost" iconOnly title="Copy public key" icon={<Copy size={14} />} onClick={actions.onCopyKey} />
-        <Button size="sm" variant="ghost" iconOnly title="Clone / switch a repository" icon={<FolderGit2 size={14} />} onClick={actions.onRepo} />
-        <Button size="sm" variant="ghost" iconOnly title="Edit" icon={<Pencil size={14} />} onClick={actions.onEdit} />
-        <Button size="sm" variant="ghost" iconOnly danger title="Remove account" icon={<Trash2 size={14} />} onClick={actions.onRemove} />
-      </div>
+      <ActionMenu
+        busy={testing || switching}
+        label={`Actions for ${account.name}`}
+        items={[
+          ...(account.active ? [] : [{ label: 'Use this account', icon: <ArrowRightLeft size={15} />, onSelect: actions.onUse }]),
+          { label: 'Test (ssh -T)', icon: <Activity size={15} />, onSelect: actions.onTest },
+          { label: 'Copy public key', icon: <Copy size={15} />, onSelect: actions.onCopyKey },
+          { label: 'Clone / switch a repository', icon: <FolderGit2 size={15} />, onSelect: actions.onRepo },
+          { label: 'Edit', icon: <Pencil size={15} />, onSelect: actions.onEdit, separated: true },
+          { label: 'Remove account', icon: <Trash2 size={15} />, onSelect: actions.onRemove, danger: true },
+        ]}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Activity, Eye, GitBranch, Pencil, SquareTerminal, Trash2 } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
+import { ActionMenu, type ActionItem } from '../../components/ui/ActionMenu';
 import { HostKeySwitcher } from '../../components/domain/HostKeySwitcher';
 import { ProviderMark } from '../../components/domain/ProviderMark';
 import type { HostEntry, KeyInfo, ProviderOverview } from '../../../../shared/types';
@@ -21,6 +21,24 @@ function target(h: HostEntry): string {
 
 const fileName = (p: string) => p.split(/[\\/]/).pop() ?? p;
 
+/** Row actions by kind: servers connect, git hosts test, managed rows link to Git accounts. */
+function menuItems(h: HostEntry, a: HostRowActions): ActionItem[] {
+  const items: ActionItem[] = [];
+  if (!h.isPattern && !h.gitProvider) {
+    items.push({ label: 'Connect', icon: <SquareTerminal size={15} />, onSelect: a.onConnect });
+    items.push({ label: 'Test login', icon: <Activity size={15} />, onSelect: a.onTest });
+  }
+  if (h.gitProvider) items.push({ label: 'Test (ssh -T)', icon: <Activity size={15} />, onSelect: a.onTest });
+  if (!h.isPattern) items.push({ label: 'Effective config', icon: <Eye size={15} />, onSelect: a.onResolve });
+  if (h.managed) {
+    items.push({ label: 'Manage in Git accounts', icon: <GitBranch size={15} />, onSelect: a.onManageAccounts, separated: true });
+  } else {
+    items.push({ label: 'Edit', icon: <Pencil size={15} />, onSelect: a.onEdit, separated: items.length > 0 });
+    items.push({ label: 'Remove', icon: <Trash2 size={15} />, onSelect: a.onRemove, danger: true });
+  }
+  return items;
+}
+
 /**
  * One Host block. Managed rows (generated from Git accounts) are read-only.
  * `status` fills the optional Status column (Git hosts table only).
@@ -33,7 +51,6 @@ export function HostRow({ host: h, provider, status, keys, testing, actions }: {
   testing: boolean;
   actions: HostRowActions;
 }) {
-  const canShell = !h.isPattern && !h.gitProvider;
   return (
     <tr>
       <td>
@@ -51,27 +68,7 @@ export function HostRow({ host: h, provider, status, keys, testing, actions }: {
       </td>
       {status !== undefined && <td className="host-status">{status}</td>}
       <td className="actions">
-        <div className="row">
-          {canShell && (
-            <Button size="sm" variant="ghost" icon={<SquareTerminal size={14} />} onClick={actions.onConnect}>Connect</Button>
-          )}
-          {/* Git hosts have no shell, so their primary action is the ssh -T login test. */}
-          {h.gitProvider && (
-            <Button size="sm" variant="ghost" icon={<Activity size={14} />} loading={testing} onClick={actions.onTest}>Test</Button>
-          )}
-          {canShell && (
-            <Button size="sm" variant="ghost" iconOnly title="Test login (BatchMode)" icon={<Activity size={14} />} loading={testing} onClick={actions.onTest} />
-          )}
-          {!h.isPattern && <Button size="sm" variant="ghost" iconOnly title="Effective config (ssh -G)" icon={<Eye size={14} />} onClick={actions.onResolve} />}
-          {h.managed ? (
-            <Button size="sm" variant="ghost" iconOnly title="Manage in Git accounts" icon={<GitBranch size={14} />} onClick={actions.onManageAccounts} />
-          ) : (
-            <>
-              <Button size="sm" variant="ghost" iconOnly title="Edit" icon={<Pencil size={14} />} onClick={actions.onEdit} />
-              <Button size="sm" variant="ghost" iconOnly danger title="Remove" icon={<Trash2 size={14} />} onClick={actions.onRemove} />
-            </>
-          )}
-        </div>
+        <ActionMenu busy={testing} label={`Actions for ${h.alias}`} items={menuItems(h, actions)} />
       </td>
     </tr>
   );

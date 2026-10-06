@@ -88,17 +88,6 @@
   white-space: nowrap;
 }
 
-.account-actions {
-  display: flex;
-  gap: 2px;
-  opacity: 0.55;
-  transition: opacity 0.12s;
-}
-
-.account-row:hover .account-actions,
-.account-actions:focus-within {
-  opacity: 1;
-}
 
 .provider-chips {
   display: flex;
