@@ -45,6 +45,8 @@ export function OverviewPage() {
   const accountCount = withAccounts.reduce((n, p) => n + p.accounts.length, 0);
   // Git hosts are covered by the identity cards; the host list is for servers you open shells on.
   const servers = hosts.filter((h) => !h.gitProvider);
+  const gitHosts = hosts.filter((h) => h.gitProvider);
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
   const go = (page: PageId) => () => navigate(page);
 
   return (
@@ -58,7 +60,13 @@ export function OverviewPage() {
       <div className="stat-row">
         <StatTile icon={<GitBranch size={18} />} label="Git accounts" value={accountCount}
           detail={`${withAccounts.length} provider${withAccounts.length === 1 ? '' : 's'}`} onClick={go('accounts')} />
-        <StatTile icon={<Server size={18} />} label="Hosts" value={hosts.length} detail="in ~/.ssh/config" onClick={go('hosts')} />
+        <StatTile
+          icon={<Server size={18} />}
+          label="Hosts"
+          value={hosts.length}
+          detail={gitHosts.length ? `${plural(servers.length, 'server')} · ${plural(gitHosts.length, 'git host')}` : 'in ~/.ssh/config'}
+          onClick={go('hosts')}
+        />
         <StatTile icon={<KeyRound size={18} />} label="Keys" value={keys.length}
           detail={`${keys.filter((k) => k.encrypted).length} with passphrase`} onClick={go('keys')} />
         <StatTile
@@ -90,7 +98,7 @@ export function OverviewPage() {
       )}
 
       <div className="section-head">
-        <h2>Hosts</h2>
+        <h2>Servers</h2>
         <Button size="sm" variant="ghost" onClick={go('hosts')}>All hosts <ArrowRight size={14} /></Button>
       </div>
       {loading ? <Skeleton rows={3} /> : servers.length ? (
@@ -110,10 +118,16 @@ export function OverviewPage() {
       ) : (
         <EmptyState
           icon={<Server size={30} />}
-          title="No hosts yet"
-          action={<Button icon={<Plus size={15} />} onClick={() => navigate('hosts', 'add-host')}>Add host</Button>}
+          title="No servers yet"
+          action={<Button icon={<Plus size={15} />} onClick={() => navigate('hosts', 'add-host')}>Add server</Button>}
         >
-          Save servers you connect to and give each one its own key.
+          {gitHosts.length ? (
+            <>
+              {gitHosts.map((h, i) => <span key={h.alias}>{i ? ', ' : ''}<code>{h.alias}</code></span>)}
+              {gitHosts.length === 1 ? ' is a git host' : ' are git hosts'}, so {gitHosts.length === 1 ? 'it lives' : 'they live'} under
+              Identities above (git hosts have no shell to connect to). Add a server you SSH into to connect to it from here.
+            </>
+          ) : 'Save servers you connect to and give each one its own key.'}
         </EmptyState>
       )}
     </>
