@@ -1,7 +1,7 @@
 /** Terminal output helpers: colors, tables, JSON mode and error handling. */
 
 const useColor = !!process.stdout.isTTY && !process.env.NO_COLOR;
-const paint = (code: string) => (s: unknown) => (useColor ? `\x1b[${code}m${s}\x1b[0m` : String(s));
+const paint = (code: string) => (s: string | number) => (useColor ? `\x1b[${code}m${s}\x1b[0m` : String(s));
 
 export const c = {
   bold: paint('1'),
@@ -13,6 +13,7 @@ export const c = {
   cyan: paint('36'),
 };
 
+// eslint-disable-next-line no-control-regex -- matching ANSI escape sequences is the point
 const ANSI = /\x1b\[[0-9;]*m/g;
 const width = (s: string) => s.replace(ANSI, '').length;
 
@@ -31,11 +32,16 @@ export function emit<T>(data: T, human: (data: T) => void): void {
   else human(data);
 }
 
-export interface Column<T> {
-  key: keyof T & string;
-  label: string;
-  format?: (value: any, row: T) => unknown;
-}
+/** A table column; `format` receives the cell value typed by its key. */
+export type Column<T> = {
+  [K in keyof T & string]: { key: K; label: string; format?: (value: T[K], row: T) => unknown };
+}[keyof T & string];
+
+const cellText = (v: unknown): string => {
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  return v == null ? '' : JSON.stringify(v);
+};
 
 export function table<T>(rows: T[], columns: Column<T>[]): void {
   if (!rows.length) {
@@ -45,8 +51,8 @@ export function table<T>(rows: T[], columns: Column<T>[]): void {
   const cells = rows.map((r) =>
     columns.map((col) => {
       const raw = r[col.key];
-      const v = col.format ? col.format(raw, r) : raw;
-      return v == null ? '' : String(v);
+      const format = col.format as ((value: unknown, row: T) => unknown) | undefined;
+      return cellText(format ? format(raw, r) : raw);
     }),
   );
   const widths = columns.map((col, i) => Math.max(width(col.label), ...cells.map((row) => width(row[i]))));

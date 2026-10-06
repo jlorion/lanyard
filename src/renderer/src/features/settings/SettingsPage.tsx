@@ -148,7 +148,7 @@ export function SettingsPage() {
 
       <div className="section-title">Files</div>
       <div className="card settings-section">
-        {Object.entries(info.paths).map(([key, path]) => (
+        {(Object.entries(info.paths) as [string, string][]).map(([key, path]) => (
           <Row key={key} title={key} description={<span className="mono selectable">{path}</span>}>
             <Button
               size="sm"

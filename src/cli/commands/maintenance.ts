@@ -26,12 +26,15 @@ export function launchGui(): void {
   // This file is out/main/cli.js, so the project root is two levels up.
   const root = path.resolve(__dirname, '..', '..');
   if (!fs.existsSync(path.join(root, 'out', 'renderer', 'index.html'))) throw new Error(NO_DESKTOP_APP);
-  let electronPath: string;
+  // Resolved at run time: the electron package exports the path of its binary.
+  let electronPath: unknown;
   try {
-    electronPath = require('electron') as unknown as string;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    electronPath = require('electron');
   } catch {
     throw new Error(NO_DESKTOP_APP);
   }
+  if (typeof electronPath !== 'string') throw new Error(NO_DESKTOP_APP);
   detached(electronPath, [root]);
 }
 

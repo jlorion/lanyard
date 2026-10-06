@@ -16,7 +16,7 @@ export const LEGACY_END = '# <<< sshm managed section <<<';
 const QUOTED_KEYS = new Set(['identityfile', 'certificatefile', 'identityagent', 'controlpath']);
 
 /** Quote values that may contain spaces where ssh expects a single token. */
-export function formatValue(key: string, value: unknown): string {
+export function formatValue(key: string, value: string | number | boolean | null | undefined): string {
   const v = String(value ?? '').trim();
   if (QUOTED_KEYS.has(key.toLowerCase()) && /\s/.test(v) && !/^".*"$/.test(v)) return `"${v}"`;
   return v;

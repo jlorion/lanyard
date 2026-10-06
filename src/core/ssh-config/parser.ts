@@ -50,7 +50,7 @@ export function parseBlocks(lines: string[]): { preamble: Line[]; blocks: Block[
 }
 
 export function parse(text = ''): ConfigModel {
-  text = text.replace(/^﻿/, '');
+  text = text.replace(/^\uFEFF/, '');
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
   let lines = text.split(/\r?\n/);
   if (lines.length && lines[lines.length - 1] === '') lines.pop();

@@ -42,7 +42,7 @@ export function load(): State {
   try {
     data = JSON.parse(raw) as Partial<State>;
   } catch (err) {
-    throw new Error(`Could not parse ${paths.state}: ${(err as Error).message}`);
+    throw new Error(`Could not parse ${paths.state}: ${(err as Error).message}`, { cause: err });
   }
   return {
     version: 1,

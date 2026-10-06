@@ -30,7 +30,7 @@ export function run(cmd: string, args: string[] = [], options: RunOptions = {}):
         stdio: 'pipe',
       });
     } catch (err) {
-      reject(err);
+      reject(err instanceof Error ? err : new Error(String(err)));
       return;
     }
     let stdout = '';
@@ -40,10 +40,13 @@ export function run(cmd: string, args: string[] = [], options: RunOptions = {}):
       timedOut = true;
       child.kill();
     }, timeout);
-    child.stdout.on('data', (d: Buffer) => {
+    // Decode as UTF-8 streams so multi-byte characters split across chunks survive.
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (d: string) => {
       stdout += d;
     });
-    child.stderr.on('data', (d: Buffer) => {
+    child.stderr.on('data', (d: string) => {
       stderr += d;
     });
     child.on('error', (err: NodeJS.ErrnoException) => {

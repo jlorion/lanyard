@@ -55,7 +55,7 @@ export function AccountsPage() {
     }
   };
 
-  const use = (p: ProviderOverview, name: string | null) =>
+  const activate = (p: ProviderOverview, name: string | null) =>
     run(
       `use:${p.id}`,
       () => api.accounts.use(p.id, name),
@@ -94,7 +94,7 @@ export function AccountsPage() {
   };
 
   const actionsFor = (p: ProviderOverview) => (a: AccountView) => ({
-    onUse: () => void use(p, a.name),
+    onUse: () => void activate(p, a.name),
     onTest: () => void test(a),
     onCopyKey: () => void run(`copy:${a.id}`, async () => api.app.copy(await api.keys.publicKey(a.keyPath)), 'Public key copied'),
     onRepo: () => setDialog({ kind: 'repo', account: a }),
@@ -163,7 +163,7 @@ export function AccountsPage() {
             isBusy={isBusy}
             onAdd={() => setDialog({ kind: 'add', provider: p.id })}
             onOpenKeys={() => void run('open', () => api.app.openExternal(p.keysUrl))}
-            onDeactivate={() => void use(p, null)}
+            onDeactivate={() => void activate(p, null)}
             actionsFor={actionsFor(p)}
           />
         ))}

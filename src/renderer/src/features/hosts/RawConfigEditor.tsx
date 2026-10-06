@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CheckCircle2, RotateCcw, Save } from 'lucide-react';
 import { api, ApiError } from '../../lib/api';
 import { useResource } from '../../hooks/useResource';
@@ -13,17 +13,14 @@ import { useAppInfo } from '../../app/AppInfoContext';
 export function RawConfigEditor() {
   const { paths } = useAppInfo();
   const { data: saved = '', reload } = useResource(() => api.hosts.getRaw(), ['config']);
-  const [text, setText] = useState(saved);
-  const [dirty, setDirty] = useState(false);
+  // The user's edit, or null to follow the file on disk.
+  const [draft, setDraft] = useState<string | null>(null);
+  const text = draft ?? saved;
+  const dirty = draft !== null;
   const [problem, setProblem] = useState('');
   const { run, isBusy } = useTask();
   const confirm = useConfirm();
   const toast = useToast();
-
-  // Follow changes on disk until the user starts editing.
-  useEffect(() => {
-    if (!dirty) setText(saved);
-  }, [saved, dirty]);
 
   const validate = async () => {
     const r = await run('validate', () => api.hosts.validate(text));
@@ -51,11 +48,11 @@ export function RawConfigEditor() {
       failure = await saveWith(true);
     }
     if (failure) {
-      setProblem(failure instanceof Error ? failure.message : String(failure));
+      setProblem(failure instanceof Error ? failure.message : 'Could not save the SSH config');
       return;
     }
     toast.success('SSH config saved');
-    setDirty(false);
+    setDraft(null);
     setProblem('');
     await reload();
   };
@@ -70,9 +67,8 @@ export function RawConfigEditor() {
             variant="ghost"
             icon={<RotateCcw size={15} />}
             onClick={() => {
-              setDirty(false);
+              setDraft(null);
               setProblem('');
-              setText(saved);
             }}
           >
             Discard
@@ -98,8 +94,7 @@ export function RawConfigEditor() {
         className="raw-editor"
         value={text}
         onChange={(e) => {
-          setText(e.target.value);
-          setDirty(true);
+          setDraft(e.target.value);
         }}
       />
     </div>

@@ -102,8 +102,8 @@ export class TrayController {
 
   /** Servers and git hosts, mirroring the Hosts page (built by tray-hosts-menu.ts). */
   private hostsMenu(providers: ProviderOverview[]): MenuItemConstructorOptions[] {
-    let hosts: HostEntry[] = [];
-    let keys: KeyInfo[] = [];
+    let hosts: HostEntry[];
+    let keys: KeyInfo[];
     try {
       hosts = core.hosts.list();
       keys = core.keys.list().filter((k) => k.hasPrivate);

@@ -7,15 +7,15 @@ import type { KeyNameCheck } from '../../../shared/types';
  * a check is pending so callers can avoid flashing stale results.
  */
 export function useKeyNameCheck(name: string, enabled = true): KeyNameCheck | null {
-  const [result, setResult] = useState<KeyNameCheck | null>(null);
+  // Tagged with the name it answers, so a result for an older name reads as pending.
+  const [result, setResult] = useState<{ name: string; check: KeyNameCheck } | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
-    setResult(null);
     let cancelled = false;
     const timer = setTimeout(() => {
       api.keys.checkName(name).then(
-        (r) => !cancelled && setResult(r),
+        (check) => !cancelled && setResult({ name, check }),
         () => {},
       );
     }, 150);
@@ -25,5 +25,5 @@ export function useKeyNameCheck(name: string, enabled = true): KeyNameCheck | nu
     };
   }, [name, enabled]);
 
-  return enabled ? result : null;
+  return enabled && result?.name === name ? result.check : null;
 }

@@ -156,7 +156,7 @@ export function HostsTable({
 
   const test = async (h: HostEntry) => {
     const r = await run(`test:${rowKey(h)}`, () => api.hosts.test(h.alias));
-    if (r) (r.ok ? toast.success : toast.error)(`${h.alias}: ${r.message}`);
+    if (r) toast[r.ok ? 'success' : 'error'](`${h.alias}: ${r.message}`);
   };
 
   const remove = async (h: HostEntry) => {

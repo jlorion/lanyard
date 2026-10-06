@@ -25,7 +25,7 @@ export function IdentityCard({ provider: p }: { provider: ProviderOverview }) {
 
   const test = async () => {
     const r = await run('test', () => api.accounts.test(p.id));
-    if (r) (r.ok ? toast.success : toast.error)(`${p.name}: ${r.message}${r.hint ? `\n${r.hint}` : ''}`);
+    if (r) toast[r.ok ? 'success' : 'error'](`${p.name}: ${r.message}${r.hint ? `\n${r.hint}` : ''}`);
   };
 
   return (

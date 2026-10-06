@@ -27,7 +27,7 @@ export function registerIpc(api: LanyardApi): void {
     const fn = lookup(api, namespace, method);
     if (!fn) return { ok: false, error: `Unknown method ${String(namespace)}.${String(method)}` };
     try {
-      const data = await fn(...(Array.isArray(args) ? args : []));
+      const data = await fn(...(Array.isArray(args) ? (args as unknown[]) : []));
       return { ok: true, data };
     } catch (err) {
       const e = err as Error & { code?: string };

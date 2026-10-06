@@ -35,7 +35,7 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
           if (!active.length) return toast.info('No active accounts to test');
           for (const p of active) {
             const r = await run(`test:${p.id}`, () => api.accounts.test(p.id));
-            if (r) (r.ok ? toast.success : toast.error)(`${r.account}: ${r.message}`);
+            if (r) toast[r.ok ? 'success' : 'error'](`${r.account}: ${r.message}`);
           }
         },
         setTheme,
@@ -46,7 +46,6 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
 
   const results = useMemo(() => filterCommands(commands, query).slice(0, MAX_RESULTS), [commands, query]);
 
-  useEffect(() => setSelected(0), [query]);
   useEffect(() => {
     listRef.current?.querySelector<HTMLElement>(`[data-index="${selected}"]`)?.scrollIntoView({ block: 'nearest' });
   }, [selected]);
@@ -73,7 +72,6 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
     }
   };
 
-  let lastGroup = '';
   return (
     <div className="palette-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="palette" role="dialog" aria-modal="true" aria-label="Command palette">
@@ -84,7 +82,10 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
             value={query}
             spellCheck={false}
             placeholder="Switch an account, connect to a host, run an action…"
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelected(0);
+            }}
             onKeyDown={onKeyDown}
             role="combobox"
             aria-expanded="true"
@@ -94,8 +95,7 @@ export function CommandPalette({ initialQuery = '', onClose }: { initialQuery?: 
         <div className="palette-list" id="palette-list" role="listbox" ref={listRef}>
           {!results.length && <div className="palette-empty">No matching commands</div>}
           {results.map((c, i) => {
-            const header = c.group !== lastGroup ? c.group : null;
-            lastGroup = c.group;
+            const header = c.group !== results[i - 1]?.group ? c.group : null;
             const Icon = c.icon;
             return (
               <div key={c.id}>
