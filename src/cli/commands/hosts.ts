@@ -182,8 +182,17 @@ export const register: CommandModule = (program, core) => {
     .command('connect <alias> [sshArgs...]')
     .alias('c')
     .description('open an SSH session to a host')
-    .action(out.action((alias: string, sshArgs: string[] = []) => {
+    .action(out.action(async (alias: string, sshArgs: string[] = []) => {
       core.hosts.assertAlias(alias);
+      const provider = core.hosts.gitProviderFor(alias);
+      if (provider && !sshArgs.length) {
+        // Git hosts refuse shells ("PTY allocation request failed"); show the login check instead.
+        out.warn(`${alias} is a ${provider} git host - it has no shell. Testing the login instead:`);
+        const r = await core.hosts.test(alias);
+        out.print(`${r.ok ? c.green('✔') : c.red('✖')} ${alias}: ${r.message}`);
+        if (!r.ok) process.exitCode = 1;
+        return;
+      }
       process.exitCode = interactive('ssh', [alias, ...sshArgs]);
     }));
 };

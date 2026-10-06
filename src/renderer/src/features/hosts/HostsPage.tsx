@@ -15,6 +15,8 @@ import { RawConfigEditor } from './RawConfigEditor';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useIntent } from '../../app/navigation';
 import { HostKeySwitcher } from '../../components/domain/HostKeySwitcher';
+import { ProviderMark } from '../../components/domain/ProviderMark';
+import { useWorkspace } from '../../app/workspace';
 import type { HostEntry } from '../../../../shared/types';
 
 function target(h: HostEntry): string {
@@ -25,6 +27,7 @@ function target(h: HostEntry): string {
 export function HostsPage() {
   const [view, setView] = useState<'list' | 'raw'>('list');
   const { data: hosts = [], error, loading } = useResource(() => api.hosts.list(), ['config']);
+  const { providers } = useWorkspace();
   const { data: allKeys = [] } = useResource(() => api.keys.list(), ['keys']);
   const keys = allKeys.filter((k) => k.hasPrivate);
   const [query, setQuery] = useState('');
@@ -104,7 +107,12 @@ export function HostsPage() {
                     <tr key={`${h.managed ? 'm' : 'u'}${h.index}`}>
                       <td>
                         <div className="row" style={{ gap: 6 }}>
+                          {h.gitProvider && (() => {
+                            const p = providers.find((x) => x.id === h.gitProvider);
+                            return p ? <ProviderMark id={p.id} name={p.name} color={p.color} size={18} /> : null;
+                          })()}
                           <span className="host-alias mono">{h.patterns}</span>
+                          {h.gitProvider && !h.managed && <Badge title="Git hosting: accepts git over SSH, no shell">git host</Badge>}
                           {h.managed && <Badge tone="accent" title="Generated from Git accounts">managed</Badge>}
                           {h.isPattern && <Badge>pattern</Badge>}
                         </div>
@@ -118,12 +126,18 @@ export function HostsPage() {
                       </td>
                       <td className="actions">
                         <div className="row">
-                          {!h.isPattern && !h.managed && (
+                          {!h.isPattern && !h.managed && !h.gitProvider && (
                             <Button size="sm" variant="ghost" icon={<SquareTerminal size={14} />} onClick={() => run(`c:${h.index}`, () => api.app.connect(h.alias))}>
                               Connect
                             </Button>
                           )}
-                          {!h.isPattern && (
+                          {/* Git hosts have no shell, so their primary action is the ssh -T login test. */}
+                          {h.gitProvider && (
+                            <Button size="sm" variant="ghost" icon={<Activity size={14} />} loading={isBusy(`test:${h.managed}:${h.index}`)} onClick={() => void test(h)}>
+                              Test
+                            </Button>
+                          )}
+                          {!h.isPattern && !h.gitProvider && (
                             <Button size="sm" variant="ghost" iconOnly title="Test login (BatchMode)" icon={<Activity size={14} />} loading={isBusy(`test:${h.managed}:${h.index}`)} onClick={() => void test(h)} />
                           )}
                           {!h.isPattern && <Button size="sm" variant="ghost" iconOnly title="Effective config (ssh -G)" icon={<Eye size={14} />} onClick={() => setResolving(h.alias)} />}

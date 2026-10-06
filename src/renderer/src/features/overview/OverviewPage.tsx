@@ -43,6 +43,8 @@ export function OverviewPage() {
 
   const withAccounts = providers.filter((p) => p.accounts.length);
   const accountCount = withAccounts.reduce((n, p) => n + p.accounts.length, 0);
+  // Git hosts are covered by the identity cards; the host list is for servers you open shells on.
+  const servers = hosts.filter((h) => !h.gitProvider);
   const go = (page: PageId) => () => navigate(page);
 
   return (
@@ -91,9 +93,9 @@ export function OverviewPage() {
         <h2>Hosts</h2>
         <Button size="sm" variant="ghost" onClick={go('hosts')}>All hosts <ArrowRight size={14} /></Button>
       </div>
-      {loading ? <Skeleton rows={3} /> : hosts.length ? (
+      {loading ? <Skeleton rows={3} /> : servers.length ? (
         <div className="host-list">
-          {hosts.slice(0, 6).map((h) => (
+          {servers.slice(0, 6).map((h) => (
             <div key={h.index} className="host-row">
               <span className="host-avatar"><Server size={16} /></span>
               <div className="host-main">

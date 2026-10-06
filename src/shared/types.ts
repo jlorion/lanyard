@@ -25,6 +25,12 @@ export interface HostEntry {
   identityFile: string;
   options: HostOption[];
   comment: string;
+  /**
+   * Id of the git provider this host points at (github.com, an account alias,
+   * HostName hf.co, ...). Git hosts accept `ssh -T` but refuse shells, so they
+   * are tested rather than connected to.
+   */
+  gitProvider?: string | null;
 }
 
 export interface HostInput {

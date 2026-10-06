@@ -46,7 +46,7 @@ export function buildCommands(d: CommandDeps): PaletteCommand[] {
     }
   }
 
-  for (const h of d.hosts) {
+  for (const h of d.hosts.filter((x) => !x.gitProvider)) {
     commands.push({
       id: `connect:${h.alias}`,
       group: 'Connect',
@@ -58,7 +58,7 @@ export function buildCommands(d: CommandDeps): PaletteCommand[] {
     });
   }
 
-  for (const h of d.hosts) {
+  for (const h of d.hosts.filter((x) => !x.gitProvider)) {
     for (const k of d.keys) {
       if (h.identityFile && k.path && h.identityFile.replace(/\\/g, '/').endsWith(`/${k.name}`)) continue;
       commands.push({

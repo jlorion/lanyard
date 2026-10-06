@@ -17,12 +17,22 @@ export function assertAlias(alias: string): string {
 }
 
 export function list(): HostEntry[] {
-  return sshConfig.listHosts(repo.load());
+  const state = store.load();
+  return sshConfig.listHosts(repo.load()).map((h) => ({
+    ...h,
+    gitProvider: h.isPattern ? null : providers.findByHost(state, h.alias, h.hostName)?.id ?? null,
+  }));
 }
 
-/** Hosts you can actually connect to (no wildcard patterns). */
+/** Name of the git provider behind an alias (configured or not), or null for a regular server. */
+export function gitProviderFor(alias: string): string | null {
+  const host = list().find((h) => h.aliases.includes(alias));
+  return providers.findByHost(store.load(), alias, host?.hostName)?.name ?? null;
+}
+
+/** Hosts you can open a shell on: no wildcard patterns and no git providers. */
 export function connectable(): HostEntry[] {
-  return list().filter((h) => !h.isPattern);
+  return list().filter((h) => !h.isPattern && !h.gitProvider);
 }
 
 /** Create (index == null) or update a host. */

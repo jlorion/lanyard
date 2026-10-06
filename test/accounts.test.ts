@@ -77,6 +77,22 @@ describe('hosts', () => {
     core.hosts.remove(srv.index, 'srv');
   });
 
+  it('tags git hosts so they are tested rather than connected to', () => {
+    core.hosts.save({ patterns: 'github.com', options: [{ key: 'User', value: 'git' }] });
+    core.hosts.save({ patterns: 'my-gh', options: [{ key: 'HostName', value: 'github.com' }] });
+    core.hosts.save({ patterns: 'srv2', options: [{ key: 'HostName', value: '10.0.0.2' }] });
+
+    const byAlias = Object.fromEntries(core.hosts.list().filter((h) => !h.managed).map((h) => [h.alias, h.gitProvider]));
+    expect(byAlias).toMatchObject({ 'github.com': 'github', 'my-gh': 'github', srv2: null });
+    expect(core.hosts.gitProviderFor('hf.co')).toBe('Hugging Face'); // not in the config at all
+    expect(core.hosts.connectable().map((h) => h.alias)).toEqual(expect.not.arrayContaining(['github.com', 'my-gh']));
+
+    for (const alias of ['github.com', 'my-gh', 'srv2']) {
+      const h = core.hosts.list().find((x) => !x.managed && x.alias === alias)!;
+      core.hosts.remove(h.index, h.patterns);
+    }
+  });
+
   it('reports taken key names and suggests a free one', async () => {
     await core.keys.generate({ name: 'id_taken' });
     fs.writeFileSync(path.join(process.env.LANYARD_SSH_DIR!, 'id_taken_2.pub'), 'ssh-ed25519 AAAA x');
