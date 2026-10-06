@@ -71,7 +71,7 @@ The command is `lanyard` (short alias `lny`). Running it with no arguments opens
 | **`npm install -g lanyard-ssh`** | Node.js 20+ | `lanyard`, `lny` |
 | **From source**: `npm run build`, then `npm link` | this repo | `lanyard`, `lny` |
 
-The in-app installer writes small launcher scripts to `%LOCALAPPDATA%\Lanyardin` (added to your *user* PATH) on Windows, or `~/.local/bin` on macOS/Linux. It only ever touches files it created, and Settings can uninstall them again. The npm package contains just the CLI (about 36 kB); `lanyard` with no arguments explains how to get the desktop app.
+The in-app installer writes small launcher scripts to `%LOCALAPPDATA%\Lanyard\bin` (added to your *user* PATH) on Windows, or `~/.local/bin` on macOS/Linux. It only ever touches files it created, and Settings can uninstall them again. The npm package contains just the CLI (about 36 kB); `lanyard` with no arguments explains how to get the desktop app.
 
 ```bash
 lanyard status                                   # active account per provider
