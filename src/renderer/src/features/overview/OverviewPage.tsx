@@ -37,7 +37,7 @@ function greeting(): string {
 
 export function OverviewPage() {
   const { navigate } = useNavigation();
-  const { providers, hosts, keys, loading } = useWorkspace();
+  const { providers, hosts, allHosts, keys, loading } = useWorkspace();
   const agent = useResource(() => api.agent.status(), ['keys']);
   const { run } = useTask();
 
@@ -46,6 +46,9 @@ export function OverviewPage() {
   // Git hosts are covered by the identity cards; the host list is for servers you open shells on.
   const servers = hosts.filter((h) => !h.gitProvider);
   const gitHosts = hosts.filter((h) => h.gitProvider);
+  // The tile mirrors the Hosts page groups (managed account entries included).
+  const allServers = allHosts.filter((h) => !h.isPattern && !h.gitProvider).length;
+  const allGitHosts = allHosts.filter((h) => !h.isPattern && h.gitProvider).length;
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
   const go = (page: PageId) => () => navigate(page);
 
@@ -63,8 +66,8 @@ export function OverviewPage() {
         <StatTile
           icon={<Server size={18} />}
           label="Hosts"
-          value={hosts.length}
-          detail={gitHosts.length ? `${plural(servers.length, 'server')} · ${plural(gitHosts.length, 'git host')}` : 'in ~/.ssh/config'}
+          value={allHosts.length}
+          detail={allGitHosts ? `${plural(allServers, 'server')} · ${plural(allGitHosts, 'git host')}` : 'in ~/.ssh/config'}
           onClick={go('hosts')}
         />
         <StatTile icon={<KeyRound size={18} />} label="Keys" value={keys.length}

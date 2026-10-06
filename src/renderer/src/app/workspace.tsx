@@ -11,7 +11,10 @@ import type { HostEntry, KeyInfo, ProviderOverview } from '../../../shared/types
 
 interface Workspace {
   providers: ProviderOverview[];
+  /** User-defined, connectable-looking hosts (no managed entries or patterns). */
   hosts: HostEntry[];
+  /** Every Host/Match entry, as listed on the Hosts page. */
+  allHosts: HostEntry[];
   keys: KeyInfo[];
   loading: boolean;
 }
@@ -26,6 +29,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const value: Workspace = {
     providers: providers.data ?? [],
     hosts: (hosts.data ?? []).filter((h) => !h.managed && !h.isPattern),
+    allHosts: hosts.data ?? [],
     keys: (keys.data ?? []).filter((k) => k.hasPrivate),
     loading: providers.loading || hosts.loading || keys.loading,
   };

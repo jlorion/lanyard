@@ -556,3 +556,36 @@
   min-height: 0;
   overflow: hidden;
 }
+
+/* ------------------------------------------------------------ host groups */
+
+.host-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.host-group-head h2 {
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.host-group-head .nav-count {
+  margin-left: 0;
+}
+
+.host-group-head .faint {
+  font-size: 13px;
+}
+
+.host-group-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+}

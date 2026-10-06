@@ -8,11 +8,11 @@ const isMac = navigator.userAgent.includes('Mac');
 
 export function Sidebar({ version }: { version: string }) {
   const { page, navigate } = useNavigation();
-  const { providers, hosts, keys } = useWorkspace();
+  const { providers, allHosts, keys } = useWorkspace();
 
   const counts: Partial<Record<PageId, number>> = {
     accounts: providers.reduce((n, p) => n + p.accounts.length, 0),
-    hosts: hosts.length,
+    hosts: allHosts.length, // same entries the Hosts page lists
     keys: keys.length,
   };
 
