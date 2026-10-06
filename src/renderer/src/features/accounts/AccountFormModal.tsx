@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { UserPlus, UserPen } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useTask } from '../../hooks/useTask';
@@ -33,12 +33,6 @@ export function AccountFormModal(props: Props) {
   // On by default: the commit identity is what makes switching accounts complete.
   const [setGitIdentity, setSetGitIdentity] = useState(editing?.setGitIdentity ?? true);
   const [touched, setTouched] = useState<{ gitName?: boolean; gitEmail?: boolean }>({});
-
-  // Your name is usually the same on every account, so start from the global git config.
-  useEffect(() => {
-    if (editing) return;
-    api.git.identity().then((id) => setGitName((current) => current || id.name), () => {});
-  }, [editing]);
   const selected = providers.find((p) => p.id === provider);
   const [activate, setActivate] = useState(!selected?.active);
 
