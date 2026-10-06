@@ -9,6 +9,8 @@ import { Input } from '../../components/ui/Field';
 import { Badge, Callout, EmptyState, PageHeader } from '../../components/ui/Feedback';
 import { SearchInput } from '../../components/ui/SearchInput';
 import { ScanHostModal } from './ScanHostModal';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { useIntent } from '../../app/navigation';
 import type { KnownHostEntry } from '../../../../shared/types';
 
 export function KnownHostsPage() {
@@ -18,6 +20,7 @@ export function KnownHostsPage() {
   const [query, setQuery] = useState('');
   const [forget, setForget] = useState('');
   const [scanning, setScanning] = useState(false);
+  useIntent('scan-host', () => setScanning(true));
 
   const q = query.toLowerCase();
   const rows = data.filter((e) => !q || e.hostsField.toLowerCase().includes(q) || e.fingerprint.toLowerCase().includes(q));
@@ -61,7 +64,7 @@ export function KnownHostsPage() {
         </div>
       )}
 
-      {!loading && !rows.length ? (
+      {loading ? <Skeleton rows={4} /> : !rows.length ? (
         <EmptyState icon={<Fingerprint size={30} />} title={data.length ? 'No matching entries' : 'known_hosts is empty'} />
       ) : (
         <div className="table-wrap">

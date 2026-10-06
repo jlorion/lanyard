@@ -12,7 +12,9 @@ import { SearchInput } from '../../components/ui/SearchInput';
 import { HostEditorModal } from './HostEditorModal';
 import { ResolveModal } from './ResolveModal';
 import { RawConfigEditor } from './RawConfigEditor';
-import { HostKeySwitcher } from './HostKeySwitcher';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { useIntent } from '../../app/navigation';
+import { HostKeySwitcher } from '../../components/domain/HostKeySwitcher';
 import type { HostEntry } from '../../../../shared/types';
 
 function target(h: HostEntry): string {
@@ -32,6 +34,8 @@ export function HostsPage() {
   const { run, isBusy } = useTask();
   const toast = useToast();
   const confirm = useConfirm();
+  useIntent('add-host', () => { setView('list'); setEditing('new'); });
+  useIntent('raw-config', () => setView('raw'));
 
   const q = query.toLowerCase();
   const visible = hosts
@@ -76,7 +80,7 @@ export function HostsPage() {
             <Checkbox checked={showAll} onChange={setShowAll} label="Show managed entries and patterns" />
           </div>
 
-          {!loading && !visible.length ? (
+          {loading ? <Skeleton rows={4} /> : !visible.length ? (
             <EmptyState
               icon={<Server size={30} />}
               title={hosts.length ? 'No matching hosts' : 'No hosts yet'}

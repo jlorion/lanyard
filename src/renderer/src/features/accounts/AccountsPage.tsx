@@ -9,6 +9,8 @@ import { Button } from '../../components/ui/Button';
 import { Callout, EmptyState, PageHeader } from '../../components/ui/Feedback';
 import { PublicKeyModal } from '../../components/domain/PublicKeyModal';
 import { ProviderMark } from '../../components/domain/ProviderMark';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { useIntent } from '../../app/navigation';
 import { ProviderCard } from './ProviderCard';
 import { AccountFormModal } from './AccountFormModal';
 import { ProviderFormModal } from './ProviderFormModal';
@@ -28,6 +30,7 @@ export function AccountsPage() {
   const toast = useToast();
   const confirm = useConfirm();
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  useIntent('add-account', () => setDialog({ kind: 'add' }));
 
   const withAccounts = providers.filter((p) => p.accounts.length);
   const available = providers.filter((p) => !p.accounts.length);
@@ -89,6 +92,7 @@ export function AccountsPage() {
       />
 
       {error && <Callout tone="danger">{error}</Callout>}
+      {loading && <Skeleton rows={2} height={180} />}
 
       {!loading && !withAccounts.length && (
         <EmptyState

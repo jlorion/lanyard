@@ -12,6 +12,8 @@ import { shortFingerprint, timeAgo } from '../../lib/format';
 import { GenerateKeyModal } from './GenerateKeyModal';
 import { PassphraseModal } from './PassphraseModal';
 import { keyUsage } from './key-usage';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { useIntent } from '../../app/navigation';
 import type { KeyInfo } from '../../../../shared/types';
 
 type Dialog = { kind: 'generate' } | { kind: 'passphrase'; key: KeyInfo } | { kind: 'public'; key: KeyInfo; publicKey: string };
@@ -24,6 +26,7 @@ export function KeysPage() {
   const confirm = useConfirm();
   const toast = useToast();
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  useIntent('generate-key', () => setDialog({ kind: 'generate' }));
 
   const list = keys.data ?? [];
   const usage = keyUsage(list, (accounts.data ?? []).flatMap((p) => p.accounts), hosts.data ?? []);
@@ -71,7 +74,7 @@ export function KeysPage() {
 
       {keys.error && <Callout tone="danger">{keys.error}</Callout>}
 
-      {!keys.loading && !list.length ? (
+      {keys.loading ? <Skeleton rows={4} /> : !list.length ? (
         <EmptyState
           icon={<KeyRound size={30} />}
           title="No SSH keys found"

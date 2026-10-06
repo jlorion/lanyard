@@ -124,6 +124,8 @@ export interface LanyardApi {
     /** Open a terminal running `ssh-add <key>` so the passphrase can be typed. */
     addKeyInTerminal(ref: string): Promise<void>;
     revealPath(path: string): Promise<void>;
+    /** Match native window chrome to the renderer theme. */
+    setTheme(mode: 'system' | 'light' | 'dark'): Promise<void>;
   };
 }
 

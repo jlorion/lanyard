@@ -1,68 +1,90 @@
-/* Design tokens. Dark is the default; light follows the OS preference. */
+/*
+ * Design tokens. The resolved theme ('dark' | 'light') is set on <html data-theme>
+ * by lib/theme.ts, which also follows the OS when the user picks "System".
+ *
+ * Typography follows Slack's app UI: Lato at 400 / 700 / 900 with a
+ * Monaco / Menlo / Consolas monospace stack.
+ */
 
 :root {
-  color-scheme: dark;
+  --font-sans: 'Lato', 'Slack-Lato', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: Monaco, Menlo, Consolas, 'Courier New', monospace;
 
-  --bg: #0c0e13;
-  --surface: #13161e;
-  --surface-2: #191d27;
-  --surface-3: #212633;
-  --border: #252a37;
-  --border-strong: #343b4c;
-
-  --text: #e7e9ef;
-  --text-muted: #a0a8b8;
-  --text-faint: #6c7486;
-
-  --accent: #8b7cf8;
-  --accent-strong: #7461f2;
-  --accent-soft: rgba(139, 124, 248, 0.14);
-  --accent-text: #ffffff;
-
-  --success: #3ecf8e;
-  --success-soft: rgba(62, 207, 142, 0.13);
-  --danger: #f2706f;
-  --danger-soft: rgba(242, 112, 111, 0.13);
-  --warning: #f4b740;
-  --warning-soft: rgba(244, 183, 64, 0.13);
-
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --sidebar-width: 236px;
+  --topbar-height: 52px;
 
-  --font-sans: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
-  --font-mono: 'Cascadia Code', 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
-
-  --sidebar-width: 224px;
+  /* The sidebar keeps its brand colours in both themes. */
+  --sidebar-bg: #1d1842;
+  --sidebar-bg-2: #251f52;
+  --sidebar-text: #f3f1ff;
+  --sidebar-muted: rgba(236, 233, 255, 0.62);
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-active: #6d5af0;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color-scheme: light;
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-    --bg: #f5f6f9;
-    --surface: #ffffff;
-    --surface-2: #f6f7fa;
-    --surface-3: #eceef3;
-    --border: #e2e5ec;
-    --border-strong: #cdd2dc;
+  --bg: #17181c;
+  --surface: #1e1f24;
+  --surface-2: #25262c;
+  --surface-3: #2e3037;
+  --border: #2f3138;
+  --border-strong: #3d4049;
 
-    --text: #161a23;
-    --text-muted: #555e70;
-    --text-faint: #8a92a3;
+  --text: #e8e8ea;
+  --text-muted: #ababb1;
+  --text-faint: #7c7d85;
 
-    --accent: #6d5ae6;
-    --accent-strong: #5b47d6;
-    --accent-soft: rgba(109, 90, 230, 0.1);
+  --accent: #8f7ff7;
+  --accent-strong: #6d5af0;
+  --accent-soft: rgba(143, 127, 247, 0.16);
+  --accent-text: #ffffff;
 
-    --success: #12a26b;
-    --success-soft: rgba(18, 162, 107, 0.1);
-    --danger: #d64545;
-    --danger-soft: rgba(214, 69, 69, 0.09);
-    --warning: #b7791f;
-    --warning-soft: rgba(183, 121, 31, 0.12);
+  --success: #3fc28a;
+  --success-soft: rgba(63, 194, 138, 0.14);
+  --danger: #ef6b6b;
+  --danger-soft: rgba(239, 107, 107, 0.14);
+  --warning: #f2b443;
+  --warning-soft: rgba(242, 180, 67, 0.14);
 
-    --shadow: 0 12px 32px rgba(22, 26, 35, 0.14);
-  }
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --skeleton: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f8f8f8;
+  --surface-3: #efeff1;
+  --border: #e6e6e8;
+  --border-strong: #d2d2d6;
+
+  --text: #1d1c1d;
+  --text-muted: #5e5d60;
+  --text-faint: #8e8d91;
+
+  --accent: #5b47d6;
+  --accent-strong: #5b47d6;
+  --accent-soft: rgba(91, 71, 214, 0.09);
+  --accent-text: #ffffff;
+
+  --success: #007a5a;
+  --success-soft: rgba(0, 122, 90, 0.09);
+  --danger: #d0353b;
+  --danger-soft: rgba(208, 53, 59, 0.08);
+  --warning: #a86500;
+  --warning-soft: rgba(168, 101, 0, 0.1);
+
+  --shadow: 0 16px 40px rgba(29, 28, 29, 0.16);
+  --shadow-sm: 0 1px 3px rgba(29, 28, 29, 0.08);
+  --skeleton: rgba(29, 28, 29, 0.06);
 }

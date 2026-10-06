@@ -8,6 +8,13 @@ Your SSH identities on a lanyard: a desktop app (Electron + React + TypeScript) 
 - **ssh-agent, known_hosts and backups.** Load and unload agent keys, scan and trust host keys, and restore any earlier version of your config.
 - **System tray.** The app keeps running after you close its window. From the tray you can switch accounts, switch a host's key, connect, and run tests.
 
+## Using the app
+
+- **Overview**: who you are on each git host right now, switchable inline, plus your most-used hosts.
+- **Command palette**: press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> to switch accounts, connect to a host, change a host's key, or jump anywhere.
+- **Shortcuts**: <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>1</kbd>–<kbd>8</kbd> open the pages in sidebar order.
+- **Theme**: system, light or dark, from the bottom of the sidebar. The UI is set in Lato (Slack's UI typeface, bundled locally) with a Monaco / Menlo / Consolas monospace stack.
+
 ## How account switching works
 
 The app owns one clearly marked block at the top of `~/.ssh/config`. Everything else in the file is left byte-for-byte untouched:

@@ -6,7 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { app, clipboard, dialog, shell } from 'electron';
+import { app, clipboard, dialog, nativeTheme, shell } from 'electron';
 import * as core from '../../core';
 import type { AppInfo, LanyardApi } from '../../shared/ipc';
 import type { MainWindow } from '../window';
@@ -120,6 +120,9 @@ export function createApi(ctx: ApiContext): LanyardApi {
       addKeyInTerminal: async (ref) => {
         const { cmd, args } = core.agent.interactiveAddCommand(ref);
         openInTerminal(cmd, args, 'ssh-add');
+      },
+      setTheme: async (mode) => {
+        nativeTheme.themeSource = mode;
       },
       revealPath: async (target) => {
         if (!fs.existsSync(target)) throw new Error(`Not found: ${target}`);
