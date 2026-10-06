@@ -12,8 +12,6 @@ export interface ActionItem {
   separated?: boolean;
 }
 
-const MENU_WIDTH = 220;
-
 /**
  * A single "⋯" button that opens a row's actions. The menu is portalled to
  * <body> with fixed positioning so table clipping can't cut it off, and flips
@@ -39,11 +37,11 @@ export function ActionMenu({ items, busy, label = 'Actions' }: {
   useLayoutEffect(() => {
     if (!open || !buttonRef.current || !menuRef.current) return;
     const b = buttonRef.current.getBoundingClientRect();
-    const h = menuRef.current.offsetHeight;
+    const { offsetHeight: h, offsetWidth: w } = menuRef.current; // sized to its longest label
     const below = b.bottom + 4 + h <= window.innerHeight - 8;
     setPos({
       top: below ? b.bottom + 4 : Math.max(8, b.top - 4 - h),
-      left: Math.max(8, Math.min(b.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8)),
+      left: Math.max(8, Math.min(b.right - w, window.innerWidth - w - 8)),
     });
     menuRef.current.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
   }, [open]);
@@ -96,7 +94,7 @@ export function ActionMenu({ items, busy, label = 'Actions' }: {
           ref={menuRef}
           className="action-menu"
           role="menu"
-          style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999, width: MENU_WIDTH }}
+          style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
           onKeyDown={onMenuKey}
         >
           {items.map((item) => (
