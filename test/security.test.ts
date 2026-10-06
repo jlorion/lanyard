@@ -15,8 +15,10 @@ const { openTerminal } = await import('../src/core/terminal/terminal');
 beforeAll(() => fs.mkdirSync(process.env.LANYARD_SSH_DIR!, { recursive: true }));
 afterAll(() => fs.rmSync(sandbox, { recursive: true, force: true }));
 
-describe('passphrases never go on the command line', () => {
-  it('generates an encrypted key and changes its passphrase through stdin', async () => {
+// Linux and macOS type passphrases into ssh-keygen's prompts through stdin;
+// Windows OpenSSH only reads the console, so there they go in -P / -N.
+describe("passphrases stay out of other users' reach", () => {
+  it('generates an encrypted key and changes its passphrase', async () => {
     const key = await core.keys.generate({ name: 'id_secret', passphrase: 'first pass phrase' });
     expect(key.encrypted).toBe(true);
 

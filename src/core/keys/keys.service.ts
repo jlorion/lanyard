@@ -89,6 +89,22 @@ function passphraseInput(answers: string[]) {
 }
 
 /**
+ * How passphrases reach ssh-keygen. On Linux and macOS any local user can read
+ * a process's arguments, so they are typed into its prompts through stdin.
+ * Windows OpenSSH reads prompts from the console only and never from stdin
+ * (it would wait forever), but there a process's command line is readable
+ * only by its owner and administrators, so the -P / -N options are used.
+ */
+function passphraseOptions(oldPassphrase: string | null, newPassphrase: string) {
+  if (isWin) {
+    const args = oldPassphrase == null ? [] : ['-P', oldPassphrase];
+    return { args: [...args, '-N', newPassphrase], run: {} };
+  }
+  const answers = oldPassphrase == null ? [] : [oldPassphrase];
+  return { args: [], run: passphraseInput([...answers, newPassphrase, newPassphrase]) };
+}
+
+/**
  * Key references may be absolute paths, so operations that move or re-permission
  * files first make sure the target really is a key: a private key file, or a
  * file with a matching .pub next to it. Anything else is refused.
@@ -137,13 +153,12 @@ export async function generate({ name, type = 'ed25519', bits, comment = '', pas
   const file = path.join(paths.sshDir, name);
   if (fs.existsSync(file) || fs.existsSync(file + '.pub')) throw new Error(`A key named "${name}" already exists.`);
 
-  // A passphrase is typed into ssh-keygen's prompt through stdin: on the
-  // command line (-N) any local user could read it from the process list.
   const args = ['-t', type, '-f', file, '-C', comment, '-q'];
-  if (!passphrase) args.push('-N', '');
   if (type === 'rsa') args.push('-b', String(bits || 4096));
   if (type === 'ecdsa') args.push('-b', String(bits || 521));
-  const r = await run('ssh-keygen', args, { timeout: 120000, ...passphraseInput([passphrase, passphrase]) });
+  // An empty passphrase is no secret, so -N '' is fine on every platform.
+  const pass = passphrase ? passphraseOptions(null, passphrase) : { args: ['-N', ''], run: {} };
+  const r = await run('ssh-keygen', [...args, ...pass.args], { timeout: 120000, ...pass.run });
   if (r.code !== 0) throw new Error(`ssh-keygen failed: ${(r.stderr || r.stdout).trim()}`);
   return get(file);
 }
@@ -151,8 +166,9 @@ export async function generate({ name, type = 'ed25519', bits, comment = '', pas
 export async function changePassphrase(ref: string, oldPassphrase = '', newPassphrase = ''): Promise<KeyInfo> {
   const priv = assertKeyFile(resolve(ref));
   // ssh-keygen -p asks for the old passphrase only when the key has one.
-  const answers = isEncrypted(fs.readFileSync(priv, 'utf8')) ? [oldPassphrase] : [];
-  const r = await run('ssh-keygen', ['-p', '-f', priv], passphraseInput([...answers, newPassphrase, newPassphrase]));
+  const old = isEncrypted(fs.readFileSync(priv, 'utf8')) ? oldPassphrase : null;
+  const pass = passphraseOptions(old, newPassphrase);
+  const r = await run('ssh-keygen', ['-p', ...pass.args, '-f', priv], pass.run);
   if (r.code !== 0) throw new Error(`Could not change passphrase: ${(r.stderr || r.stdout).trim()}`);
   return get(priv);
 }
