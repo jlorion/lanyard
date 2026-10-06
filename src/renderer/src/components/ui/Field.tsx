@@ -1,16 +1,20 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
-export function Field({ label, hint, children, className = '' }: {
+/** Labelled form control. `error` replaces the hint and marks the field invalid. */
+export function Field({ label, hint, error, children, className = '' }: {
   label?: ReactNode;
   hint?: ReactNode;
+  error?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <label className={`field ${className}`}>
+    <label className={`field${error ? ' invalid' : ''} ${className}`}>
       {label && <span className="field-label">{label}</span>}
       {children}
-      {hint && <span className="field-hint">{hint}</span>}
+      {error
+        ? <span className="field-hint field-error" role="alert">{error}</span>
+        : hint && <span className="field-hint">{hint}</span>}
     </label>
   );
 }

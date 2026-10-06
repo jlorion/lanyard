@@ -66,6 +66,7 @@ export function createApi(ctx: ApiContext): LanyardApi {
     keys: {
       list: async () => core.keys.list(),
       generate: (input) => core.keys.generate(input),
+      checkName: async (name) => core.keys.checkName(name),
       publicKey: (ref) => core.keys.publicKey(ref),
       changePassphrase: (ref, oldP, newP) => core.keys.changePassphrase(ref, oldP, newP),
       remove: async (ref) => core.keys.remove(ref),

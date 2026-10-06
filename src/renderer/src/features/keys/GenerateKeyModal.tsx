@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { KeyRound } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useTask } from '../../hooks/useTask';
+import { useKeyNameCheck } from '../../hooks/useKeyNameCheck';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { Field, Input, Select } from '../../components/ui/Field';
 import type { KeyInfo, KeyType } from '../../../../shared/types';
-
-const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 export function GenerateKeyModal({ onClose, onGenerated }: {
   onClose: () => void;
@@ -22,7 +21,20 @@ export function GenerateKeyModal({ onClose, onGenerated }: {
   const [confirmation, setConfirmation] = useState('');
 
   const mismatch = passphrase !== confirmation;
-  const valid = NAME_RE.test(name) && !mismatch;
+  const check = useKeyNameCheck(name);
+  const nameOk = !!check && check.valid && !check.exists;
+  const valid = nameOk && !mismatch;
+
+  const nameError = check && !nameOk ? (
+    <>
+      <span>{check.message}</span>
+      {check.suggestion && (
+        <button type="button" className="link-button" onClick={() => { setNameTouched(true); setName(check.suggestion!); }}>
+          Use {check.suggestion}
+        </button>
+      )}
+    </>
+  ) : undefined;
 
   const changeType = (t: KeyType) => {
     setType(t);
@@ -59,7 +71,7 @@ export function GenerateKeyModal({ onClose, onGenerated }: {
             <option value="ecdsa">ECDSA P-521</option>
           </Select>
         </Field>
-        <Field label="File name" hint={`Saved in ~/.ssh/${name || '…'}`}>
+        <Field label="File name" hint={`Saved in ~/.ssh/${name || '…'}`} error={nameError}>
           <Input mono value={name} onChange={(e) => { setNameTouched(true); setName(e.target.value.trim()); }} />
         </Field>
         <Field label="Comment" className="full" hint="Usually your email; shown next to the key on servers and git hosts">
@@ -68,7 +80,7 @@ export function GenerateKeyModal({ onClose, onGenerated }: {
         <Field label="Passphrase" hint="Optional but recommended">
           <Input type="password" autoComplete="new-password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} />
         </Field>
-        <Field label="Confirm passphrase" hint={mismatch ? 'Passphrases do not match' : undefined}>
+        <Field label="Confirm passphrase" error={mismatch && confirmation ? 'Passphrases do not match' : undefined}>
           <Input type="password" autoComplete="new-password" value={confirmation} onChange={(e) => setConfirmation(e.target.value)} />
         </Field>
       </div>

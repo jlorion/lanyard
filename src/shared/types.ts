@@ -181,6 +181,14 @@ export interface GenerateKeyInput {
   passphrase?: string;
 }
 
+export interface KeyNameCheck {
+  valid: boolean;
+  exists: boolean;
+  /** A free alternative when the name is taken, e.g. "id_ed25519_2". */
+  suggestion?: string;
+  message?: string;
+}
+
 export interface TrashResult {
   trashDir: string;
   moved: string[];

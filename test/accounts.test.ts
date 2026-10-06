@@ -77,6 +77,15 @@ describe('hosts', () => {
     core.hosts.remove(srv.index, 'srv');
   });
 
+  it('reports taken key names and suggests a free one', async () => {
+    await core.keys.generate({ name: 'id_taken' });
+    fs.writeFileSync(path.join(process.env.LANYARD_SSH_DIR!, 'id_taken_2.pub'), 'ssh-ed25519 AAAA x');
+    expect(core.keys.checkName('id_taken')).toMatchObject({ valid: true, exists: true, suggestion: 'id_taken_3' });
+    expect(core.keys.checkName('id_free')).toMatchObject({ valid: true, exists: false });
+    expect(core.keys.checkName('bad name')).toMatchObject({ valid: false });
+    expect(core.keys.checkName('')).toMatchObject({ valid: false });
+  });
+
   it('validates configs with OpenSSH', async () => {
     expect((await core.hosts.validate('Host a\n  HostName b\n')).ok).toBe(true);
     expect((await core.hosts.validate('Host a\n  NotARealOption yes\n')).ok).toBe(false);

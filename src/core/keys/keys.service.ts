@@ -7,7 +7,7 @@ import { paths, expandTilde, toTilde, samePath } from '../config/paths';
 import { run } from '../utils/exec';
 import { ensureDir, isWin, timestamp } from '../utils/fs-safe';
 import { parsePublicKey, isEncrypted, looksLikePrivateKey } from './key-format';
-import type { GenerateKeyInput, KeyInfo, KeyType, TrashResult } from '../../shared/types';
+import type { GenerateKeyInput, KeyInfo, KeyNameCheck, KeyType, TrashResult } from '../../shared/types';
 
 const NOT_KEYS = /^(config|known_hosts|authorized_keys|environment|rc)(\..*)?$|\.(bak|old|tmp|txt|md|json|log)$/i;
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
@@ -95,6 +95,22 @@ export async function publicKey(ref: string): Promise<string> {
   const r = await run('ssh-keygen', ['-y', '-P', '', '-f', priv]);
   if (r.code !== 0) throw new Error(`Could not derive public key: ${(r.stderr || r.stdout).trim()}`);
   return r.stdout.trim();
+}
+
+/**
+ * Can `name` be used for a new key in ~/.ssh? Checks the format and whether
+ * the private or public file already exists, and suggests a free alternative.
+ */
+export function checkName(name: string): KeyNameCheck {
+  if (!name) return { valid: false, exists: false, message: 'Enter a file name.' };
+  if (!NAME_RE.test(name)) {
+    return { valid: false, exists: false, message: 'Use letters, digits, ".", "_" and "-" (start with a letter or digit).' };
+  }
+  const taken = (n: string) => fs.existsSync(path.join(paths.sshDir, n)) || fs.existsSync(path.join(paths.sshDir, `${n}.pub`));
+  if (!taken(name)) return { valid: true, exists: false };
+  let i = 2;
+  while (taken(`${name}_${i}`)) i++;
+  return { valid: true, exists: true, suggestion: `${name}_${i}`, message: `~/.ssh/${name} already exists.` };
 }
 
 export async function generate({ name, type = 'ed25519', bits, comment = '', passphrase = '' }: GenerateKeyInput): Promise<KeyInfo> {

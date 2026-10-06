@@ -669,3 +669,32 @@ table.table {
   color: var(--text-faint);
   font-size: 12px;
 }
+
+/* ------------------------------------------------------------ field validation */
+
+.field-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--danger);
+}
+
+.field.invalid .input,
+.field.invalid .select {
+  border-color: var(--danger);
+}
+
+.field.invalid .input:focus {
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}

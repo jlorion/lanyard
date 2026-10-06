@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { UserPlus, UserPen } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useTask } from '../../hooks/useTask';
+import { useKeyNameCheck } from '../../hooks/useKeyNameCheck';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { Checkbox, Field, Input, Segmented, Select } from '../../components/ui/Field';
@@ -33,7 +34,17 @@ export function AccountFormModal(props: Props) {
   const [activate, setActivate] = useState(!selected?.active);
 
   const nameValid = NAME_RE.test(name);
-  const canSubmit = nameValid && (keySource === 'generate' || !!keyPath);
+
+  // A generated key is saved as ~/.ssh/id_<type>_<provider>_<name> unless that
+  // file exists and the user picked an alternative name for this combination.
+  const defaultFile = `id_${keyType}_${provider}_${name}`;
+  const [fileOverride, setFileOverride] = useState<{ base: string; name: string } | null>(null);
+  const keyFile = fileOverride?.base === defaultFile ? fileOverride.name : defaultFile;
+  const generating = !editing && keySource === 'generate';
+  const fileCheck = useKeyNameCheck(keyFile, generating && nameValid);
+  const fileFree = !!fileCheck && fileCheck.valid && !fileCheck.exists;
+
+  const canSubmit = nameValid && (generating ? fileFree : !!keyPath);
 
   const submit = async () => {
     if (!canSubmit) return;
@@ -48,7 +59,7 @@ export function AccountFormModal(props: Props) {
       provider,
       name,
       keyPath: keySource === 'existing' ? keyPath : undefined,
-      generate: keySource === 'generate' ? { type: keyType, passphrase, comment: gitEmail || undefined } : null,
+      generate: keySource === 'generate' ? { type: keyType, passphrase, comment: gitEmail || undefined, fileName: keyFile } : null,
       gitName,
       gitEmail,
       setGitIdentity,
@@ -116,6 +127,24 @@ export function AccountFormModal(props: Props) {
               <Input type="password" value={passphrase} autoComplete="new-password" onChange={(e) => setPassphrase(e.target.value)} />
             </Field>
             {selected?.keyHint && <div className="full"><Callout tone="warning">{selected.keyHint}</Callout></div>}
+            {nameValid && fileCheck?.exists && (
+              <div className="full">
+                <Callout tone="warning">
+                  <div><code>~/.ssh/{keyFile}</code> already exists.</div>
+                  <div className="row" style={{ marginTop: 6, gap: 14 }}>
+                    <button type="button" className="link-button" onClick={() => { setKeySource('existing'); setKeyPath(`~/.ssh/${keyFile}`); }}>
+                      Use the existing key
+                    </button>
+                    {fileCheck.suggestion && (
+                      <button type="button" className="link-button" onClick={() => setFileOverride({ base: defaultFile, name: fileCheck.suggestion! })}>
+                        Generate as {fileCheck.suggestion}
+                      </button>
+                    )}
+                  </div>
+                </Callout>
+              </div>
+            )}
+            {nameValid && fileFree && <div className="full field-hint">Will be saved as <code>~/.ssh/{keyFile}</code></div>}
           </>
         ) : (
           <Field className="full" hint="Private key file; its .pub must be registered with the provider.">

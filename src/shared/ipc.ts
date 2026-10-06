@@ -22,6 +22,7 @@ import type {
   HostInput,
   HostOption,
   KeyInfo,
+  KeyNameCheck,
   KnownHostEntry,
   ProviderInfo,
   ProviderOverview,
@@ -82,6 +83,8 @@ export interface LanyardApi {
   keys: {
     list(): Promise<KeyInfo[]>;
     generate(input: GenerateKeyInput): Promise<KeyInfo>;
+    /** Is this file name free in ~/.ssh? Suggests an alternative when it is taken. */
+    checkName(name: string): Promise<KeyNameCheck>;
     publicKey(ref: string): Promise<string>;
     changePassphrase(ref: string, oldPassphrase: string, newPassphrase: string): Promise<KeyInfo>;
     remove(ref: string): Promise<TrashResult>;
