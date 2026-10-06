@@ -13,7 +13,7 @@ interface Workspace {
   providers: ProviderOverview[];
   /** User-defined, connectable-looking hosts (no managed entries or patterns). */
   hosts: HostEntry[];
-  /** Every Host/Match entry, as listed on the Hosts page. */
+  /** Host/Match entries exactly as the Hosts page lists them (one row per account). */
   allHosts: HostEntry[];
   keys: KeyInfo[];
   loading: boolean;
@@ -26,10 +26,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const hosts = useResource(() => api.hosts.list(), ['config']);
   const keys = useResource(() => api.keys.list(), ['keys']);
 
+  // Managed "active switch" blocks (Host github.com -> active key) are shown as
+  // the Active status of an account row, not as rows of their own.
+  const accountAliases = new Set((providers.data ?? []).flatMap((p) => p.accounts.map((a) => a.alias)));
+
   const value: Workspace = {
     providers: providers.data ?? [],
     hosts: (hosts.data ?? []).filter((h) => !h.managed && !h.isPattern),
-    allHosts: hosts.data ?? [],
+    allHosts: (hosts.data ?? []).filter((h) => !h.managed || accountAliases.has(h.alias)),
     keys: (keys.data ?? []).filter((k) => k.hasPrivate),
     loading: providers.loading || hosts.loading || keys.loading,
   };

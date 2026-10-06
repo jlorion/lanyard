@@ -7,7 +7,7 @@ import { useToast } from '../../components/feedback/ToastProvider';
 import { useConfirm } from '../../components/feedback/ConfirmProvider';
 import { Button } from '../../components/ui/Button';
 import { Segmented } from '../../components/ui/Field';
-import { Callout, EmptyState, PageHeader } from '../../components/ui/Feedback';
+import { Badge, Callout, EmptyState, PageHeader } from '../../components/ui/Feedback';
 import { SearchInput } from '../../components/ui/SearchInput';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useIntent, useNavigation } from '../../app/navigation';
@@ -20,12 +20,13 @@ import type { HostEntry } from '../../../../shared/types';
 
 const rowKey = (h: HostEntry) => `${h.managed ? 'm' : 'u'}${h.index}`;
 
-function HostGroup({ title, description, count, children, empty }: {
+function HostGroup({ title, description, count, children, empty, withStatus }: {
   title: string;
   description: ReactNode;
   count: number;
   children: ReactNode;
   empty?: ReactNode;
+  withStatus?: boolean;
 }) {
   return (
     <section className="host-group">
@@ -42,6 +43,7 @@ function HostGroup({ title, description, count, children, empty }: {
                 <th>Host</th>
                 <th>Target</th>
                 <th>SSH key</th>
+                {withStatus && <th>Status</th>}
                 <th className="actions" />
               </tr>
             </thead>
@@ -76,13 +78,50 @@ export function HostsPage() {
   // Aliases that Lanyard's managed section defines; user blocks reusing them are shadowed.
   const managedAliases = new Set(hosts.filter((h) => h.managed).flatMap((h) => h.aliases));
   const providerOf = (h: HostEntry) => providers.find((p) => p.id === h.gitProvider);
-  const providerOrder = (h: HostEntry) => providers.findIndex((p) => p.id === h.gitProvider);
+  const accountOf = (h: HostEntry) => providerOf(h)?.accounts.find((a) => a.alias === h.alias);
 
-  const servers = visible.filter((h) => !h.isPattern && !h.gitProvider);
+  // Git hosts: one row per account (its alias block) plus the user's own git
+  // blocks. The managed "active switch" block (Host github.com -> active key)
+  // is not listed separately; it is what the Active status means.
+  const gitRank = (h: HostEntry) => {
+    const account = accountOf(h);
+    return account ? (account.active ? 0 : 1) : 2;
+  };
   const gitHosts = visible
-    .filter((h) => !h.isPattern && h.gitProvider)
-    .sort((a, b) => providerOrder(a) - providerOrder(b) || Number(b.managed) - Number(a.managed));
+    .filter((h) => !h.isPattern && h.gitProvider && (!h.managed || accountOf(h)))
+    .sort((a, b) =>
+      providers.findIndex((p) => p.id === a.gitProvider) - providers.findIndex((p) => p.id === b.gitProvider)
+      || gitRank(a) - gitRank(b));
+  const servers = visible.filter((h) => !h.isPattern && !h.gitProvider);
   const patterns = visible.filter((h) => h.isPattern);
+
+  const gitStatus = (h: HostEntry): ReactNode => {
+    const provider = providerOf(h);
+    const account = accountOf(h);
+    if (account && provider) {
+      if (account.active) {
+        return <Badge tone="success" title={`Plain ${provider.user}@${provider.hosts[0]} URLs use this account`}>Active</Badge>;
+      }
+      return (
+        <Button
+          size="sm"
+          variant="ghost"
+          loading={isBusy(`use:${account.id}`)}
+          title={`Make ${account.name} the active ${provider.name} account`}
+          onClick={() => void run(`use:${account.id}`, () => api.accounts.use(provider.id, account.name), `${provider.name} now uses "${account.name}"`)}
+        >
+          Use
+        </Button>
+      );
+    }
+    if (h.aliases.some((a) => managedAliases.has(a))) {
+      const why = provider?.active
+        ? `Lanyard's ${provider.name} account (${provider.active}) is applied first; this block's key is only offered as a fallback.`
+        : 'A Lanyard entry for this host is applied first.';
+      return <Badge tone="warning" title={why}>Overridden</Badge>;
+    }
+    return <span className="faint">-</span>;
+  };
 
   const test = async (h: HostEntry) => {
     const r = await run(`test:${rowKey(h)}`, () => api.hosts.test(h.alias));
@@ -101,15 +140,14 @@ export function HostsPage() {
     if (ok) await run(`rm:${rowKey(h)}`, () => api.hosts.remove(h.index, h.patterns), `Removed ${h.alias}`);
   };
 
-  const row = (h: HostEntry) => {
+  const row = (h: HostEntry, withStatus = false) => {
     const provider = providerOf(h);
-    const shadowed = !h.managed && h.aliases.some((a) => managedAliases.has(a));
     return (
       <HostRow
         key={rowKey(h)}
         host={h}
         provider={provider}
-        overriddenBy={shadowed ? provider?.active ?? null : undefined}
+        status={withStatus ? gitStatus(h) : undefined}
         keys={keys}
         testing={isBusy(`test:${rowKey(h)}`)}
         actions={{
@@ -168,17 +206,17 @@ export function HostsPage() {
                     </div>
                   )}
                 >
-                  {servers.map(row)}
+                  {servers.map((h) => row(h))}
                 </HostGroup>
               )}
               {gitHosts.length > 0 && (
-                <HostGroup title="Git hosts" count={gitHosts.length} description="Git over SSH, no shell - managed entries come from Git accounts">
-                  {gitHosts.map(row)}
+                <HostGroup withStatus title="Git hosts" count={gitHosts.length} description="One row per account; the active one is what plain git URLs use">
+                  {gitHosts.map((h) => row(h, true))}
                 </HostGroup>
               )}
               {patterns.length > 0 && (
                 <HostGroup title="Patterns" count={patterns.length} description="Wildcard and Match blocks that apply to several hosts">
-                  {patterns.map(row)}
+                  {patterns.map((h) => row(h))}
                 </HostGroup>
               )}
             </div>

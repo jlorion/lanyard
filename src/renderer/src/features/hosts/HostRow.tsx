@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react';
 import { Activity, Eye, GitBranch, Pencil, SquareTerminal, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Feedback';
 import { HostKeySwitcher } from '../../components/domain/HostKeySwitcher';
 import { ProviderMark } from '../../components/domain/ProviderMark';
 import type { HostEntry, KeyInfo, ProviderOverview } from '../../../../shared/types';
@@ -22,14 +22,13 @@ function target(h: HostEntry): string {
 const fileName = (p: string) => p.split(/[\\/]/).pop() ?? p;
 
 /**
- * One Host block. Managed rows (generated from Git accounts) are read-only;
- * a user block that a managed block shadows is flagged "overridden".
+ * One Host block. Managed rows (generated from Git accounts) are read-only.
+ * `status` fills the optional Status column (Git hosts table only).
  */
-export function HostRow({ host: h, provider, overriddenBy, keys, testing, actions }: {
+export function HostRow({ host: h, provider, status, keys, testing, actions }: {
   host: HostEntry;
   provider?: ProviderOverview;
-  /** Active account whose managed block takes priority over this user block. */
-  overriddenBy?: string | null;
+  status?: ReactNode;
   keys: KeyInfo[];
   testing: boolean;
   actions: HostRowActions;
@@ -41,17 +40,6 @@ export function HostRow({ host: h, provider, overriddenBy, keys, testing, action
         <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
           {provider && <ProviderMark id={provider.id} name={provider.name} color={provider.color} size={18} />}
           <span className="host-alias mono">{h.patterns}</span>
-          {h.managed && <Badge tone="accent" title="Generated from Git accounts; change it there">managed</Badge>}
-          {overriddenBy !== undefined && (
-            <Badge
-              tone="warning"
-              title={overriddenBy
-                ? `Lanyard's ${provider?.name ?? 'account'} switch (${overriddenBy}) is applied first; this block's key is only offered as a fallback.`
-                : 'A Lanyard account entry for this host is applied first.'}
-            >
-              overridden
-            </Badge>
-          )}
         </div>
         {h.comment && <div className="faint truncate" style={{ maxWidth: 380 }}>{h.comment}</div>}
       </td>
@@ -61,6 +49,7 @@ export function HostRow({ host: h, provider, overriddenBy, keys, testing, action
           ? <span className="mono faint">{h.identityFile ? fileName(h.identityFile) : '-'}</span>
           : <HostKeySwitcher host={h} keys={keys} />}
       </td>
+      {status !== undefined && <td className="host-status">{status}</td>}
       <td className="actions">
         <div className="row">
           {canShell && (
