@@ -42,7 +42,17 @@ export const IPC_CHANNELS = {
   changed: 'lanyard:changed',
   /** main -> renderer: the tray asked to show a page. */
   navigate: 'lanyard:navigate',
+  /** main -> renderer: an app-menu action the renderer performs (palette, history). */
+  command: 'lanyard:command',
 } as const;
+
+/** Open a page, optionally with a one-shot intent such as 'add-host'. */
+export interface NavigateRequest {
+  page: string;
+  intent?: string;
+}
+
+export type AppCommand = 'palette' | 'back' | 'forward';
 
 export type ChangeTopic = 'config' | 'knownHosts' | 'state' | 'keys';
 
@@ -159,6 +169,8 @@ export interface LanyardApi {
     /** Put `lanyard` / `lny` on the PATH (no npm needed). */
     installCli(): Promise<CliInstallStatus>;
     uninstallCli(): Promise<CliInstallStatus>;
+    /** Pop up the application menu (File, Edit, View, ...) at a point in the window. */
+    showAppMenu(x: number, y: number): Promise<void>;
     /** Colour the native window buttons drawn over the custom title bar. */
     setTitleBarColors(color: string, symbolColor: string): Promise<void>;
   };
@@ -174,5 +186,6 @@ export type IpcResponse<T = unknown> =
 export interface PreloadBridge {
   invoke(namespace: string, method: string, args: unknown[]): Promise<IpcResponse>;
   onChanged(listener: (topics: ChangeTopic[]) => void): () => void;
-  onNavigate(listener: (page: string) => void): () => void;
+  onNavigate(listener: (request: NavigateRequest) => void): () => void;
+  onCommand(listener: (command: AppCommand) => void): () => void;
 }

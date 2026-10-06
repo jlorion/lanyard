@@ -2,7 +2,7 @@
 
 import path from 'node:path';
 import { BrowserWindow, Notification, shell } from 'electron';
-import { IPC_CHANNELS } from '../shared/ipc';
+import { IPC_CHANNELS, type AppCommand } from '../shared/ipc';
 import { appIcon } from './assets';
 
 export interface MainWindowOptions {
@@ -91,14 +91,14 @@ export class MainWindow {
     }).show();
   }
 
-  show(page?: string): void {
+  show(page?: string, intent?: string): void {
     if (!this.win) this.win = this.create();
     const win = this.win;
     const reveal = () => {
       if (win.isMinimized()) win.restore();
       win.show();
       win.focus();
-      if (page) win.webContents.send(IPC_CHANNELS.navigate, page);
+      if (page) win.webContents.send(IPC_CHANNELS.navigate, { page, intent });
     };
     if (this.ready) reveal();
     else win.once('ready-to-show', reveal);
@@ -108,6 +108,12 @@ export class MainWindow {
   setTitleBarColors(color: string, symbolColor: string): void {
     if (process.platform === 'darwin' || !this.win || this.win.isDestroyed()) return;
     this.win.setTitleBarOverlay({ color, symbolColor, height: TITLE_BAR_HEIGHT });
+  }
+
+  /** Ask the renderer to perform an app-menu action (shows the window first). */
+  command(command: AppCommand): void {
+    this.show();
+    this.send(IPC_CHANNELS.command, command);
   }
 
   toggle(): void {

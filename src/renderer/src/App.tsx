@@ -14,12 +14,25 @@ import { CommandPalette } from './features/palette/CommandPalette';
 import type { AppInfo } from '../../shared/ipc';
 
 function Shell({ info }: { info: AppInfo }) {
-  const { page, navigate } = useNavigation();
+  const { page, navigate, back, forward } = useNavigation();
   const [palette, setPalette] = useState<{ query: string } | null>(null);
 
-  // Ctrl/Cmd+K toggles the palette, Ctrl/Cmd+1..8 jump between pages.
+  // App-menu actions that live in the renderer.
+  useEffect(() => window.lanyard.onCommand((command) => {
+    if (command === 'palette') setPalette((p) => (p ? null : { query: '' }));
+    else if (command === 'back') back();
+    else if (command === 'forward') forward();
+  }), [back, forward]);
+
+  // Ctrl/Cmd+K toggles the palette, Ctrl/Cmd+1..8 jump between pages, Alt+Left/Right go back/forward.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        if (e.key === 'ArrowLeft') back();
+        else forward();
+        return;
+      }
       if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
       if (e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -34,14 +47,14 @@ function Shell({ info }: { info: AppInfo }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [navigate]);
+  }, [navigate, back, forward]);
 
   const Page = ROUTES.find((r) => r.id === page)!.component;
   return (
     <div className="app">
-      <Sidebar version={info.version} />
-      <div className="workspace">
-        <Topbar onSearch={(query = '') => setPalette({ query })} />
+      <Topbar onSearch={(query = '') => setPalette({ query })} />
+      <div className="app-body">
+        <Sidebar version={info.version} />
         <main className="main">
           <div className="page" key={page}>
             <Page />

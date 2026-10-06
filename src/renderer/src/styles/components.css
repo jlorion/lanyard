@@ -408,7 +408,7 @@ table.table {
   animation: fade-in 0.12s ease-out;
 }
 
-:root:has(.modal-backdrop, .palette-backdrop) :is(.topbar, .brand) :is(button, input, a) {
+:root:has(.modal-backdrop, .palette-backdrop) .topbar :is(button, input, a) {
   pointer-events: none;
 }
 

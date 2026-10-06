@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { app, clipboard, dialog, nativeTheme, shell } from 'electron';
+import { app, clipboard, dialog, Menu, nativeTheme, shell } from 'electron';
 import * as core from '../../core';
 import { toolVersions } from '../../core/utils/tool-versions';
 import pkg from '../../../package.json';
@@ -140,6 +140,10 @@ export function createApi(ctx: ApiContext): LanyardApi {
         tools: await toolVersions(),
         packaged: app.isPackaged,
       }),
+      showAppMenu: async (x, y) => {
+        const win = ctx.window.browserWindow;
+        if (win) Menu.getApplicationMenu()?.popup({ window: win, x: Math.round(x), y: Math.round(y) });
+      },
       cliStatus: () => cliInstall.status(),
       installCli: () => cliInstall.install(),
       uninstallCli: () => cliInstall.uninstall(),

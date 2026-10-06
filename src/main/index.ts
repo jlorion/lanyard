@@ -12,6 +12,7 @@ import { watchFiles } from './watcher';
 import { applyLaunchAtLogin, HIDDEN_FLAG } from './login-item';
 import { createApi, openInTerminal } from './ipc/api';
 import { registerIpc } from './ipc/register';
+import { buildAppMenu } from './app-menu';
 
 const APP_ID = 'dev.riomar.lanyard';
 
@@ -46,7 +47,9 @@ function bootstrap(): void {
   app.on('window-all-closed', () => {});
 
   void app.whenReady().then(() => {
-    if (process.platform !== 'darwin') Menu.setApplicationMenu(null);
+    // No visible menu bar (frameless window); the title bar's menu button pops
+    // this up, and setting it here makes its accelerators work.
+    Menu.setApplicationMenu(buildAppMenu({ window, quit }));
 
     registerIpc(createApi({
       window,

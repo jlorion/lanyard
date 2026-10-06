@@ -1,7 +1,15 @@
 .app {
-  display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+}
+
+/* Below the full-width title bar: sidebar | page. */
+.app-body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: 0;
 }
 
 /* ------------------------------------------------------------ sidebar */
@@ -10,43 +18,10 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 0 10px 12px;
+  padding: 12px 10px;
   border-right: 1px solid var(--border);
   background: var(--sidebar-bg);
   color: var(--text);
-}
-
-/* The brand row lines up with the top bar: together they form the title bar. */
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: var(--topbar-height);
-  margin: 0 -10px 14px;
-  padding: 0 18px;
-  border-bottom: 1px solid var(--border);
-  -webkit-app-region: drag;
-}
-
-/* macOS traffic lights sit at the left of the title bar. */
-:root[data-platform='mac'] .brand {
-  padding-left: 84px;
-}
-
-:root[data-platform='mac'] .brand-sub {
-  display: none;
-}
-
-.brand-name {
-  font-size: 17px;
-  line-height: 1.1;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-}
-
-.brand-sub {
-  color: var(--text-faint);
-  font-size: 12px;
 }
 
 .nav {
@@ -177,24 +152,58 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* ------------------------------------------------------------ workspace */
+/* ------------------------------------------------------------ title bar */
 
-.workspace {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-}
-
+/*
+ * Full-width custom title bar, laid out like Slack's: menu + history on the
+ * left, search centred on the window, identities on the right. The outer
+ * columns are equal and the padding symmetric, so the search is centred on
+ * the window; room for native window buttons is padding inside the right column.
+ */
 .topbar {
-  display: flex;
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: 1fr minmax(0, 560px) 1fr;
   align-items: center;
   gap: 16px;
   height: var(--topbar-height);
-  padding: 0 24px;
+  padding: 0 10px;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
-  -webkit-app-region: drag; /* custom title bar */
+  -webkit-app-region: drag;
+}
+
+/* macOS traffic lights sit at the top-left; mirror the space to stay centred. */
+:root[data-platform='mac'] .topbar {
+  padding: 0 80px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.topbar-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.topbar-icon:hover:not(:disabled) {
+  background: var(--sidebar-hover);
+  color: var(--text);
+}
+
+.topbar-icon:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .topbar button,
@@ -204,16 +213,16 @@
 }
 
 /* Windows / Linux draw native window buttons over the top-right corner. */
-:root[data-platform='windows'] .topbar,
-:root[data-platform='linux'] .topbar {
-  padding-right: max(150px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 16px));
+:root[data-platform='windows'] .identity-chips,
+:root[data-platform='linux'] .identity-chips {
+  padding-right: max(140px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 6px));
 }
 
 .search-trigger {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(480px, 60%);
+  width: 100%;
   height: 32px;
   padding: 0 10px 0 12px;
   border: 1px solid var(--border-strong);

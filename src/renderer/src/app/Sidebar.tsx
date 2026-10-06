@@ -2,7 +2,6 @@ import { ROUTES, type PageId, type Route } from './routes';
 import { useNavigation } from './navigation';
 import { useWorkspace } from './workspace';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { LanyardMark } from '../components/brand/LanyardMark';
 
 const isMac = navigator.userAgent.includes('Mac');
 
@@ -25,14 +24,6 @@ export function Sidebar({ version }: { version: string }) {
 
   return (
     <aside className="sidebar">
-      <div className="brand">
-        <LanyardMark size={34} />
-        <div>
-          <div className="brand-name">Lanyard</div>
-          <div className="brand-sub">your SSH identities</div>
-        </div>
-      </div>
-
       <nav className="nav">
         {sections.map(([section, routes]) => (
           <div key={section || 'home'} className="nav-group">

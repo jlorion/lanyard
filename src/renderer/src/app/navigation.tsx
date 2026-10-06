@@ -6,13 +6,25 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { isPageId, type PageId } from './pages';
 
-export type Intent = 'add-account' | 'add-host' | 'generate-key' | 'scan-host' | 'raw-config' | 'about';
+export const INTENTS = ['add-account', 'add-host', 'generate-key', 'scan-host', 'raw-config', 'about'] as const;
+export type Intent = (typeof INTENTS)[number];
+
+const isIntent = (v: unknown): v is Intent => (INTENTS as readonly unknown[]).includes(v);
 
 interface Navigation {
   page: PageId;
   navigate: (page: PageId, intent?: Intent) => void;
   intent: Intent | null;
   clearIntent: () => void;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  back: () => void;
+  forward: () => void;
+}
+
+interface History {
+  stack: PageId[];
+  index: number;
 }
 
 const NavigationContext = createContext<Navigation | null>(null);
@@ -29,13 +41,19 @@ function initialPage(): PageId {
 }
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
-  const [page, setPage] = useState<PageId>(initialPage);
+  // Browser-style history: navigating drops anything "forward" of the current page.
+  const [history, setHistory] = useState<History>(() => ({ stack: [initialPage()], index: 0 }));
   const [intent, setIntent] = useState<Intent | null>(null);
+  const page = history.stack[history.index];
 
   const navigate = useCallback((next: PageId, nextIntent?: Intent) => {
-    setPage(next);
+    setHistory((h) => (h.stack[h.index] === next
+      ? h
+      : { stack: [...h.stack.slice(0, h.index + 1), next].slice(-50), index: Math.min(h.index + 1, 49) }));
     setIntent(nextIntent ?? null);
   }, []);
+  const back = useCallback(() => setHistory((h) => (h.index > 0 ? { ...h, index: h.index - 1 } : h)), []);
+  const forward = useCallback(() => setHistory((h) => (h.index < h.stack.length - 1 ? { ...h, index: h.index + 1 } : h)), []);
   const clearIntent = useCallback(() => setIntent(null), []);
 
   useEffect(() => {
@@ -46,10 +64,21 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     }
   }, [page]);
 
-  // The tray can ask the window to open on a specific page.
-  useEffect(() => window.lanyard.onNavigate((p) => isPageId(p) && navigate(p)), [navigate]);
+  // The tray and the app menu can open a page, optionally with an intent.
+  useEffect(() => window.lanyard.onNavigate(({ page: p, intent: i }) => {
+    if (isPageId(p)) navigate(p, isIntent(i) ? i : undefined);
+  }), [navigate]);
 
-  const value = useMemo(() => ({ page, navigate, intent, clearIntent }), [page, navigate, intent, clearIntent]);
+  const value = useMemo(() => ({
+    page,
+    navigate,
+    intent,
+    clearIntent,
+    canGoBack: history.index > 0,
+    canGoForward: history.index < history.stack.length - 1,
+    back,
+    forward,
+  }), [page, navigate, intent, clearIntent, history, back, forward]);
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }
 
