@@ -45,11 +45,21 @@ function ownedByLanyard(file: string): boolean {
 
 // ---------------------------------------------------------------- Windows user PATH
 
+/**
+ * The user PATH ('' when it has no Path value yet). Throws when the key cannot
+ * be read: the result is written back with our entry added, so guessing ''
+ * after a failed read would replace the user's whole PATH.
+ */
 async function readUserPath(): Promise<string> {
-  const r = await run('reg', ['query', 'HKCU\\Environment', '/v', 'Path']);
-  if (r.code !== 0) return '';
-  const m = r.stdout.match(/^\s*Path\s+REG_(?:EXPAND_)?SZ\s+(.*)$/im);
-  return m ? m[1].trim() : '';
+  // Query the whole key: a missing value then shows up as an absent line
+  // instead of a (localized) error, so any non-zero exit is a real failure.
+  const r = await run('reg', ['query', 'HKCU\\Environment']);
+  if (r.code !== 0) throw new Error(`Could not read your PATH: ${(r.stderr || r.stdout).trim()}`);
+  const line = r.stdout.split(/\r?\n/).find((l) => /^\s*Path\s+REG_/i.test(l));
+  if (!line) return '';
+  const m = line.match(/^\s*Path\s+REG_(?:EXPAND_)?SZ(?:\s+(.*))?$/i);
+  if (!m) throw new Error(`Your PATH has an unexpected registry type: ${line.trim()}`);
+  return (m[1] ?? '').trim();
 }
 
 /** Writes REG_EXPAND_SZ so entries like %USERPROFILE%\bin keep working. */
@@ -75,7 +85,8 @@ export async function status(): Promise<CliInstallStatus> {
   const dir = binDir();
   const shims = renderShims(shimTarget());
   const installed = shims.every((s) => ownedByLanyard(path.join(dir, s.fileName)));
-  const onPath = isWin ? pathListHas(await readUserPath(), dir) : pathListHas(process.env.PATH ?? '', dir);
+  const userPath = isWin ? await readUserPath().catch(() => '') : (process.env.PATH ?? ''); // status only reads
+  const onPath = pathListHas(userPath, dir);
   return {
     installed,
     onPath,
