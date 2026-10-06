@@ -4,6 +4,6 @@ import type { PreloadBridge } from '../../shared/ipc';
 
 declare global {
   interface Window {
-    sshm: PreloadBridge;
+    lanyard: PreloadBridge;
   }
 }

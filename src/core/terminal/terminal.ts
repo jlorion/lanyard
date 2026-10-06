@@ -86,7 +86,7 @@ function linux(preference: string, parts: string[]): void {
 }
 
 /** Open `cmd args...` in a new terminal window. */
-export function openTerminal(cmd: string, args: string[] = [], { preference = 'auto', title = 'SSH Manager' }: OpenTerminalOptions = {}): void {
+export function openTerminal(cmd: string, args: string[] = [], { preference = 'auto', title = 'Lanyard' }: OpenTerminalOptions = {}): void {
   const parts = [cmd, ...args];
   assertSafe(parts);
   if (process.platform === 'win32') windows(preference, parts, title);

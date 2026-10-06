@@ -17,8 +17,8 @@ const COMMAND_MODULES: CommandModule[] = [accounts, hosts, keys, agent, knownHos
 export function buildProgram(): Command {
   const program = new Command();
   program
-    .name('sshm')
-    .description('SSH Manager - switch git provider accounts and manage SSH hosts, keys, agent and known_hosts')
+    .name('lanyard')
+    .description('Lanyard - switch git provider accounts and manage SSH hosts, keys, agent and known_hosts')
     .version(pkg.version)
     .option('--json', 'machine-readable output')
     .hook('preAction', (cmd) => out.setJson(!!cmd.optsWithGlobals().json));
@@ -27,13 +27,13 @@ export function buildProgram(): Command {
 
   program.addHelpText('after', `
 Examples:
-  $ sshm accounts add github work --generate --git-email me@work.com --set-git-identity
-  $ sshm accounts add github personal --key ~/.ssh/id_ed25519
-  $ sshm use github personal          # git@github.com:... now authenticates as "personal"
-  $ sshm test                         # verify every active account
-  $ git clone $(sshm url github work https://github.com/acme/app)
-  $ sshm hosts add prod -H 203.0.113.10 -u deploy -k ~/.ssh/id_ed25519
-  $ sshm connect prod`);
+  $ lanyard accounts add github work --generate --git-email me@work.com --set-git-identity
+  $ lanyard accounts add github personal --key ~/.ssh/id_ed25519
+  $ lanyard use github personal          # git@github.com:... now authenticates as "personal"
+  $ lanyard test                         # verify every active account
+  $ git clone $(lanyard url github work https://github.com/acme/app)
+  $ lanyard hosts add prod -H 203.0.113.10 -u deploy -k ~/.ssh/id_ed25519
+  $ lanyard connect prod`);
   return program;
 }
 

@@ -1,13 +1,14 @@
 {
-  "name": "ssh-manager",
-  "productName": "SSH Manager",
+  "name": "lanyard",
+  "productName": "Lanyard",
   "version": "1.0.0",
-  "description": "Desktop + CLI tool to manage SSH config hosts, keys, the ssh-agent, known_hosts and per-provider git accounts (GitHub, GitLab, Bitbucket, Hugging Face, ...).",
+  "description": "Lanyard: switch git provider accounts and manage SSH hosts, keys, ssh-agent and known_hosts, from the system tray or the command line.",
   "author": "riomar",
   "license": "MIT",
   "main": "out/main/index.js",
   "bin": {
-    "sshm": "bin/sshm.js"
+    "lanyard": "bin/lanyard.js",
+    "lny": "bin/lanyard.js"
   },
   "scripts": {
     "dev": "electron-vite dev",
@@ -18,7 +19,7 @@
     "test:watch": "vitest",
     "icons": "node scripts/make-icons.mjs",
     "dist": "npm run typecheck && npm run build && electron-builder",
-    "sshm": "node bin/sshm.js"
+    "lanyard": "node bin/lanyard.js"
   },
   "dependencies": {
     "commander": "^12.1.0"

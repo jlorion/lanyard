@@ -6,7 +6,7 @@ import * as keys from '../keys/keys.service';
 import * as providers from '../providers';
 import * as store from '../state/store';
 import { toTilde } from '../config/paths';
-import { run, SshmError } from '../utils/exec';
+import { run, LanyardError } from '../utils/exec';
 import type { ConfigValidation, HostEntry, HostInput, HostOption, TestResult } from '../../shared/types';
 
 const ALIAS_RE = /^[\w.@:-]+$/;
@@ -101,7 +101,7 @@ export function validate(text: string = repo.readRaw()): Promise<ConfigValidatio
 export async function saveRaw(text: string, { force = false } = {}): Promise<{ saved: boolean }> {
   if (!force) {
     const v = await repo.validate(text);
-    if (!v.ok) throw new SshmError(`ssh rejected the config:\n${v.error}`, 'INVALID_CONFIG');
+    if (!v.ok) throw new LanyardError(`ssh rejected the config:\n${v.error}`, 'INVALID_CONFIG');
   }
   return { saved: repo.writeRaw(text, 'raw-edit') };
 }

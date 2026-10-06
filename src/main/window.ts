@@ -28,7 +28,7 @@ export class MainWindow {
       minWidth: 860,
       minHeight: 560,
       show: false,
-      title: 'SSH Manager',
+      title: 'Lanyard',
       icon: appIcon(),
       backgroundColor: '#0f1117',
       autoHideMenuBar: true,
@@ -73,7 +73,7 @@ export class MainWindow {
     if (this.notifiedHidden || !Notification.isSupported()) return;
     this.notifiedHidden = true;
     new Notification({
-      title: 'SSH Manager is still running',
+      title: 'Lanyard is still running',
       body: 'It lives in the system tray. Right-click the tray icon to switch accounts or quit.',
       icon: appIcon(),
     }).show();

@@ -119,7 +119,7 @@ export async function changePassphrase(ref: string, oldPassphrase = '', newPassp
   return get(priv);
 }
 
-/** Moves the key pair to ~/.sshm/trash/<timestamp>/ instead of deleting it. */
+/** Moves the key pair to ~/.lanyard/trash/<timestamp>/ instead of deleting it. */
 export function remove(ref: string): TrashResult {
   const priv = resolve(ref);
   const trashDir = path.join(paths.trash, timestamp());

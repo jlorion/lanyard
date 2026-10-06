@@ -20,4 +20,4 @@ const bridge: PreloadBridge = {
   onNavigate: (listener) => subscribe<string>(IPC_CHANNELS.navigate, listener),
 };
 
-contextBridge.exposeInMainWorld('sshm', bridge);
+contextBridge.exposeInMainWorld('lanyard', bridge);

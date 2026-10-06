@@ -4,7 +4,7 @@
  * as ApiError with the original message and code.
  */
 
-import type { ApiNamespace, SshmApi } from '../../../shared/ipc';
+import type { ApiNamespace, LanyardApi } from '../../../shared/ipc';
 
 export class ApiError extends Error {
   constructor(message: string, public readonly code?: string) {
@@ -18,7 +18,7 @@ function namespaceProxy(namespace: ApiNamespace): object {
     get: (_target, method) => {
       if (typeof method !== 'string') return undefined;
       return async (...args: unknown[]) => {
-        const res = await window.sshm.invoke(namespace, method, args);
+        const res = await window.lanyard.invoke(namespace, method, args);
         if (!res.ok) throw new ApiError(res.error, res.code);
         return res.data;
       };
@@ -26,7 +26,7 @@ function namespaceProxy(namespace: ApiNamespace): object {
   });
 }
 
-export const api = new Proxy({} as SshmApi, {
+export const api = new Proxy({} as LanyardApi, {
   get: (_target, namespace) => (typeof namespace === 'string' ? namespaceProxy(namespace as ApiNamespace) : undefined),
 });
 

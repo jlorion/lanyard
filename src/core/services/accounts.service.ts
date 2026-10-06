@@ -1,7 +1,7 @@
 /**
  * Git provider accounts (GitHub, GitLab, Hugging Face, ...).
  *
- * Each account is a key registered with a provider. sshm renders two kinds of
+ * Each account is a key registered with a provider. Lanyard renders two kinds of
  * Host blocks into the managed section of ~/.ssh/config:
  *
  *   Host github.com            <- the ACTIVE account; plain git URLs use it.
@@ -269,7 +269,7 @@ export async function test(providerId: string, name?: string): Promise<AccountTe
   const result = providers.interpretTest(p, r);
   const view = decorate(p, account, state);
   if (!result.ok && view.keyEncrypted) {
-    result.hint = 'This key has a passphrase. Load it into ssh-agent first (Agent page or `sshm agent add`).';
+    result.hint = 'This key has a passphrase. Load it into ssh-agent first (Agent page or `lanyard agent add`).';
   }
   if (!result.ok && !view.keyExists) result.hint = `Key file ${account.keyPath} no longer exists.`;
 

@@ -67,7 +67,7 @@ describe('ssh-config parser/editor', () => {
     ]);
     const once = sshConfig.serialize(model);
     expect(once.startsWith(sshConfig.MANAGED_BEGIN)).toBe(true);
-    expect(once).toMatch(/Host \*\n# <<< sshm managed section <<<\n\n# my config/);
+    expect(once).toMatch(/Host \*\n# <<< lanyard managed section <<<\n\n# my config/);
 
     const again = sshConfig.parse(once);
     expect(sshConfig.serialize(again)).toBe(once);
@@ -77,5 +77,26 @@ describe('ssh-config parser/editor', () => {
 
     again.managedLines = [];
     expect(sshConfig.serialize(again)).toBe(SAMPLE);
+  });
+
+  it('migrates a pre-rename (sshm) managed section in place instead of duplicating it', () => {
+    const legacy = [
+      '# >>> sshm managed section >>>',
+      'Host github.com',
+      '    IdentityFile ~/.ssh/old',
+      'Host *',
+      '# <<< sshm managed section <<<',
+      '',
+      SAMPLE,
+    ].join('\n');
+    const model = sshConfig.parse(legacy);
+    expect(model.managedLines).toHaveLength(5);
+    model.managedLines = sshConfig.renderManaged([
+      { comment: '', patterns: 'github.com', options: [{ key: 'IdentityFile', value: '~/.ssh/new' }] },
+    ]);
+    const out = sshConfig.serialize(model);
+    expect(out).not.toMatch(/sshm managed section/);
+    expect(out.match(/managed section >>>/g)).toHaveLength(1);
+    expect(out.endsWith(SAMPLE)).toBe(true);
   });
 });

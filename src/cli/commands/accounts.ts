@@ -22,7 +22,7 @@ export const register: CommandModule = (program, core) => {
       const data = { providers: providers.map((p) => ({ id: p.id, active: p.active, accounts: p.accounts.map((a) => a.name) })), git };
       out.emit(data, () => {
         if (!providers.length) {
-          out.info('No accounts yet. Add one with: sshm accounts add <provider> <name> --generate');
+          out.info('No accounts yet. Add one with: lanyard accounts add <provider> <name> --generate');
           return;
         }
         out.table(providers, [
@@ -129,7 +129,7 @@ export const register: CommandModule = (program, core) => {
           if (r.keysUrl) out.info(`Add it at ${c.cyan(r.keysUrl)}`);
           if (r.keyHint) out.warn(r.keyHint);
         }
-        out.info(`Then verify with: sshm test ${provider} ${name}`);
+        out.info(`Then verify with: lanyard test ${provider} ${name}`);
       });
     }));
 
@@ -157,7 +157,7 @@ export const register: CommandModule = (program, core) => {
   accounts
     .command('rm <provider> <name>')
     .description('remove an account')
-    .option('--delete-key', 'also move its key to ~/.sshm/trash (if no other account uses it)')
+    .option('--delete-key', 'also move its key to ~/.lanyard/trash (if no other account uses it)')
     .action(out.action(async (provider: string, name: string, o: { deleteKey?: boolean }) => {
       const r = await core.accounts.remove(provider, name, { deleteKey: o.deleteKey });
       out.emit(r, () => {
@@ -178,7 +178,7 @@ export const register: CommandModule = (program, core) => {
         if (!list.length) throw new Error(`No accounts for "${provider}".`);
         out.print(`Accounts for ${provider}:`);
         for (const a of list) out.print(`  ${a.active ? c.green('●') : ' '} ${a.name}`);
-        out.print('', c.dim(`Switch with: sshm use ${provider} <name>`));
+        out.print('', c.dim(`Switch with: lanyard use ${provider} <name>`));
         return;
       }
       const r = await core.accounts.use(provider, o.off ? null : name!);

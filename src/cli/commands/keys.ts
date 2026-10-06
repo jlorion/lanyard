@@ -62,7 +62,7 @@ export const register: CommandModule = (program, core) => {
 
   keys
     .command('rm <key>')
-    .description('move a key pair to ~/.sshm/trash')
+    .description('move a key pair to ~/.lanyard/trash')
     .action(out.action((key: string) => {
       const target = core.keys.resolve(key);
       const users = core.accounts.list().filter((a) => a.keyExists && core.keys.resolve(a.keyPath) === target);

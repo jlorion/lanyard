@@ -5,9 +5,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'sshm-test-'));
-process.env.SSHM_SSH_DIR = path.join(sandbox, '.ssh');
-process.env.SSHM_HOME = path.join(sandbox, '.sshm');
+const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'lanyard-test-'));
+process.env.LANYARD_SSH_DIR = path.join(sandbox, '.ssh');
+process.env.LANYARD_HOME = path.join(sandbox, '.lanyard');
 
 const core = await import('../src/core');
 
@@ -15,7 +15,7 @@ const USER_CONFIG = 'IdentityFile ~/.ssh/id_global\n\nHost box\n    HostName 1.2
 const readConfig = () => fs.readFileSync(core.paths.config, 'utf8');
 
 beforeAll(() => {
-  fs.mkdirSync(process.env.SSHM_SSH_DIR!, { recursive: true });
+  fs.mkdirSync(process.env.LANYARD_SSH_DIR!, { recursive: true });
   fs.writeFileSync(core.paths.config, USER_CONFIG);
 });
 afterAll(() => fs.rmSync(sandbox, { recursive: true, force: true }));

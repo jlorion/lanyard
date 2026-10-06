@@ -37,7 +37,7 @@ export function BackupsPage() {
     <>
       <PageHeader
         title="Backups"
-        description="A snapshot is taken before every change sshm makes to your SSH config or known_hosts."
+        description="A snapshot is taken before every change Lanyard makes to your SSH config or known_hosts."
         actions={(
           <Segmented
             value={kind}

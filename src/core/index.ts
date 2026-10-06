@@ -4,6 +4,8 @@
  * ~/.ssh directly.
  */
 
+import { migrateLegacyData } from './state/migrate';
+
 export { paths, describePaths } from './config/paths';
 export * as providers from './providers';
 export * as accounts from './services/accounts.service';
@@ -15,4 +17,7 @@ export * as agent from './agent/agent.service';
 export * as backups from './backups/backup.service';
 export * as git from './git/git.service';
 export * as terminal from './terminal/terminal';
-export { SshmError } from './utils/exec';
+export { LanyardError } from './utils/exec';
+
+// Move ~/.sshm (pre-rename) to ~/.lanyard before anything reads state.
+migrateLegacyData();

@@ -1,5 +1,5 @@
 /**
- * sshm's own persistent state (~/.sshm/state.json), shared by the desktop app
+ * Lanyard's own persistent state (~/.lanyard/state.json), shared by the desktop app
  * and the CLI. Always read fresh: the other process may have changed it.
  */
 

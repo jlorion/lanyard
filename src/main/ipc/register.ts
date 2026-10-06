@@ -1,14 +1,14 @@
 /** Dispatches renderer calls on the single invoke channel to the API object. */
 
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
-import { IPC_CHANNELS, type IpcResponse, type SshmApi } from '../../shared/ipc';
+import { IPC_CHANNELS, type IpcResponse, type LanyardApi } from '../../shared/ipc';
 
 type AnyFn = (...args: unknown[]) => Promise<unknown>;
 
-function lookup(api: SshmApi, namespace: unknown, method: unknown): AnyFn | null {
+function lookup(api: LanyardApi, namespace: unknown, method: unknown): AnyFn | null {
   if (typeof namespace !== 'string' || typeof method !== 'string') return null;
   if (!Object.hasOwn(api, namespace)) return null;
-  const group = api[namespace as keyof SshmApi] as unknown as Record<string, unknown>;
+  const group = api[namespace as keyof LanyardApi] as unknown as Record<string, unknown>;
   if (!Object.hasOwn(group, method)) return null;
   const fn = group[method];
   return typeof fn === 'function' ? (fn as AnyFn) : null;
@@ -21,7 +21,7 @@ function trustedSender(event: IpcMainInvokeEvent): boolean {
   return url.startsWith('file://') || (!!devUrl && url.startsWith(devUrl));
 }
 
-export function registerIpc(api: SshmApi): void {
+export function registerIpc(api: LanyardApi): void {
   ipcMain.handle(IPC_CHANNELS.invoke, async (event, namespace: unknown, method: unknown, args: unknown): Promise<IpcResponse> => {
     if (!trustedSender(event)) return { ok: false, error: 'Untrusted sender' };
     const fn = lookup(api, namespace, method);

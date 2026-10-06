@@ -11,7 +11,7 @@ export interface Resource<T> {
 
 /**
  * Load data from the main process and reload it whenever one of `topics`
- * changes on disk (the main process watches ~/.ssh and ~/.sshm).
+ * changes on disk (the main process watches ~/.ssh and ~/.lanyard).
  */
 export function useResource<T>(load: () => Promise<T>, topics: ChangeTopic[] = []): Resource<T> {
   const [data, setData] = useState<T>();
@@ -41,7 +41,7 @@ export function useResource<T>(load: () => Promise<T>, topics: ChangeTopic[] = [
   useEffect(() => {
     if (!topicKey) return;
     const wanted = topicKey.split(',');
-    return window.sshm.onChanged((changed) => {
+    return window.lanyard.onChanged((changed) => {
       if (changed.some((t) => wanted.includes(t))) void reload();
     });
   }, [topicKey, reload]);

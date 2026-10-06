@@ -1,6 +1,6 @@
-# SSH Manager
+# Lanyard
 
-A desktop app (Electron + React + TypeScript) and a CLI (`sshm`) for managing SSH:
+Your SSH identities on a lanyard: a desktop app (Electron + React + TypeScript) and a CLI (`lanyard`, short alias `lny`) for managing SSH:
 
 - **Git accounts per provider.** Keep several accounts on GitHub, GitLab, Bitbucket, Hugging Face, Azure DevOps, Codeberg, Gitea, SourceHut or a self-hosted server, and switch which one plain `git@github.com:…` URLs use.
 - **Hosts.** Edit the `Host` entries in `~/.ssh/config` without losing comments or formatting. There's a raw editor that OpenSSH validates, an effective-config view (`ssh -G`), one-click connect, and **per-host key switching**.
@@ -13,7 +13,7 @@ A desktop app (Electron + React + TypeScript) and a CLI (`sshm`) for managing SS
 The app owns one clearly marked block at the top of `~/.ssh/config`. Everything else in the file is left byte-for-byte untouched:
 
 ```sshconfig
-# >>> sshm managed section >>>
+# >>> lanyard managed section >>>
 # GitHub - active account: work
 Host github.com
     User git
@@ -29,15 +29,15 @@ Host github.com-personal
     HostName github.com
     ...
 Host *
-# <<< sshm managed section <<<
+# <<< lanyard managed section <<<
 
 # ...your own config, unchanged...
 ```
 
 - **Switching** rewrites the `Host github.com` block, so plain `git@github.com:org/repo.git` URLs use the selected account.
-- **Alias hosts** such as `github.com-personal` let you use several accounts side by side. `sshm url` and `sshm repo` rewrite remotes to use them.
+- **Alias hosts** such as `github.com-personal` let you use several accounts side by side. `lanyard url` and `lanyard repo` rewrite remotes to use them.
 - **The trailing `Host *`** resets scope, so global directives in your own part of the file still apply to every host.
-- **Backups.** Every write is backed up to `~/.sshm/backups` and can be restored from the app or the CLI.
+- **Backups.** Every write is backed up to `~/.lanyard/backups` and can be restored from the app or the CLI.
 
 ## Development
 
@@ -50,35 +50,37 @@ npm run build      # compiles main, preload, renderer and the CLI into out/
 npm run dist       # installer in release/ (NSIS on Windows, dmg on macOS, AppImage on Linux)
 ```
 
-Set `SSHM_SSH_DIR` and `SSHM_HOME` to point the app and the CLI at a sandbox instead of `~/.ssh` and `~/.sshm`.
+Set `LANYARD_SSH_DIR` and `LANYARD_HOME` to point the app and the CLI at a sandbox instead of `~/.ssh` and `~/.lanyard`.
 
 ## CLI
 
-After `npm run build`, run `npm link` once to put `sshm` on your PATH. An installed app also ships a shim at `resources/cli/sshm.cmd` (Windows) or `resources/cli/sshm` (macOS/Linux). It runs the CLI with the app's own binary, so it doesn't need Node.js.
+After `npm run build`, run `npm link` once to put `lanyard` (and the short alias `lny`) on your PATH. An installed app also ships a shim at `resources/cli/lanyard.cmd` (Windows) or `resources/cli/lanyard` (macOS/Linux). It runs the CLI with the app's own binary, so it doesn't need Node.js.
 
 ```bash
-sshm status                                   # active account per provider
-sshm accounts add github work --generate --git-email me@work.com --set-git-identity
-sshm accounts add github personal --key ~/.ssh/id_ed25519
-sshm use github personal                      # switch
-sshm test --all                               # ssh -T every account
-git clone $(sshm url github work https://github.com/acme/app)
-sshm repo github work ./my-repo               # point an existing repo at an account
+lanyard status                                   # active account per provider
+lanyard accounts add github work --generate --git-email me@work.com --set-git-identity
+lanyard accounts add github personal --key ~/.ssh/id_ed25519
+lanyard use github personal                      # switch
+lanyard test --all                               # ssh -T every account
+git clone $(lanyard url github work https://github.com/acme/app)
+lanyard repo github work ./my-repo               # point an existing repo at an account
 
-sshm hosts add prod -H 203.0.113.10 -u deploy -k id_ed25519_servers
-sshm hosts key prod id_ed25519_other          # switch the key a host uses
-sshm hosts key prod --default                 # back to ssh's default keys
-sshm connect prod
-sshm hosts resolve prod                       # ssh -G
+lanyard hosts add prod -H 203.0.113.10 -u deploy -k id_ed25519_servers
+lanyard hosts key prod id_ed25519_other          # switch the key a host uses
+lanyard hosts key prod --default                 # back to ssh's default keys
+lanyard connect prod
+lanyard hosts resolve prod                       # ssh -G
 
-sshm keys gen id_ed25519_new -C me@example.com
-sshm agent add id_ed25519_new                 # prompts for the passphrase
-sshm known-hosts scan github.com --trust
-sshm backups list && sshm backups restore <id>
-sshm gui                                      # open the desktop app
+lanyard keys gen id_ed25519_new -C me@example.com
+lanyard agent add id_ed25519_new                 # prompts for the passphrase
+lanyard known-hosts scan github.com --trust
+lanyard backups list && lanyard backups restore <id>
+lanyard gui                                      # open the desktop app
 ```
 
 Add `--json` to any command for machine-readable output.
+
+> Upgrading from the pre-rename `sshm` builds: `~/.sshm` is moved to `~/.lanyard` on first run, and the old `sshm managed section` block in `~/.ssh/config` is recognised and rewritten in place on the next change.
 
 ## Architecture
 
@@ -107,4 +109,4 @@ src/
       └─ styles/      Design tokens and component styles
 ```
 
-The renderer is sandboxed and only talks to the main process through the typed `SshmApi`. The main process delegates every SSH operation to `src/core`, the same code the CLI runs. A file watcher on `~/.ssh` and `~/.sshm` keeps the window and the tray in sync when the CLI or an editor changes something.
+The renderer is sandboxed and only talks to the main process through the typed `SshmApi`. The main process delegates every SSH operation to `src/core`, the same code the CLI runs. A file watcher on `~/.ssh` and `~/.lanyard` keeps the window and the tray in sync when the CLI or an editor changes something.

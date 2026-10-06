@@ -1,7 +1,7 @@
 #!/bin/sh
-# sshm CLI shim for the installed macOS / Linux app (resources/cli/sshm).
+# lanyard CLI shim for the installed macOS / Linux app (resources/cli/lanyard).
 # Runs the bundled CLI with the app's own Electron binary in Node mode.
-# Symlink it onto your PATH, e.g.  ln -s "<this file>" /usr/local/bin/sshm
+# Symlink it onto your PATH, e.g.  ln -s "<this file>" /usr/local/bin/lanyard
 set -e
 SELF="$0"
 while [ -L "$SELF" ]; do
@@ -10,9 +10,9 @@ while [ -L "$SELF" ]; do
 done
 DIR="$(cd "$(dirname "$SELF")" && pwd)"
 if [ "$(uname)" = "Darwin" ]; then
-  APP="$DIR/../../MacOS/SSH Manager"
+  APP="$DIR/../../MacOS/Lanyard"
 else
-  APP="$DIR/../../ssh-manager"
+  APP="$DIR/../../lanyard"
 fi
-export SSHM_APP_EXE="$APP"
-ELECTRON_RUN_AS_NODE=1 exec "$APP" "$DIR/../app.asar/bin/sshm.js" "$@"
+export LANYARD_APP_EXE="$APP"
+ELECTRON_RUN_AS_NODE=1 exec "$APP" "$DIR/../app.asar/bin/lanyard.js" "$@"

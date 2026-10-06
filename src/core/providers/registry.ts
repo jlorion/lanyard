@@ -122,7 +122,7 @@ export function allProviders(state: State): Provider[] {
 
 export function getProvider(state: State, id: string): Provider {
   const p = allProviders(state).find((x) => x.id === id);
-  if (!p) throw new Error(`Unknown provider "${id}". Run \`sshm providers\` to list them.`);
+  if (!p) throw new Error(`Unknown provider "${id}". Run \`lanyard providers\` to list them.`);
   return p;
 }
 

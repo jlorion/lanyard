@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app, clipboard, dialog, shell } from 'electron';
 import * as core from '../../core';
-import type { AppInfo, SshmApi } from '../../shared/ipc';
+import type { AppInfo, LanyardApi } from '../../shared/ipc';
 import type { MainWindow } from '../window';
 
 export interface ApiContext {
@@ -19,17 +19,17 @@ export interface ApiContext {
 
 function cliHint(): string {
   if (app.isPackaged) {
-    const shim = process.platform === 'win32' ? 'sshm.cmd' : 'sshm';
+    const shim = process.platform === 'win32' ? 'lanyard.cmd' : 'lanyard';
     return `"${path.join(process.resourcesPath, 'cli', shim)}"`;
   }
-  return `node "${path.join(app.getAppPath(), 'bin', 'sshm.js')}"`;
+  return `node "${path.join(app.getAppPath(), 'bin', 'lanyard.js')}"`;
 }
 
 export function openInTerminal(cmd: string, args: string[], title: string): void {
   core.terminal.openTerminal(cmd, args, { preference: core.settings.get().terminal, title });
 }
 
-export function createApi(ctx: ApiContext): SshmApi {
+export function createApi(ctx: ApiContext): LanyardApi {
   const parent = () => ctx.window.browserWindow ?? undefined;
 
   async function pick(properties: Electron.OpenDialogOptions['properties'], defaultPath?: string) {

@@ -73,7 +73,7 @@ function findHost(core: Core, alias: string): HostEntry {
 }
 
 function assertUserHost(h: HostEntry): void {
-  if (h.managed) throw new Error('This entry is managed by sshm. Use `sshm accounts` instead.');
+  if (h.managed) throw new Error('This entry is managed by Lanyard. Use `lanyard accounts` instead.');
 }
 
 export const register: CommandModule = (program, core) => {
@@ -102,7 +102,7 @@ export const register: CommandModule = (program, core) => {
       const h = findHost(core, alias);
       out.emit(h, () => {
         if (h.comment) out.print(c.dim(h.comment.split('\n').map((l) => `# ${l}`).join('\n')));
-        out.print(c.bold(`${h.kind} ${h.patterns}`) + (h.managed ? c.dim('  (managed by sshm)') : ''));
+        out.print(c.bold(`${h.kind} ${h.patterns}`) + (h.managed ? c.dim('  (managed by Lanyard)') : ''));
         for (const opt of h.options) out.print(`    ${opt.key} ${opt.value}`);
       });
     }));
@@ -150,7 +150,7 @@ export const register: CommandModule = (program, core) => {
         out.emit({ alias, identityFile: h.identityFile || null, key: current?.name ?? null, available: keys.map((k) => k.name) }, () => {
           out.print(`${c.bold(alias)} uses ${h.identityFile ? c.green(current?.name ?? h.identityFile) : c.dim('the default SSH keys')}`, '');
           for (const k of keys) out.print(`  ${k === current ? c.green('●') : ' '} ${k.name} ${c.dim(k.type)}`);
-          out.print('', c.dim(`Switch with: sshm hosts key ${alias} <key>`));
+          out.print('', c.dim(`Switch with: lanyard hosts key ${alias} <key>`));
         });
         return;
       }

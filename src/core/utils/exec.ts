@@ -57,9 +57,9 @@ export function run(cmd: string, args: string[] = [], options: RunOptions = {}):
 }
 
 /** Error with a machine-readable code the UI/CLI can branch on. */
-export class SshmError extends Error {
+export class LanyardError extends Error {
   constructor(message: string, public readonly code: string) {
     super(message);
-    this.name = 'SshmError';
+    this.name = 'LanyardError';
   }
 }

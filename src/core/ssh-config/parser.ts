@@ -5,7 +5,7 @@
  * comments, ordering, blank lines and odd formatting survive round trips.
  */
 
-import { BEGIN, END } from './managed-section';
+import { BEGIN, END, LEGACY_BEGIN, LEGACY_END } from './managed-section';
 import type { Block, ConfigModel, Directive, Line } from './model';
 
 const DIRECTIVE_RE = /^(\s*)([A-Za-z][A-Za-z0-9]*)(?:\s*=\s*|\s+)(.*?)\s*$/;
@@ -19,7 +19,7 @@ export function parseLine(raw: string): Line {
   return { type: 'directive', raw, indent: m[1], key: m[2], value: m[3] };
 }
 
-/** Parse a line that is known to be a directive (built by sshm itself). */
+/** Parse a line that is known to be a directive (built by Lanyard itself). */
 export function parseDirective(raw: string): Directive {
   const line = parseLine(raw);
   if (line.type !== 'directive') throw new Error(`Not a directive: ${raw}`);
@@ -56,15 +56,17 @@ export function parse(text = ''): ConfigModel {
   if (lines.length && lines[lines.length - 1] === '') lines.pop();
 
   let managedLines: string[] = [];
-  const b = lines.findIndex((l) => l.trim() === BEGIN);
+  const isBegin = (l: string) => l.trim() === BEGIN || l.trim() === LEGACY_BEGIN;
+  const isEnd = (l: string) => l.trim() === END || l.trim() === LEGACY_END;
+  const b = lines.findIndex(isBegin);
   if (b !== -1) {
     // A missing END marker means somebody mangled the section. Only the BEGIN
     // line is treated as managed so that no user content can be lost.
-    let e = lines.findIndex((l, i) => i > b && l.trim() === END);
+    let e = lines.findIndex((l, i) => i > b && isEnd(l));
     if (e === -1) e = b;
     managedLines = lines.slice(b, e + 1);
     lines = [...lines.slice(0, b), ...lines.slice(e + 1)];
-    // Drop the blank separator line sshm writes after the section.
+    // Drop the blank separator line Lanyard writes after the section.
     if (lines[b] !== undefined && lines[b].trim() === '') lines.splice(b, 1);
   }
 

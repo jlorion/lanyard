@@ -1,7 +1,7 @@
 /**
  * The contract between the Electron main process and the renderer.
  *
- * The main process implements `SshmApi`; the renderer gets a typed client for
+ * The main process implements `LanyardApi`; the renderer gets a typed client for
  * it. Calls travel over a single channel as (namespace, method, args) and the
  * reply is an `IpcResponse` envelope so error codes survive the trip.
  */
@@ -28,7 +28,7 @@ import type {
   RepoRewriteResult,
   ScannedHostKey,
   Settings,
-  SshmPaths,
+  LanyardPaths,
   TestResult,
   TrashResult,
   UpdateAccountInput,
@@ -36,11 +36,11 @@ import type {
 } from './types';
 
 export const IPC_CHANNELS = {
-  invoke: 'sshm:invoke',
+  invoke: 'lanyard:invoke',
   /** main -> renderer: files on disk changed (config, known_hosts, state). */
-  changed: 'sshm:changed',
+  changed: 'lanyard:changed',
   /** main -> renderer: the tray asked to show a page. */
-  navigate: 'sshm:navigate',
+  navigate: 'lanyard:navigate',
 } as const;
 
 export type ChangeTopic = 'config' | 'knownHosts' | 'state' | 'keys';
@@ -48,13 +48,13 @@ export type ChangeTopic = 'config' | 'knownHosts' | 'state' | 'keys';
 export interface AppInfo {
   version: string;
   platform: 'win32' | 'darwin' | 'linux' | (string & {});
-  paths: SshmPaths;
+  paths: LanyardPaths;
   terminalChoices: string[];
   /** Command that runs the CLI from this installation. */
   cliHint: string;
 }
 
-export interface SshmApi {
+export interface LanyardApi {
   accounts: {
     overview(): Promise<ProviderOverview[]>;
     add(input: AddAccountInput): Promise<AddAccountResult>;
@@ -127,13 +127,13 @@ export interface SshmApi {
   };
 }
 
-export type ApiNamespace = keyof SshmApi;
+export type ApiNamespace = keyof LanyardApi;
 
 export type IpcResponse<T = unknown> =
   | { ok: true; data: T }
   | { ok: false; error: string; code?: string };
 
-/** What the preload script exposes on `window.sshm`. */
+/** What the preload script exposes on `window.lanyard`. */
 export interface PreloadBridge {
   invoke(namespace: string, method: string, args: unknown[]): Promise<IpcResponse>;
   onChanged(listener: (topics: ChangeTopic[]) => void): () => void;

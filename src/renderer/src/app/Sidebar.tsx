@@ -15,7 +15,7 @@ export function Sidebar({ current, onNavigate, version }: {
       <div className="brand">
         <div className="brand-mark">&gt;_</div>
         <div>
-          <div className="brand-name">SSH Manager</div>
+          <div className="brand-name">Lanyard</div>
           <div className="brand-sub">keys · hosts · accounts</div>
         </div>
       </div>

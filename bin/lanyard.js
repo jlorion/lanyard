@@ -7,7 +7,7 @@ const path = require('path');
 
 const entry = path.join(__dirname, '..', 'out', 'main', 'cli.js');
 if (!fs.existsSync(entry)) {
-  process.stderr.write('sshm is not built yet. Run `npm run build` in the project directory first.\n');
+  process.stderr.write('lanyard is not built yet. Run `npm run build` in the project directory first.\n');
   process.exit(1);
 }
 require(entry).run(process.argv);

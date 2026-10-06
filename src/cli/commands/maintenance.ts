@@ -10,8 +10,8 @@ const { c } = out;
 
 function launchGui(): void {
   // Packaged app: the shim runs the CLI inside the app binary and tells us where it is.
-  if (process.env.SSHM_APP_EXE) {
-    detached(process.env.SSHM_APP_EXE, [], { ELECTRON_RUN_AS_NODE: undefined });
+  if (process.env.LANYARD_APP_EXE) {
+    detached(process.env.LANYARD_APP_EXE, [], { ELECTRON_RUN_AS_NODE: undefined });
     return;
   }
   // Development checkout: this file is out/main/cli.js; start Electron from node_modules.
@@ -57,7 +57,7 @@ export const register: CommandModule = (program, core) => {
   const config = program.command('config').description('ssh config file utilities');
   config
     .command('path')
-    .description('print the paths sshm uses')
+    .description('print the paths Lanyard uses')
     .action(out.action(() => {
       const data = core.describePaths();
       out.emit(data, () => Object.entries(data).forEach(([k, v]) => out.print(`${c.dim(k.padEnd(11))} ${v}`)));
@@ -85,6 +85,6 @@ export const register: CommandModule = (program, core) => {
     .description('open the desktop app')
     .action(out.action(() => {
       launchGui();
-      out.ok('Launching SSH Manager…');
+      out.ok('Launching Lanyard…');
     }));
 };

@@ -1,6 +1,6 @@
 /** ssh-agent access through ssh-add. */
 
-import { run, SshmError } from '../utils/exec';
+import { run, LanyardError } from '../utils/exec';
 import { isWin } from '../utils/fs-safe';
 import * as keys from '../keys/keys.service';
 import type { AgentIdentity, AgentStatus } from '../../shared/types';
@@ -48,7 +48,7 @@ export async function add(ref: string): Promise<{ added: string }> {
   const key = keys.get(ref);
   const file = privatePath(ref);
   if (key.encrypted) {
-    throw new SshmError('This key is passphrase-protected; it must be added from a terminal.', 'NEEDS_PASSPHRASE');
+    throw new LanyardError('This key is passphrase-protected; it must be added from a terminal.', 'NEEDS_PASSPHRASE');
   }
   const r = await run('ssh-add', [file], { timeout: 15000 });
   if (r.code !== 0) throw new Error((r.stderr || r.stdout).trim() || 'ssh-add failed');

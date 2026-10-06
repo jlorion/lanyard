@@ -27,7 +27,7 @@ export function writePrivate(file: string, content: string): void {
   else fs.writeFileSync(file, content, { encoding: 'utf8', mode: 0o600 });
 }
 
-/** Atomic write for sshm's own files (state.json), where ACLs don't matter. */
+/** Atomic write for Lanyard's own files (state.json), where ACLs don't matter. */
 export function writeAtomic(file: string, content: string): void {
   ensureDir(path.dirname(file));
   const tmp = `${file}.${process.pid}.tmp`;

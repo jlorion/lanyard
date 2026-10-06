@@ -244,7 +244,7 @@ export interface Settings {
   backupLimit: number;
 }
 
-export interface SshmPaths {
+export interface LanyardPaths {
   sshDir: string;
   config: string;
   knownHosts: string;

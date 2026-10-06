@@ -18,7 +18,7 @@ export interface Block {
 
 export interface ConfigModel {
   eol: '\n' | '\r\n';
-  /** Raw lines of the sshm managed section (empty when absent). */
+  /** Raw lines of the lanyard managed section (empty when absent). */
   managedLines: string[];
   /** Global directives before the first Host/Match block. */
   preamble: Line[];

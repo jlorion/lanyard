@@ -37,10 +37,10 @@ export function save(model: ConfigModel, reason: string): boolean {
  * ok (skipped) when ssh is unavailable so validation never blocks saving.
  */
 export async function validate(text: string): Promise<ConfigValidation> {
-  const tmp = path.join(os.tmpdir(), `sshm-validate-${process.pid}-${Date.now()}.conf`);
+  const tmp = path.join(os.tmpdir(), `lanyard-validate-${process.pid}-${Date.now()}.conf`);
   fs.writeFileSync(tmp, text, { encoding: 'utf8', mode: 0o600 });
   try {
-    const r = await run('ssh', ['-G', '-F', tmp, 'sshm-validate-probe'], { timeout: 10000 });
+    const r = await run('ssh', ['-G', '-F', tmp, 'lanyard-validate-probe'], { timeout: 10000 });
     if (r.code === 0) return { ok: true };
     const error = (r.stderr || r.stdout).trim().split(/\r?\n/)
       .filter((l) => !/terminating|^\s*$/.test(l))

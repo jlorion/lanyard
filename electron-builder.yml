@@ -1,5 +1,5 @@
-appId: dev.riomar.sshmanager
-productName: SSH Manager
+appId: dev.riomar.lanyard
+productName: Lanyard
 directories:
   buildResources: resources
   output: release
@@ -15,7 +15,8 @@ extraResources:
     to: cli
 win:
   target: nsis
-  icon: resources/icon.png
+  icon: resources/icon.ico
+  executableName: Lanyard
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
@@ -25,5 +26,6 @@ mac:
   category: public.app-category.developer-tools
 linux:
   target: AppImage
+  executableName: lanyard
   icon: resources/icon.png
   category: Development

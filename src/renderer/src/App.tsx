@@ -8,7 +8,7 @@ import { ConfirmProvider } from './components/feedback/ConfirmProvider';
 import { Callout } from './components/ui/Feedback';
 import type { AppInfo } from '../../shared/ipc';
 
-const PAGE_KEY = 'sshm.page';
+const PAGE_KEY = 'lanyard.page';
 
 function initialPage(): PageId {
   try {
@@ -30,7 +30,7 @@ export function App() {
   }, []);
 
   // The tray can ask the window to open on a specific page.
-  useEffect(() => window.sshm.onNavigate((p) => isPageId(p) && setPage(p)), []);
+  useEffect(() => window.lanyard.onNavigate((p) => isPageId(p) && setPage(p)), []);
 
   useEffect(() => {
     try {

@@ -66,7 +66,7 @@ export function RawConfigEditor() {
         <Button icon={<CheckCircle2 size={15} />} loading={isBusy('validate')} onClick={() => void validate()}>Validate</Button>
         <Button variant="primary" icon={<Save size={15} />} disabled={!dirty} onClick={() => void save()}>Save</Button>
       </div>
-      <Callout>A backup is taken before every save. The block between the <code>sshm managed section</code> markers is regenerated from your git accounts.</Callout>
+      <Callout>A backup is taken before every save. The block between the <code>lanyard managed section</code> markers is regenerated from your git accounts.</Callout>
       {problem && <Callout tone="danger"><pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{problem}</pre></Callout>}
       <Textarea
         className="raw-editor"

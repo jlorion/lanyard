@@ -1,13 +1,21 @@
 import os from 'node:os';
 import path from 'node:path';
-import type { SshmPaths } from '../../shared/types';
+import type { LanyardPaths } from '../../shared/types';
 
 export const HOME = os.homedir();
 
 // Both directories can be overridden through env vars, which keeps tests (and
-// experiments) away from the real ~/.ssh.
-const sshDir = (): string => process.env.SSHM_SSH_DIR || path.join(HOME, '.ssh');
-const dataDir = (): string => process.env.SSHM_HOME || path.join(HOME, '.sshm');
+// experiments) away from the real ~/.ssh. The SSHM_* names predate the rename.
+const sshDir = (): string => process.env.LANYARD_SSH_DIR || process.env.SSHM_SSH_DIR || path.join(HOME, '.ssh');
+const dataDir = (): string => process.env.LANYARD_HOME || process.env.SSHM_HOME || path.join(HOME, '.lanyard');
+
+/** Data directory used before the app was renamed to Lanyard. */
+export const LEGACY_DATA_DIR = path.join(HOME, '.sshm');
+
+/** True when the data directory comes from an env override (tests, sandboxes). */
+export function dataDirOverridden(): boolean {
+  return !!(process.env.LANYARD_HOME || process.env.SSHM_HOME);
+}
 
 export const paths = {
   get sshDir() { return sshDir(); },
@@ -19,7 +27,7 @@ export const paths = {
   get trash() { return path.join(dataDir(), 'trash'); },
 };
 
-export function describePaths(): SshmPaths {
+export function describePaths(): LanyardPaths {
   return {
     sshDir: paths.sshDir,
     config: paths.config,

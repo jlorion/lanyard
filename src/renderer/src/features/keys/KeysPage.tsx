@@ -49,11 +49,11 @@ export function KeysPage() {
     }
     const ok = await confirm({
       title: `Delete ${k.name}?`,
-      message: <>The key pair is moved to <code>~/.sshm/trash</code>, so it can still be recovered. Anything that relies on this key will stop working.</>,
+      message: <>The key pair is moved to <code>~/.lanyard/trash</code>, so it can still be recovered. Anything that relies on this key will stop working.</>,
       confirmLabel: 'Move to trash',
       danger: true,
     });
-    if (ok) await run(`rm:${k.name}`, () => api.keys.remove(k.tildePath), `${k.name} moved to ~/.sshm/trash`);
+    if (ok) await run(`rm:${k.name}`, () => api.keys.remove(k.tildePath), `${k.name} moved to ~/.lanyard/trash`);
   };
 
   const showPublic = async (k: KeyInfo) => {
@@ -65,7 +65,7 @@ export function KeysPage() {
     <>
       <PageHeader
         title="Keys"
-        description="Key pairs in ~/.ssh. Fingerprints are computed locally; deleting moves keys to ~/.sshm/trash."
+        description="Key pairs in ~/.ssh. Fingerprints are computed locally; deleting moves keys to ~/.lanyard/trash."
         actions={<Button variant="primary" icon={<Plus size={15} />} onClick={() => setDialog({ kind: 'generate' })}>Generate key</Button>}
       />
 

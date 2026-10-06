@@ -1,6 +1,6 @@
 /**
  * Snapshots of ~/.ssh/config and known_hosts taken before every write, stored
- * in ~/.sshm/backups as "<kind>_<timestamp>[_<reason>].bak".
+ * in ~/.lanyard/backups as "<kind>_<timestamp>[_<reason>].bak".
  */
 
 import fs from 'node:fs';

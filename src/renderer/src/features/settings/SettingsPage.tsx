@@ -55,7 +55,7 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Preferences are stored in ~/.sshm/state.json and shared with the sshm CLI." />
+      <PageHeader title="Settings" description="Preferences are stored in ~/.lanyard/state.json and shared with the lanyard CLI." />
 
       {s && (
         <>
@@ -112,13 +112,13 @@ export function SettingsPage() {
       <div className="section-title">Command line</div>
       <div className="card settings-section">
         <div className="card-body stack">
-          <p className="muted">Everything here is also available from the <code>sshm</code> CLI. From this installation run:</p>
+          <p className="muted">Everything here is also available from the <code>lanyard</code> CLI. From this installation run:</p>
           <div className="row">
             <code className="selectable truncate" style={{ flex: 1 }}>{info.cliHint}</code>
             <Button size="sm" icon={<Copy size={14} />} onClick={() => run('copy', () => api.app.copy(info.cliHint), 'Copied')}>Copy</Button>
           </div>
-          <CodeBlock>{CLI_EXAMPLES.map((e) => `sshm ${e}`).join('\n')}</CodeBlock>
-          <p className="faint">Tip: <code>npm link</code> in the project folder puts <code>sshm</code> on your PATH. Use <code>--json</code> for scripting; <code>{cli('--help')}</code> lists every command.</p>
+          <CodeBlock>{CLI_EXAMPLES.map((e) => `lanyard ${e}`).join('\n')}</CodeBlock>
+          <p className="faint">Tip: <code>npm link</code> in the project folder puts <code>lanyard</code> on your PATH. Use <code>--json</code> for scripting; <code>{cli('--help')}</code> lists every command.</p>
         </div>
       </div>
 

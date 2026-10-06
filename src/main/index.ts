@@ -13,7 +13,7 @@ import { applyLaunchAtLogin, HIDDEN_FLAG } from './login-item';
 import { createApi, openInTerminal } from './ipc/api';
 import { registerIpc } from './ipc/register';
 
-const APP_ID = 'dev.riomar.sshmanager';
+const APP_ID = 'dev.riomar.lanyard';
 
 function bootstrap(): void {
   let tray: TrayController | null = null;
@@ -76,6 +76,11 @@ function bootstrap(): void {
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.setAppUserModelId(APP_ID); // required for Windows notifications
+  // Windows ties taskbar icons and notifications to the App User Model ID. The
+  // installer registers a Start-menu shortcut for APP_ID; in development no such
+  // shortcut exists, and Windows would fall back to electron.exe's icon, so the
+  // dev build keeps the default ID and the window icon wins.
+  app.setName('Lanyard');
+  if (app.isPackaged) app.setAppUserModelId(APP_ID);
   bootstrap();
 }

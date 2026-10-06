@@ -25,7 +25,7 @@ export class TrayController {
 
   constructor(private readonly deps: TrayDeps) {
     this.tray = new Tray(trayIcon());
-    this.tray.setToolTip('SSH Manager');
+    this.tray.setToolTip('Lanyard');
     // Windows/Linux convention: left click opens the window, right click the menu.
     this.tray.on('click', () => deps.window.toggle());
     this.refresh();
@@ -45,13 +45,13 @@ export class TrayController {
 
   private tooltip(providers: ProviderOverview[]): string {
     const active = providers.filter((p) => p.active).map((p) => `${p.name}: ${p.active}`);
-    return ['SSH Manager', ...active].join('\n');
+    return ['Lanyard', ...active].join('\n');
   }
 
   private template(providers: ProviderOverview[]): MenuItemConstructorOptions[] {
     const { window } = this.deps;
     return [
-      { label: 'Open SSH Manager', click: () => window.show() },
+      { label: 'Open Lanyard', click: () => window.show() },
       { type: 'separator' },
       ...(providers.length
         ? providers.map((p) => this.providerMenu(p))
@@ -70,7 +70,7 @@ export class TrayController {
         checked: core.settings.get().launchAtLogin,
         click: (item) => this.deps.setLaunchAtLogin(item.checked),
       },
-      { label: 'Quit SSH Manager', click: () => this.deps.quit() },
+      { label: 'Quit Lanyard', click: () => this.deps.quit() },
     ];
   }
 

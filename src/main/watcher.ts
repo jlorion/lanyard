@@ -1,5 +1,5 @@
 /**
- * Watches ~/.ssh and ~/.sshm so changes made by the CLI, an editor or another
+ * Watches ~/.ssh and ~/.lanyard so changes made by the CLI, an editor or another
  * tool show up in the window and tray without a manual refresh.
  */
 
