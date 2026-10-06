@@ -1,0 +1,157 @@
+# CI for the `build` branch.
+#
+#   pull request into build  ->  checks + tests on Windows, macOS and Linux
+#   push to build / manual   ->  the same, then installers for all three
+#                                platforms and the npm package, as artifacts
+#
+# Builds are unsigned; they are for testing and for attaching to a release.
+
+name: Build
+
+on:
+  push:
+    branches: [build]
+  pull_request:
+    branches: [build]
+  workflow_dispatch:
+
+# A newer push to the same branch makes the running build pointless.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+  # Keep the logs free of npm's funding / update notices.
+  npm_config_fund: false
+  npm_config_update_notifier: false
+
+jobs:
+  checks:
+    name: Format, lint, typecheck, audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      # Runtime dependencies must stay clean; see SECURITY.md for the
+      # build-tool advisory that is accepted.
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=low
+
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The tests drive the real ssh / ssh-keygen, which every runner image ships.
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # Built output lets the CLI shim tests run the real compiled CLI.
+      - run: npm run build
+      - run: npm test
+
+  package:
+    name: Package (${{ matrix.name }})
+    if: github.event_name != 'pull_request'
+    needs: [checks, test]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-latest
+            exe: release/win-unpacked/Lanyard.exe
+            asar: release/win-unpacked/resources/app.asar
+            files: |
+              release/*.exe
+              release/*.exe.blockmap
+          - name: macos
+            os: macos-latest
+            exe: release/mac-arm64/Lanyard.app/Contents/MacOS/Lanyard
+            asar: release/mac-arm64/Lanyard.app/Contents/Resources/app.asar
+            files: |
+              release/*.dmg
+              release/*.dmg.blockmap
+          - name: linux
+            os: ubuntu-latest
+            exe: release/linux-unpacked/lanyard
+            asar: release/linux-unpacked/resources/app.asar
+            files: release/*.AppImage
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build installer
+        run: npx electron-builder --publish never
+        env:
+          # No signing identity in CI: build unsigned instead of searching the keychain.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      # The installed lanyard command runs the app binary in Node mode on the
+      # CLI inside app.asar; make sure that still works with the fuses set.
+      - name: Smoke-test the packaged CLI
+        shell: bash
+        env:
+          APP_EXE: ${{ matrix.exe }}
+          APP_ASAR: ${{ matrix.asar }}
+        run: |
+          LANYARD_SSH_DIR="$RUNNER_TEMP/ssh" LANYARD_HOME="$RUNNER_TEMP/home" ELECTRON_RUN_AS_NODE=1 \
+            "$APP_EXE" "$APP_ASAR/bin/lanyard.js" --version
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lanyard-${{ matrix.name }}-${{ github.sha }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+          retention-days: 14
+
+  npm-package:
+    name: npm package
+    if: github.event_name != 'pull_request'
+    needs: [checks, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # prepack builds the CLI; the tarball is what `npm publish` would upload.
+      - run: npm pack
+      - name: Smoke-test the packed CLI
+        run: |
+          mkdir -p "$RUNNER_TEMP/try"
+          npm install --prefix "$RUNNER_TEMP/try" ./lanyard-ssh-*.tgz
+          LANYARD_SSH_DIR="$RUNNER_TEMP/ssh" LANYARD_HOME="$RUNNER_TEMP/home" \
+            "$RUNNER_TEMP/try/node_modules/.bin/lanyard" --version
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lanyard-npm-${{ github.sha }}
+          path: lanyard-ssh-*.tgz
+          if-no-files-found: error
+          retention-days: 14

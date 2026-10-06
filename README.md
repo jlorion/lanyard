@@ -53,12 +53,28 @@ npm install
 npm run dev        # electron-vite dev server + Electron with hot reload
 npm test           # vitest, runs against a throwaway ~/.ssh
 npm run typecheck
+npm run lint       # ESLint (type-aware); lint:fix applies the safe fixes
+npm run format     # Prettier; format:check only reports
+npm run check      # format:check + lint + typecheck + test, as CI runs them
 npm run build      # compiles main, preload, renderer and the CLI into out/
 npm run dist       # installer in release/ (NSIS on Windows, dmg on macOS, AppImage on Linux)
 npm publish        # CLI-only npm package `lanyard-ssh` (prepack builds it first)
 ```
 
 Set `LANYARD_SSH_DIR` and `LANYARD_HOME` to point the app and the CLI at a sandbox instead of `~/.ssh` and `~/.lanyard`.
+
+### CI
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) runs on the `build` branch. A pull request into `build` runs the
+checks (format, lint, typecheck, runtime-dependency audit) and the tests on Windows, macOS and Linux. A push to `build`, or
+a manual run, then also builds unsigned installers for all three platforms and the npm tarball, smoke-tests the CLI in
+each, and uploads them as workflow artifacts. To build a release, merge into `build`:
+
+```bash
+git push origin main:build
+```
+
+Security notes and the latest audit are in [SECURITY.md](SECURITY.md).
 
 ## CLI
 
