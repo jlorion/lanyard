@@ -7,6 +7,7 @@ import { Menu, Notification, Tray, type MenuItemConstructorOptions } from 'elect
 import * as core from '../core';
 import { appIcon, trayIcon } from './assets';
 import type { MainWindow } from './window';
+import { buildHostsMenu } from './tray-hosts-menu';
 import type { HostEntry, KeyInfo, ProviderOverview } from '../shared/types';
 
 export interface TrayDeps {
@@ -58,7 +59,7 @@ export class TrayController {
         : [{ label: 'No git accounts yet', enabled: false }]),
       { label: 'Test active accounts', enabled: providers.some((p) => p.active), click: () => void this.testActive(providers) },
       { type: 'separator' },
-      { label: 'Hosts', submenu: this.hostsMenu() },
+      { label: 'Hosts', submenu: this.hostsMenu(providers) },
       { type: 'separator' },
       { label: 'Manage hosts…', click: () => window.show('hosts') },
       { label: 'Manage keys…', click: () => window.show('keys') },
@@ -101,40 +102,22 @@ export class TrayController {
     };
   }
 
-  /** One submenu per host: connect, test, and a radio list to switch its SSH key. */
-  private hostsMenu(): MenuItemConstructorOptions[] {
+  /** Servers and git hosts, mirroring the Hosts page (built by tray-hosts-menu.ts). */
+  private hostsMenu(providers: ProviderOverview[]): MenuItemConstructorOptions[] {
     let hosts: HostEntry[] = [];
     let keys: KeyInfo[] = [];
     try {
-      hosts = core.hosts.connectable().filter((h) => !h.managed);
+      hosts = core.hosts.list();
       keys = core.keys.list().filter((k) => k.hasPrivate);
     } catch {
-      // unreadable config - the window will show the error
+      return [{ label: 'Could not read ~/.ssh/config', enabled: false }];
     }
-    if (!hosts.length) return [{ label: 'No hosts in ~/.ssh/config', enabled: false }];
-
-    return hosts.slice(0, 30).map((h): MenuItemConstructorOptions => {
-      const current = keys.find((k) => core.keys.isKeyAt(k, h.identityFile));
-      const keyLabel = current?.name ?? (h.identityFile ? h.identityFile.split(/[\\/]/).pop() : 'default keys');
-      return {
-        label: `${h.alias}  ·  ${keyLabel}`,
-        submenu: [
-          { label: `Connect to ${h.hostName || h.alias}`, click: () => this.deps.connect(h.alias) },
-          { label: 'Test login', click: () => void this.testHost(h.alias) },
-          { type: 'separator' },
-          { label: 'SSH key', enabled: false },
-          ...keys.slice(0, 25).map((k): MenuItemConstructorOptions => ({
-            label: `${k.name}${k.encrypted ? '  🔒' : ''}`,
-            type: 'radio',
-            checked: k === current,
-            click: () => void this.setHostKey(h.alias, k),
-          })),
-          ...(h.identityFile && !current
-            ? [{ label: `${keyLabel} (not in ~/.ssh)`, type: 'radio', checked: true, enabled: false } as MenuItemConstructorOptions]
-            : []),
-          { label: 'SSH default keys', type: 'radio', checked: !h.identityFile, click: () => void this.setHostKey(h.alias, null) },
-        ],
-      };
+    return buildHostsMenu({ hosts, keys, providers, isKeyAt: core.keys.isKeyAt }, {
+      connect: (alias) => this.deps.connect(alias),
+      test: (alias) => void this.testHost(alias),
+      setKey: (alias, key) => void this.setHostKey(alias, key),
+      useAccount: (p, name) => void this.switchTo(p, name),
+      addServer: () => this.deps.window.show('hosts', 'add-host'),
     });
   }
 
