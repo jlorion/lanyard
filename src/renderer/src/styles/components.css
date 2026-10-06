@@ -388,6 +388,12 @@ table.table {
 
 /* ------------------------------------------------------------ modal */
 
+.modal-backdrop,
+.palette-backdrop,
+.toasts {
+  -webkit-app-region: no-drag; /* overlays must not inherit the title bar's drag region */
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;

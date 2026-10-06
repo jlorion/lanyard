@@ -61,11 +61,22 @@ function resolve(mode: ThemeMode): 'light' | 'dark' {
 
 let currentTheme: ThemeMode = 'system';
 
+/** Colour the native window buttons (drawn over our custom title bar) like the top bar. */
+function syncTitleBar(): void {
+  requestAnimationFrame(() => {
+    const css = getComputedStyle(document.documentElement);
+    const bg = css.getPropertyValue('--bg').trim();
+    const fg = css.getPropertyValue('--text-muted').trim();
+    if (bg && fg) void api.app.setTitleBarColors(bg, fg).catch(() => {});
+  });
+}
+
 export function applyTheme(mode: ThemeMode): void {
   currentTheme = mode;
   document.documentElement.dataset.theme = resolve(mode);
   write(THEME_KEY, mode);
   void api.app.setTheme(mode).catch(() => {});
+  syncTitleBar();
 }
 
 export function applyAccent(accent: AccentId): void {
@@ -74,5 +85,13 @@ export function applyAccent(accent: AccentId): void {
 }
 
 media.addEventListener('change', () => {
-  if (currentTheme === 'system') document.documentElement.dataset.theme = resolve('system');
+  if (currentTheme !== 'system') return;
+  document.documentElement.dataset.theme = resolve('system');
+  syncTitleBar();
 });
+
+/** 'mac' | 'windows' | 'linux' - lets CSS make room for the native window controls. */
+export function detectPlatform(): 'mac' | 'windows' | 'linux' {
+  const ua = navigator.userAgent;
+  return ua.includes('Mac') ? 'mac' : ua.includes('Windows') ? 'windows' : 'linux';
+}

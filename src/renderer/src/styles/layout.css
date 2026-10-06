@@ -10,21 +10,36 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 16px 10px 12px;
+  padding: 0 10px 12px;
   border-right: 1px solid var(--border);
   background: var(--sidebar-bg);
   color: var(--text);
 }
 
+/* The brand row lines up with the top bar: together they form the title bar. */
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 2px 10px 18px;
+  height: var(--topbar-height);
+  margin: 0 -10px 14px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+}
+
+/* macOS traffic lights sit at the left of the title bar. */
+:root[data-platform='mac'] .brand {
+  padding-left: 84px;
+}
+
+:root[data-platform='mac'] .brand-sub {
+  display: none;
 }
 
 .brand-name {
-  font-size: 18px;
+  font-size: 17px;
+  line-height: 1.1;
   font-weight: 900;
   letter-spacing: -0.01em;
 }
@@ -169,6 +184,19 @@
   padding: 0 24px;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
+  -webkit-app-region: drag; /* custom title bar */
+}
+
+.topbar button,
+.topbar input,
+.topbar a {
+  -webkit-app-region: no-drag;
+}
+
+/* Windows / Linux draw native window buttons over the top-right corner. */
+:root[data-platform='windows'] .topbar,
+:root[data-platform='linux'] .topbar {
+  padding-right: max(150px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 16px));
 }
 
 .search-trigger {

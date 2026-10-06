@@ -12,6 +12,12 @@ export interface MainWindowOptions {
   onCloseRequested: () => void;
 }
 
+/**
+ * Height of the native window-button overlay: --topbar-height (52px) minus the
+ * top bar's 1px bottom border, so the border runs under the buttons too.
+ */
+const TITLE_BAR_HEIGHT = 51;
+
 export class MainWindow {
   private win: BrowserWindow | null = null;
   private ready = false;
@@ -30,8 +36,14 @@ export class MainWindow {
       show: false,
       title: 'Lanyard',
       icon: appIcon(),
-      backgroundColor: '#0f1117',
+      backgroundColor: '#17181c',
       autoHideMenuBar: true,
+      // Custom title bar: the renderer's top bar is the drag region. Windows and
+      // Linux keep native window buttons drawn over it; macOS keeps its traffic lights.
+      titleBarStyle: 'hidden',
+      ...(process.platform === 'darwin'
+        ? { trafficLightPosition: { x: 18, y: 18 } }
+        : { titleBarOverlay: { color: '#17181c', symbolColor: '#e8e8ea', height: TITLE_BAR_HEIGHT } }),
       webPreferences: {
         preload: path.join(__dirname, '../preload/index.js'),
         contextIsolation: true,
@@ -90,6 +102,12 @@ export class MainWindow {
     };
     if (this.ready) reveal();
     else win.once('ready-to-show', reveal);
+  }
+
+  /** Recolour the native window buttons to match the renderer theme (Windows/Linux). */
+  setTitleBarColors(color: string, symbolColor: string): void {
+    if (process.platform === 'darwin' || !this.win || this.win.isDestroyed()) return;
+    this.win.setTitleBarOverlay({ color, symbolColor, height: TITLE_BAR_HEIGHT });
   }
 
   toggle(): void {

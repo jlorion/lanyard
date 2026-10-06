@@ -124,6 +124,10 @@ export function createApi(ctx: ApiContext): LanyardApi {
       setTheme: async (mode) => {
         nativeTheme.themeSource = mode;
       },
+      setTitleBarColors: async (color, symbolColor) => {
+        if (![color, symbolColor].every((c) => /^#[0-9a-f]{6}$/i.test(c))) throw new Error('Colours must be #rrggbb.');
+        ctx.window.setTitleBarColors(color, symbolColor);
+      },
       revealPath: async (target) => {
         if (!fs.existsSync(target)) throw new Error(`Not found: ${target}`);
         shell.showItemInFolder(target);

@@ -126,6 +126,8 @@ export interface LanyardApi {
     revealPath(path: string): Promise<void>;
     /** Match native window chrome to the renderer theme. */
     setTheme(mode: 'system' | 'light' | 'dark'): Promise<void>;
+    /** Colour the native window buttons drawn over the custom title bar. */
+    setTitleBarColors(color: string, symbolColor: string): Promise<void>;
   };
 }
 
