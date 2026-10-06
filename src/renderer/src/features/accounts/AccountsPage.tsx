@@ -31,14 +31,16 @@ export function AccountsPage() {
   const toast = useToast();
   const confirm = useConfirm();
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const [collapsed, setCollapsed] = usePersistentState<Record<string, boolean>>('lanyard.accounts.collapsed', {});
-  const setProviderCollapsed = (id: string, value: boolean) => setCollapsed((c) => ({ ...c, [id]: value }));
+  // Cards start collapsed; only providers the user opened are remembered as expanded.
+  const [expanded, setExpanded] = usePersistentState<Record<string, boolean>>('lanyard.accounts.expanded', {});
+  const isCollapsed = (id: string) => !expanded[id];
+  const setProviderCollapsed = (id: string, value: boolean) => setExpanded((e) => ({ ...e, [id]: !value }));
   useIntent('add-account', () => setDialog({ kind: 'add' }));
 
   const withAccounts = providers.filter((p) => p.accounts.length);
-  const allCollapsed = withAccounts.length > 0 && withAccounts.every((p) => collapsed[p.id]);
+  const allCollapsed = withAccounts.length > 0 && withAccounts.every((p) => isCollapsed(p.id));
   const setAllCollapsed = (value: boolean) =>
-    setCollapsed(Object.fromEntries(withAccounts.map((p) => [p.id, value])));
+    setExpanded(Object.fromEntries(withAccounts.map((p) => [p.id, !value])));
   const available = providers.filter((p) => !p.accounts.length);
 
   const test = async (a: AccountView) => {
@@ -124,8 +126,8 @@ export function AccountsPage() {
           <ProviderCard
             key={p.id}
             provider={p}
-            collapsed={!!collapsed[p.id]}
-            onToggle={() => setProviderCollapsed(p.id, !collapsed[p.id])}
+            collapsed={isCollapsed(p.id)}
+            onToggle={() => setProviderCollapsed(p.id, !isCollapsed(p.id))}
             isBusy={isBusy}
             onAdd={() => setDialog({ kind: 'add', provider: p.id })}
             onOpenKeys={() => void run('open', () => api.app.openExternal(p.keysUrl))}
