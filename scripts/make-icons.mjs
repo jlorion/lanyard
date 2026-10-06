@@ -51,78 +51,115 @@ function encodePng(size, rgba) {
   ]);
 }
 
-// ------------------------------------------------------------------ shapes (unit square coordinates)
+// ------------------------------------------------------------------ artwork
+//
+// The Lanyard mark, rebuilt from the reference silhouette (1024x572 artwork):
+// two crossing straps, a clip ring, a connector, and an ID card with a ">_"
+// cut-out. Coordinates below are in that artwork's pixel space.
 
-function roundRect(x, y, cx, cy, half, r) {
-  const qx = Math.abs(x - cx) - half + r;
-  const qy = Math.abs(y - cy) - half + r;
+/** Rounded rectangle given by its corners; negative inside. */
+function box(x, y, x0, y0, x1, y1, r = 0) {
+  const qx = Math.abs(x - (x0 + x1) / 2) - (x1 - x0) / 2 + r;
+  const qy = Math.abs(y - (y0 + y1) / 2) - (y1 - y0) / 2 + r;
   return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
 }
 
-function segment(x, y, ax, ay, bx, by, thickness) {
+/** Capsule around segment a-b with half-width hw; negative inside. */
+function seg(x, y, ax, ay, bx, by, hw) {
   const px = x - ax, py = y - ay, dx = bx - ax, dy = by - ay;
   const t = Math.max(0, Math.min(1, (px * dx + py * dy) / (dx * dx + dy * dy)));
-  return Math.hypot(px - dx * t, py - dy * t) - thickness;
+  return Math.hypot(px - dx * t, py - dy * t) - hw;
 }
 
-function box(x, y, cx, cy, hx, hy, r) {
-  const qx = Math.abs(x - cx) - hx + r;
-  const qy = Math.abs(y - cy) - hy + r;
-  return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
+// Strap edges: x = x0 + slope * y. Straps extend above the artwork so they
+// can run off the top of the tile.
+const RIGHT_SLOPE = -102 / 262; // right strap runs down-left, on top
+const LEFT_SLOPE = 0.3935; // left strap runs down-right, underneath
+const STRAP_COS = 262 / Math.hypot(102, 262);
+
+function strapRight(x, y) {
+  return y < 270 && x >= 592 + RIGHT_SLOPE * y && x <= 638 + RIGHT_SLOPE * y;
+}
+
+function strapLeft(x, y, gap) {
+  if (y >= 270 || x < 385 + LEFT_SLOPE * y || x > 431 + LEFT_SLOPE * y) return false;
+  // Leave a thin gap where it passes under the right strap.
+  const leftOfRight = (592 + RIGHT_SLOPE * y - x) * STRAP_COS;
+  return leftOfRight > gap;
 }
 
 /**
- * The Lanyard mark: a strap coming down from the top, a clip, and an ID badge.
- * Returns true where the white glyph is. `detailed` adds the badge's punched
- * slot, avatar and text lines, which only read well at 48px and up.
+ * True where the (white) glyph is. level: 'full' (48px+), 'medium' (24-47px)
+ * or 'tiny' (<24px) trade fine details for thicker strokes.
  */
-function lanyard(x, y, detailed) {
-  const w = detailed ? 0.04 : 0.06;
-  const strap = Math.min(
-    segment(x, y, 0.26, 0.08, 0.465, 0.42, w),
-    segment(x, y, 0.74, 0.08, 0.535, 0.42, w),
-  );
-  const clip = box(x, y, 0.5, 0.47, 0.07, 0.06, 0.02);
-  const badge = box(x, y, 0.5, 0.69, 0.22, 0.175, detailed ? 0.05 : 0.04);
-  const solid = Math.min(strap, clip, badge) < 0;
-  if (!solid || !detailed || badge >= 0) return solid;
-  const cut = Math.min(
-    box(x, y, 0.5, 0.575, 0.06, 0.016, 0.016), // punched slot
-    Math.hypot(x - 0.405, y - 0.71) - 0.06, // avatar
-    box(x, y, 0.59, 0.685, 0.06, 0.018, 0.018), // name
-    box(x, y, 0.57, 0.745, 0.04, 0.018, 0.018), // title
-  );
-  return cut >= 0;
+function glyph(x, y, level) {
+  const full = level === 'full';
+  const gap = full ? 7 : 16;
+
+  const card = box(x, y, 435, 316, 588, 532, 18) < 0;
+  if (card) {
+    if (level === 'tiny') return true;
+    const cw = full ? 6.5 : 11;
+    const chevron = Math.min(seg(x, y, 472, 398, 500, 427, cw), seg(x, y, 500, 427, 472, 457, cw)) < 0;
+    const grow = full ? 0 : 4;
+    const underscore = box(x, y, 511 - grow, 458 - grow, 559 + grow, 468 + grow, 2) < 0;
+    if (chevron || underscore) return false;
+    if (!full) return true;
+    // Badge slot around the connector, with the connector drawn back on top.
+    const slot = box(x, y, 493, 312, 530, 336, 3) < 0 || box(x, y, 485, 334, 538, 347, 3) < 0;
+    const connector = (box(x, y, 504, 288, 519, 300) < 0 || box(x, y, 500, 296, 523, 346, 3) < 0)
+      && Math.hypot(x - 512, y - 311) > 4.5;
+    return !slot || connector;
+  }
+
+  if (strapRight(x, y) || strapLeft(x, y, gap)) return true;
+
+  const ringOuter = box(x, y, 480, 262, 543, 291, 10) < 0;
+  const ringHole = full && box(x, y, 487, 269, 536, 284, 4) < 0;
+  if (ringOuter && !ringHole) return true;
+
+  const connector = box(x, y, 504, 288, 519, 300) < 0 || box(x, y, 500, 296, 523, 346, 3) < 0;
+  return connector && (!full || Math.hypot(x - 512, y - 311) > 4.5);
 }
+
+/** How the artwork is framed on the tile: [top artwork y, artwork px per tile]. */
+const FRAMING = {
+  full: [101, 490], // straps enter from the top edge of the tile
+  medium: [180, 390], // tighter crop so the card stays legible
+  tiny: [205, 360],
+};
 
 const lerp = (a, b, t) => a + (b - a) * t;
-const FROM = [79, 70, 229]; // indigo-600
-const TO = [147, 51, 234]; // purple-600
+const TILE_TOP = [47, 52, 62]; // #2f343e
+const TILE_BOTTOM = [24, 26, 32]; // #181a20
 
 /**
- * style: 'app'      gradient tile + white glyph
+ * style: 'app'      charcoal tile + white glyph
  *        'template' black glyph only (macOS menu bar template image)
  */
 function render(size, style) {
   const px = Buffer.alloc(size * size * 4);
   const ss = 4; // supersampling per axis
-  const detailed = size >= 48;
+  const level = size >= 48 ? 'full' : size >= 24 ? 'medium' : 'tiny';
+  const [top, scale] = FRAMING[style === 'template' ? 'tiny' : level];
   const small = size <= 32;
   for (let j = 0; j < size; j++) {
     for (let i = 0; i < size; i++) {
       let r = 0, g = 0, b = 0, a = 0;
       for (let sy = 0; sy < ss; sy++) {
         for (let sx = 0; sx < ss; sx++) {
-          const x = (i + (sx + 0.5) / ss) / size;
-          const y = (j + (sy + 0.5) / ss) / size;
+          const u = (i + (sx + 0.5) / ss) / size;
+          const v = (j + (sy + 0.5) / ss) / size;
+          const ax = (u - 0.5) * scale + 511.5;
+          const ay = v * scale + top;
           if (style === 'template') {
-            if (lanyard(x, y, false)) a += 1;
+            if (glyph(ax, ay, 'tiny')) a += 1;
             continue;
           }
-          if (box(x, y, 0.5, 0.5, small ? 0.5 : 0.46, small ? 0.5 : 0.46, small ? 0.2 : 0.18) > 0) continue;
-          const t = (x + y) / 2;
-          let c = [lerp(FROM[0], TO[0], t), lerp(FROM[1], TO[1], t), lerp(FROM[2], TO[2], t)];
-          if (lanyard(x, y, detailed)) c = [255, 255, 255];
+          const inset = small ? 0 : 0.04;
+          if (box(u, v, inset, inset, 1 - inset, 1 - inset, small ? 0.2 : 0.18) > 0) continue;
+          let c = [lerp(TILE_TOP[0], TILE_BOTTOM[0], v), lerp(TILE_TOP[1], TILE_BOTTOM[1], v), lerp(TILE_TOP[2], TILE_BOTTOM[2], v)];
+          if (glyph(ax, ay, level)) c = [255, 255, 255];
           r += c[0]; g += c[1]; b += c[2]; a += 1;
         }
       }
