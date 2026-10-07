@@ -157,6 +157,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write # create the tag and the release
+      actions: write # rebuild the website so its download links follow
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
@@ -216,3 +217,9 @@ jobs:
               --notes-file ../notes.md --prerelease="$PRERELEASE"
           fi
           echo "Published https://github.com/$GH_REPO/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
+      # Releases made with this workflow's token don't trigger other workflows,
+      # so start the website build explicitly. Its download buttons also refresh
+      # themselves in the browser, so a failure here only delays the baked links.
+      - name: Rebuild the website
+        continue-on-error: true
+        run: gh workflow run pages.yml --ref main
