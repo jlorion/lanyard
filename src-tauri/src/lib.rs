@@ -51,6 +51,16 @@ fn cache_close_to_tray(app: &AppHandle, response: &Value) {
     }
 }
 
+/// Coalesces tray refreshes: `lanyard:changed` fires in bursts from the file
+/// watcher, but only one refresh needs to be in flight at a time. Distinct
+/// newtype because Tauri panics on managing the same state type twice.
+#[derive(Default)]
+struct TrayRefreshPending(Arc<AtomicBool>);
+
+/// Last maximized value we emitted as `lanyard:window-state`; prevents an IPC
+/// event per resize tick.
+struct LastMaximized(AtomicBool);
+
 fn sidecar_script(app: &AppHandle) -> (String, String) {
     // Packaged: resources/sidecar/index.js next to the binary; dev: out/sidecar.
     if let Ok(dir) = app.path().resource_dir() {
@@ -159,6 +169,10 @@ pub fn run() {
             app.manage(sidecar);
             // Close-to-tray cache; true = the safe default while unknown.
             app.manage(AtomicBool::new(true));
+            app.manage(TrayRefreshPending::default());
+            // `true` makes the first resize emit (the initial maximized state
+            // is not yet known, so treat it as changed).
+            app.manage(LastMaximized(AtomicBool::new(true)));
 
             let menu = build_app_menu(app.handle())?;
             app.set_menu(menu)?;
@@ -200,7 +214,16 @@ pub fn run() {
             // Refresh the tray whenever the sidecar reports file/state changes.
             let handle = app.handle().clone();
             let listener_handle = handle.clone();
+            let pending = handle.state::<TrayRefreshPending>().inner().0.clone();
             listener_handle.listen("lanyard:changed", move |_| {
+                // Coalesce watcher bursts: only one refresh in flight; later
+                // events while one runs are covered by that refresh.
+                if pending
+                    .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+                    .is_err()
+                {
+                    return;
+                }
                 // This listener runs inline on the sidecar's stdout reader
                 // thread (sidecar.rs emits the event from there), so calling
                 // sidecar.call here would self-deadlock: the response can only
@@ -211,10 +234,7 @@ pub fn run() {
                     let sidecar = h.state::<Arc<sidecar::Sidecar>>().inner().clone();
                     let tray = h.state::<tauri::tray::TrayIcon>().inner().clone();
                     tray::refresh_tray(&h, &tray, &sidecar);
-                    // Re-read the close-to-tray setting so the cached flag
-                    // stays current.
-                    let v = sidecar.call("settings", "get", serde_json::json!([]));
-                    cache_close_to_tray(&h, &v);
+                    h.state::<TrayRefreshPending>().inner().0.store(false, Ordering::SeqCst);
                 });
             });
 
@@ -229,7 +249,19 @@ pub fn run() {
             match event {
                 WindowEvent::Resized(_) => {
                     let maximized = window.is_maximized().unwrap_or(false);
-                    let _ = window.emit("lanyard:window-state", maximized);
+                    let app = window.app_handle();
+                    let last = app
+                        .state::<LastMaximized>()
+                        .inner()
+                        .0
+                        .load(Ordering::Relaxed);
+                    if maximized != last {
+                        app.state::<LastMaximized>()
+                            .inner()
+                            .0
+                            .store(maximized, Ordering::Relaxed);
+                        let _ = window.emit("lanyard:window-state", maximized);
+                    }
                 }
                 WindowEvent::CloseRequested { api, .. } => {
                     // Close-to-tray: read the cached setting only — never block

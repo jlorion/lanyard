@@ -15,37 +15,34 @@ fn is_hex_color(s: &str) -> bool {
         && s[1..].chars().all(|c| c.is_ascii_hexdigit())
 }
 
-/// Await the non-blocking dialog APIs so pickers never run on the main
-/// thread (the blocking_* variants deadlock the event loop there).
-async fn pick_folder_async(app: &AppHandle) -> Option<tauri_plugin_dialog::FilePath> {
-    let (tx, rx) = std::sync::mpsc::channel();
-    app.dialog().file().pick_folder(move |p| {
-        let _ = tx.send(p);
-    });
-    tauri::async_runtime::spawn_blocking(move || {
-        // Bound the wait so a never-firing dialog callback can't pin a pooled
-        // thread forever.
-        rx.recv_timeout(std::time::Duration::from_secs(300)).ok()
-    })
-    .await
-    .ok()
-    .flatten()
-    .flatten()
+const MAIN_WINDOW_LABEL: &str = "main";
+
+/// The main webview window, or an error when it is gone (e.g. closed).
+fn main_window(app: &AppHandle) -> Result<tauri::WebviewWindow, String> {
+    app.get_webview_window(MAIN_WINDOW_LABEL)
+        .ok_or_else(|| "Main window is unavailable".to_string())
 }
 
-async fn pick_file_async(app: &AppHandle) -> Option<tauri_plugin_dialog::FilePath> {
+/// Await the non-blocking dialog APIs so pickers never run on the main
+/// thread (the blocking_* variants deadlock the event loop there).
+/// `dialog_call` invokes the desired picker on the fresh builder and hands
+/// the result to `tx`.
+async fn pick_async(
+    app: &AppHandle,
+    dialog_call: impl FnOnce(
+        tauri_plugin_dialog::FileDialogBuilder<tauri::Wry>,
+        std::sync::mpsc::Sender<Option<tauri_plugin_dialog::FilePath>>,
+    ),
+) -> Option<tauri_plugin_dialog::FilePath> {
     let (tx, rx) = std::sync::mpsc::channel();
-    app.dialog().file().pick_file(move |p| {
-        let _ = tx.send(p);
-    });
+    dialog_call(app.dialog().file(), tx);
     tauri::async_runtime::spawn_blocking(move || {
         // Bound the wait so a never-firing dialog callback can't pin a pooled
         // thread forever.
-        rx.recv_timeout(std::time::Duration::from_secs(300)).ok()
+        rx.recv_timeout(std::time::Duration::from_secs(300)).ok().flatten()
     })
     .await
     .ok()
-    .flatten()
     .flatten()
 }
 
@@ -68,11 +65,12 @@ pub async fn app_call(app: &AppHandle, method: &str, args: Value) -> Result<Valu
             Ok(Value::Null)
         }
         "pickDirectory" => {
-            let path = pick_folder_async(app).await;
+            let path =
+                pick_async(app, |b, tx| b.pick_folder(move |p| { let _ = tx.send(p); })).await;
             Ok(path.map(|p| json!(p.to_string())).unwrap_or(Value::Null))
         }
         "pickFile" => {
-            let path = pick_file_async(app).await;
+            let path = pick_async(app, |b, tx| b.pick_file(move |p| { let _ = tx.send(p); })).await;
             Ok(path.map(|p| json!(p.to_string())).unwrap_or(Value::Null))
         }
         "revealPath" => {
@@ -121,16 +119,16 @@ pub async fn app_call(app: &AppHandle, method: &str, args: Value) -> Result<Valu
             Ok(Value::Null)
         }
         "isMaximized" => {
-            let w = app.get_webview_window("main").ok_or("Main window is unavailable")?;
+            let w = main_window(app)?;
             Ok(json!(w.is_maximized().map_err(|e| e.to_string())?))
         }
         "minimizeWindow" => {
-            let w = app.get_webview_window("main").ok_or("Main window is unavailable")?;
+            let w = main_window(app)?;
             w.minimize().map_err(|e| e.to_string())?;
             Ok(Value::Null)
         }
         "toggleMaximize" => {
-            let w = app.get_webview_window("main").ok_or("Main window is unavailable")?;
+            let w = main_window(app)?;
             if w.is_maximized().map_err(|e| e.to_string())? {
                 w.unmaximize().map_err(|e| e.to_string())?;
             } else {
@@ -139,7 +137,7 @@ pub async fn app_call(app: &AppHandle, method: &str, args: Value) -> Result<Valu
             Ok(json!(w.is_maximized().map_err(|e| e.to_string())?))
         }
         "closeWindow" => {
-            let w = app.get_webview_window("main").ok_or("Main window is unavailable")?;
+            let w = main_window(app)?;
             w.close().map_err(|e| e.to_string())?;
             Ok(Value::Null)
         }

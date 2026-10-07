@@ -28,7 +28,8 @@ const ACCENT_KEY = 'lanyard.accent';
 const DEFAULT_ACCENT: AccentId = 'blue';
 const media = window.matchMedia('(prefers-color-scheme: dark)');
 
-function read(key: string): string | null {
+/** Safe localStorage access; storage-disabled webviews return null / no-op. */
+export function read(key: string): string | null {
   try {
     return localStorage.getItem(key);
   } catch {
@@ -36,7 +37,8 @@ function read(key: string): string | null {
   }
 }
 
-function write(key: string, value: string): void {
+/** Safe localStorage access; storage-disabled webviews return null / no-op. */
+export function write(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
   } catch {

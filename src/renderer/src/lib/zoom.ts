@@ -6,11 +6,12 @@
 
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { nextZoomLevel, zoomActionFor, zoomLevelToScale } from '../../../shared/zoom';
+import { read as readStored, write as writeStored } from './appearance';
 
 const STORAGE_KEY = 'lanyard:zoom-level';
 
 export function storedZoomLevel(): number {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = readStored(STORAGE_KEY);
   const n = raw === null ? 0 : Number(raw);
   return Number.isFinite(n) ? n : 0;
 }
@@ -28,7 +29,7 @@ export function installZoom(): void {
     if (!action) return;
     e.preventDefault();
     level = nextZoomLevel(level, action);
-    localStorage.setItem(STORAGE_KEY, String(level));
+    writeStored(STORAGE_KEY, String(level));
     void webview.setZoom(zoomLevelToScale(level));
   });
 }

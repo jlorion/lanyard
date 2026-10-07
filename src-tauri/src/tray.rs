@@ -104,22 +104,12 @@ pub fn on_menu_event(app: &AppHandle, id: &str) {
         _ => {
             if let Some(sidecar) = app.try_state::<Arc<Sidecar>>() {
                 let sidecar = Arc::clone(sidecar.inner());
-                let app2 = app.clone();
                 let id = id.to_string();
-                std::thread::spawn(move || {
+                tauri::async_runtime::spawn_blocking(move || {
                     sidecar.call("menu", "act", serde_json::json!([id]));
-                    refresh_from_state(&app2);
                 });
             }
         }
-    }
-}
-
-fn refresh_from_state(app: &AppHandle) {
-    let sidecar = app.try_state::<Arc<Sidecar>>().map(|s| Arc::clone(s.inner()));
-    let tray = app.try_state::<TrayIcon>().map(|t| t.inner().clone());
-    if let (Some(sidecar), Some(tray)) = (sidecar, tray) {
-        refresh_tray(app, &tray, &sidecar);
     }
 }
 

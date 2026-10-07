@@ -9,12 +9,18 @@
  */
 
 import { createInterface } from 'node:readline';
+import fs from 'node:fs';
 import path from 'node:path';
 import { createDomainApi } from '../core/api-domain';
 import * as menu from './menu';
 import * as core from '../core';
 import { IPC_CHANNELS } from '../shared/ipc';
 import pkg from '../../package.json';
+
+/// The domain API with the tray menu namespace attached below.
+type SidecarApi = ReturnType<typeof createDomainApi> & {
+  menu: { traySpec(): Promise<unknown>; act(id: string): Promise<void> };
+};
 
 // stdout is the protocol channel; stray logs must not corrupt it.
 const stderr = (...args: unknown[]) => process.stderr.write(args.map(String).join(' ') + '\n');
@@ -34,8 +40,7 @@ function cliHint(): string {
   // Packaged: sidecar lives in resources/sidecar, CLI shims in resources/cli.
   const shim = process.platform === 'win32' ? 'lanyard.cmd' : 'lanyard';
   const packagedShim = path.join(here, '..', 'cli', shim);
-  // eslint-disable-next-line no-sync -- one-time startup check
-  if (require('node:fs').existsSync(packagedShim)) return `"${packagedShim}"`;
+  if (fs.existsSync(packagedShim)) return `"${packagedShim}"`;
   return `node "${path.join(process.cwd(), 'bin', 'lanyard.js')}"`;
 }
 
@@ -44,7 +49,7 @@ const api = createDomainApi({
   packaged: !!(process as unknown as { pkg?: unknown }).pkg || process.env.LANYARD_PACKAGED === '1',
   cliHint: cliHint(),
   onSettingsChanged: () => send({ event: IPC_CHANNELS.changed, payload: ['state'] }),
-});
+}) as SidecarApi;
 
 function send(msg: unknown): void {
   process.stdout.write(JSON.stringify(msg) + '\n');
@@ -52,7 +57,7 @@ function send(msg: unknown): void {
 
 // Tray menu namespace: the shell renders menu.traySpec() natively and feeds
 // item ids back to menu.act().
-(api as unknown as Record<string, unknown>).menu = {
+api.menu = {
   traySpec: async () => menu.traySpec(),
   act: (id: string) => menu.act(id, (event, payload) => send({ event, payload })),
 };

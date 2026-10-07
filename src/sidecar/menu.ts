@@ -175,7 +175,14 @@ export async function act(id: string, emit: MenuEmit): Promise<void> {
   const topics: ChangeTopic[] = ['state', 'config'];
   try {
     if (id === 'test-active') {
-      for (const p of core.accounts.overview().filter((p) => p.active)) await core.accounts.test(p.id);
+      const active = core.accounts.overview().filter((p) => p.active);
+      await Promise.all(
+        active.map((p) =>
+          core.accounts.test(p.id).catch((err) => ({
+            error: (err as Error)?.message ?? String(err),
+          })),
+        ),
+      );
     } else if (id.startsWith('use:')) {
       const rest = id.slice(4);
       const sep = rest.indexOf(':');
