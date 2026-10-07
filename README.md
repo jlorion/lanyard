@@ -1,23 +1,123 @@
-# Lanyard
+<p align="center">
+  <img src="resources/icon.png" width="96" height="96" alt="Lanyard logo">
+</p>
 
-Your SSH identities on a lanyard: a desktop app (Electron + React + TypeScript) and a CLI (`lanyard`, short alias `lny`) for managing SSH:
+<h1 align="center">Lanyard</h1>
 
-- **Git accounts per provider.** Keep several accounts on GitHub, GitLab, Bitbucket, Hugging Face, Azure DevOps, Codeberg, Gitea, SourceHut or a self-hosted server, and switch which one plain `git@github.com:…` URLs use.
-- **Hosts.** Edit the `Host` entries in `~/.ssh/config` without losing comments or formatting. There's a raw editor that OpenSSH validates, an effective-config view (`ssh -G`), one-click connect, and **per-host key switching**.
-- **Keys.** Generate keys, copy public keys, change passphrases, fix file permissions, and see which accounts and hosts use each key.
-- **ssh-agent, known_hosts and backups.** Load and unload agent keys, scan and trust host keys, and restore any earlier version of your config.
-- **System tray.** The app keeps running after you close its window. From the tray you can switch accounts, switch a host's key, connect, and run tests.
+<p align="center">
+  <strong>Wear the right identity everywhere.</strong><br>
+  Switch between your GitHub, GitLab, Bitbucket and Hugging Face accounts in one click,<br>
+  and manage every remote server you SSH into: hosts, keys, jump hosts, ssh-agent and known_hosts.
+</p>
 
-## Using the app
+<p align="center">
+  <a href="https://github.com/riomar0001/lanyard/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/riomar0001/lanyard?include_prereleases&label=release"></a>
+  <a href="https://github.com/riomar0001/lanyard/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/riomar0001/lanyard/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/riomar0001/lanyard"></a>
+  <img alt="Windows, macOS, Linux" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational">
+</p>
 
-- **Overview**: who you are on each git host right now, switchable inline, plus your most-used hosts.
-- **Command palette**: press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> to switch accounts, connect to a host, change a host's key, or jump anywhere.
-- **Shortcuts**: <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>1</kbd>–<kbd>8</kbd> open the pages in sidebar order.
-- **Appearance**: system, light or dark theme (bottom of the sidebar), and eight accent colours (Settings → Appearance, or type `accent` in the palette). The UI is set in Lato (Slack's UI typeface, bundled locally) with a Monaco / Menlo / Consolas monospace stack.
+<p align="center">
+  <a href="https://github.com/riomar0001/lanyard/releases"><strong>Download</strong></a> ·
+  <a href="https://github.com/riomar0001/lanyard/wiki"><strong>User guide</strong></a> ·
+  <a href="https://github.com/riomar0001/lanyard/wiki/CLI-Reference"><strong>CLI reference</strong></a>
+</p>
 
-## How account switching works
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/overview.png">
+  <img alt="Lanyard's Overview page: the active account on GitHub, GitLab and Hugging Face, and every server in the SSH config" src="docs/images/overview-light.png">
+</picture>
 
-The app owns one clearly marked block at the top of `~/.ssh/config`. Everything else in the file is left byte-for-byte untouched:
+## Why Lanyard
+
+You have a work GitHub account and a personal one. Both want to be `git@github.com`, so SSH sends whichever key it finds first, and you end up pushing to the wrong account. The usual fix is a hand-edited `~/.ssh/config` full of `Host github.com-work` aliases, plus remembering to change `git config user.email` every time.
+
+Lanyard does that bookkeeping for you:
+
+- **One click to switch.** Pick an account and plain `git@github.com:…` URLs use its key, with its name and email on your commits.
+- **Several accounts side by side.** Every account also gets its own alias (`github.com-work`), so one repository can use one account and the next repository another.
+- **Your config stays yours.** Lanyard edits one clearly marked block of `~/.ssh/config` and leaves every other line, comment and blank line untouched. Every change is backed up first.
+
+The same goes for your servers. Instead of scrolling through `~/.ssh/config` to remember which key `prod` uses or how to reach the database behind the bastion, you get one list of every machine you SSH into, and a click to connect.
+
+## Remote SSH management
+
+![The Hosts page: every server in the SSH config with its target and key, plus the git hosts](docs/images/hosts.png)
+
+- **Every server in one list.** All the `Host` entries in `~/.ssh/config`, with their user, address, port and key, searchable.
+- **Connect in one click.** Open `ssh prod-web` in your terminal from the app, the tray, the command palette or `lanyard connect prod-web`.
+- **Switch a server's key** from a dropdown. Lanyard sets `IdentityFile` and `IdentitiesOnly` so SSH offers only that key.
+- **Edit without breaking anything.** A form for HostName, User, Port, IdentityFile, ProxyJump (jump hosts), ForwardAgent and any other option; or a raw editor that OpenSSH validates before saving. Comments and formatting are kept.
+- **Trust servers safely.** Scan a server's host keys, compare fingerprints, then trust them; forget a host after it is reinstalled.
+- **Check before you rely on it.** Test a login non-interactively, or see the effective settings SSH will use (`ssh -G`).
+
+More: [Hosts](https://github.com/riomar0001/lanyard/wiki/Hosts) and [Known hosts](https://github.com/riomar0001/lanyard/wiki/Known-Hosts) in the user guide.
+
+## What it does
+
+| Area               | What you can do                                                                                                                                     |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Git accounts**   | Add accounts on GitHub, GitLab, Bitbucket, Hugging Face, Azure DevOps, Codeberg, Gitea, SourceHut or your own server; switch, test, clone with one. |
+| **Remote servers** | Keep every server in `~/.ssh/config` in one list: connect in one click, switch each server's key, jump hosts, a form or a validated raw editor.     |
+| **Keys**           | Generate Ed25519, RSA or ECDSA keys, copy public keys, change passphrases, fix permissions, see which accounts and servers use each key.            |
+| **ssh-agent**      | See loaded keys, load and unload them.                                                                                                              |
+| **known_hosts**    | Scan a server's host keys, compare fingerprints, trust them, forget a host after it is reinstalled.                                                 |
+| **Backups**        | A snapshot before every change to your SSH config or known_hosts; restore any of them.                                                              |
+| **Everywhere**     | Lives in the system tray after you close the window; a command palette (<kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd>); a full `lanyard` CLI.           |
+
+## Install
+
+Download the file for your system from the [latest release](https://github.com/riomar0001/lanyard/releases):
+
+| System                | File                                | Notes                                                                   |
+| --------------------- | ----------------------------------- | ----------------------------------------------------------------------- |
+| Windows 10 / 11       | `Lanyard-Setup-<version>-x64.exe`   | SmartScreen may warn about an unsigned app: **More info → Run anyway**. |
+| macOS (Apple Silicon) | `Lanyard-<version>-arm64.dmg`       | First launch: right-click the app → **Open**.                           |
+| macOS (Intel)         | `Lanyard-<version>-x64.dmg`         | Same as above.                                                          |
+| Linux                 | `Lanyard-<version>-x86_64.AppImage` | `chmod +x` the file, then run it.                                       |
+| CLI only              | `npm install -g lanyard-ssh`        | Needs Node.js 20+. Or run once with `npx lanyard-ssh status`.           |
+
+Lanyard uses the OpenSSH tools already on your machine (`ssh`, `ssh-keygen`, `ssh-add`). Windows 10 and 11 include them. The Windows installer also puts the `lanyard` and `lny` commands on your PATH.
+
+Full instructions: [Installation](https://github.com/riomar0001/lanyard/wiki/Installation).
+
+## Quick start
+
+1. Open Lanyard and click **Add account**.
+2. Pick the provider (for example GitHub), name the account (`work`), keep **Generate a new key**, and fill in the name and email for your commits.
+3. Copy the public key Lanyard shows and add it to your account's SSH key settings (Lanyard links straight to that page).
+4. Click **Test**. You should see `Authenticated as <your username>`.
+5. Clone as usual: `git clone git@github.com:acme/app.git`.
+
+Add a second account the same way, then switch between them from the Overview page, the tray icon, the command palette, or the CLI:
+
+```bash
+lanyard use github personal
+```
+
+For your servers: open **Hosts → Add host**, enter the alias (`prod-web`), address, user and key, then use **⋯ → Connect**. Hosts already in your `~/.ssh/config` show up on their own.
+
+Step-by-step with screenshots: [Getting started](https://github.com/riomar0001/lanyard/wiki/Getting-Started).
+
+## Command line
+
+Everything in the app is also a command. `lanyard` (or the short alias `lny`) with no arguments opens the app.
+
+```bash
+lanyard status                                   # who you are on each git host
+lanyard use github personal                      # switch accounts
+lanyard test                                     # check every active account works
+git clone $(lanyard url github work https://github.com/acme/app)   # clone as a specific account
+lanyard repo github work ./my-repo               # point an existing repository at an account
+lanyard hosts key prod id_ed25519_servers        # switch the key a server uses
+lanyard connect prod                             # open an SSH session
+```
+
+Add `--json` to any command for scripting. Every command: [CLI reference](https://github.com/riomar0001/lanyard/wiki/CLI-Reference).
+
+## How it works
+
+Lanyard keeps one marked section at the top of `~/.ssh/config`:
 
 ```sshconfig
 # >>> lanyard managed section >>>
@@ -27,123 +127,28 @@ Host github.com
     IdentityFile ~/.ssh/id_ed25519_github_work
     IdentitiesOnly yes
 
-# GitHub - account: work
-Host github.com-work
-    HostName github.com
-    ...
 # GitHub - account: personal
 Host github.com-personal
     HostName github.com
+    IdentityFile ~/.ssh/id_ed25519_github_personal
     ...
 Host *
 # <<< lanyard managed section <<<
 
-# ...your own config, unchanged...
+# ...the rest of your config, untouched...
 ```
 
-- **Switching** rewrites the `Host github.com` block, so plain `git@github.com:org/repo.git` URLs use the selected account.
-- **Alias hosts** such as `github.com-personal` let you use several accounts side by side. `lanyard url` and `lanyard repo` rewrite remotes to use them.
-- **The trailing `Host *`** resets scope, so global directives in your own part of the file still apply to every host.
-- **Backups.** Every write is backed up to `~/.lanyard/backups` and can be restored from the app or the CLI.
+Switching accounts rewrites the `Host github.com` block. Nothing outside the markers changes. Details, including every file Lanyard reads and writes: [How it works](https://github.com/riomar0001/lanyard/wiki/How-It-Works).
 
-## Development
+## Documentation
 
-```bash
-npm install
-npm run dev        # electron-vite dev server + Electron with hot reload
-npm test           # vitest, runs against a throwaway ~/.ssh
-npm run typecheck
-npm run lint       # ESLint (type-aware); lint:fix applies the safe fixes
-npm run format     # Prettier; format:check only reports
-npm run check      # format:check + lint + typecheck + test, as CI runs them
-npm run build      # compiles main, preload, renderer and the CLI into out/
-npm run dist       # installer in release/ (NSIS on Windows, dmg on macOS, AppImage on Linux)
-npm publish        # CLI-only npm package `lanyard-ssh` (prepack builds it first)
-```
+- **[User guide (wiki)](https://github.com/riomar0001/lanyard/wiki)**: every page of the app, with screenshots.
+- **[Troubleshooting](https://github.com/riomar0001/lanyard/wiki/Troubleshooting)**: `Permission denied (publickey)`, agent not running, host key changed, and more.
+- **[CHANGELOG.md](CHANGELOG.md)**: what changed in each release.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: build from source, run the tests, cut a release.
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**: how the code is organized.
+- **[SECURITY.md](SECURITY.md)**: threat model, the latest audit, and how to report a vulnerability.
 
-Set `LANYARD_SSH_DIR` and `LANYARD_HOME` to point the app and the CLI at a sandbox instead of `~/.ssh` and `~/.lanyard`.
+## License
 
-### CI and releases
-
-[`ci.yml`](.github/workflows/ci.yml) runs the checks (format, lint, typecheck, runtime-dependency audit) and the tests on
-Windows, macOS and Linux for every pull request and every push to `main`.
-
-[`release.yml`](.github/workflows/release.yml) publishes a release from a branch named `build-v<version>`. Creating one,
-for example `build-v1.0.0-beta`, runs CI, sets the app version to `1.0.0-beta`, builds installers for Windows, macOS
-(Apple Silicon and Intel) and Linux plus the npm tarball, smoke-tests the CLI in each, and publishes them as the GitHub
-release `v1.0.0-beta` with checksums and generated notes. A version with a suffix (`-beta`, `-rc.1`) is marked as a
-prerelease. Pushing to the branch again rebuilds that version, moves the tag and replaces the release files.
-
-```bash
-git push origin main:build-v1.0.0-beta
-```
-
-Security notes and the latest audit are in [SECURITY.md](SECURITY.md).
-
-## CLI
-
-The command is `lanyard` (short alias `lny`). Running it with no arguments opens the desktop app; `lanyard --help` lists every command. Pick whichever way of getting it suits you:
-
-| How                                                                                                                                                | Needs                                | Command name     |
-| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ---------------- |
-| **Install the desktop app** - the Windows installer adds them to your PATH (macOS / Linux: run the `--install-cli` command shown in Settings once) | nothing (uses the app's own runtime) | `lanyard`, `lny` |
-| **`npx lanyard-ssh <command>`**, e.g. `npx lanyard-ssh status`                                                                                     | Node.js 20+, nothing installed       | `lanyard-ssh`    |
-| **`npm install -g lanyard-ssh`**                                                                                                                   | Node.js 20+                          | `lanyard`, `lny` |
-| **From source**: `npm run build`, then `npm link`                                                                                                  | this repo                            | `lanyard`, `lny` |
-
-The installer runs `Lanyard.exe --install-cli`, which writes small launcher scripts to `%LOCALAPPDATA%\Lanyard\bin` and adds that folder to your _user_ PATH; the uninstaller runs `--uninstall-cli` to undo it. On macOS / Linux the same command installs into `~/.local/bin`. It only ever touches files it created. The npm package contains just the CLI (about 36 kB); `lanyard` with no arguments explains how to get the desktop app.
-
-```bash
-lanyard status                                   # active account per provider
-lanyard accounts add github work --generate --git-name "Jane Doe" --git-email jane@work.com --set-git-identity
-lanyard accounts add github personal --key ~/.ssh/id_ed25519 --git-name "Jane Doe" --git-email jane@personal.dev
-lanyard use github personal                      # switch
-lanyard test --all                               # ssh -T every account
-git clone $(lanyard url github work https://github.com/acme/app)
-lanyard repo github work ./my-repo               # point an existing repo at an account
-
-lanyard hosts add prod -H 203.0.113.10 -u deploy -k id_ed25519_servers
-lanyard hosts key prod id_ed25519_other          # switch the key a host uses
-lanyard hosts key prod --default                 # back to ssh's default keys
-lanyard connect prod
-lanyard hosts resolve prod                       # ssh -G
-
-lanyard keys gen id_ed25519_new -C me@example.com
-lanyard agent add id_ed25519_new                 # prompts for the passphrase
-lanyard known-hosts scan github.com --trust
-lanyard backups list && lanyard backups restore <id>
-lanyard gui                                      # open the desktop app
-```
-
-Add `--json` to any command for machine-readable output.
-
-> Upgrading from the pre-rename `sshm` builds: `~/.sshm` is moved to `~/.lanyard` on first run, and the old `sshm managed section` block in `~/.ssh/config` is recognised and rewritten in place on the next change.
-
-## Architecture
-
-```
-src/
-├─ shared/        Types and the typed IPC contract (no runtime dependencies)
-│  ├─ types.ts      Domain types used by every layer
-│  └─ ipc.ts        SshmApi interface, channels, preload bridge type
-├─ core/          Pure Node domain layer, shared by the app and the CLI
-│  ├─ ssh-config/   Lossless parser, structured editor, managed section, repository
-│  ├─ providers/    Provider registry and `ssh -T` result interpretation
-│  ├─ services/     accounts (switching), hosts (CRUD + key switching), settings
-│  ├─ keys/ known-hosts/ agent/ git/ backups/ terminal/ state/ config/ utils/
-│  └─ index.ts      Facade: the only entry point the app and CLI use
-├─ cli/           Commander program, one module per command group
-├─ main/          Electron main process: window, tray, file watcher, IPC
-│  └─ ipc/          SshmApi implementation + dispatcher
-├─ preload/       contextBridge: one generic invoke + change events
-└─ renderer/      React UI
-   └─ src/
-      ├─ app/         Shell, routes, sidebar
-      ├─ components/  ui/ primitives, feedback/ (toasts, confirm), domain/
-      ├─ features/    accounts, hosts, keys, agent, known-hosts, backups, settings
-      ├─ hooks/       useResource (reloads on file changes), useTask
-      ├─ lib/         Typed API client, formatting
-      └─ styles/      Design tokens and component styles
-```
-
-The renderer is sandboxed and only talks to the main process through the typed `SshmApi`. The main process delegates every SSH operation to `src/core`, the same code the CLI runs. A file watcher on `~/.ssh` and `~/.lanyard` keeps the window and the tray in sync when the CLI or an editor changes something.
+[MIT](LICENSE) © riomar
