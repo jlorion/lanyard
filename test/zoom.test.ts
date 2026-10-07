@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { zoomActionFor } from '../src/main/zoom';
+import { zoomActionFor } from '../src/shared/zoom';
 
 const key = (key: string, extra: Partial<Parameters<typeof zoomActionFor>[0]> = {}) =>
   ({ type: 'keyDown', key, code: '', control: true, meta: false, alt: false, ...extra }) as const;

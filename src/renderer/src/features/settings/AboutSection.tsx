@@ -12,7 +12,7 @@ import type { AboutInfo } from '../../../../shared/ipc';
 function versionReport(a: AboutInfo): string {
   return [
     `${a.name} ${a.version}${a.packaged ? '' : ' (development build)'}`,
-    `Electron ${a.runtime.electron} · Chromium ${a.runtime.chrome} · Node ${a.runtime.node}`,
+    `Tauri${a.runtime.webview ? ` · WebView ${a.runtime.webview}` : ''} · Node ${a.runtime.node}`,
     `OpenSSH: ${a.tools.ssh ?? 'not found'}`,
     `Git: ${a.tools.git ?? 'not found'}`,
     `OS: ${a.os}`,
@@ -70,11 +70,11 @@ export function AboutSection({
           <dl className="about-grid">
             <dt>Version</dt>
             <dd className="mono selectable">{a.version}</dd>
-            <dt>Electron</dt>
+            <dt>Tauri</dt>
             <dd className="mono selectable">
-              {a.runtime.electron}{' '}
+              2{' '}
               <span className="faint">
-                · Chromium {a.runtime.chrome} · Node {a.runtime.node}
+                {a.runtime.webview ? `· WebView ${a.runtime.webview} ` : ''}· Node {a.runtime.node}
               </span>
             </dd>
             <dt>OpenSSH</dt>

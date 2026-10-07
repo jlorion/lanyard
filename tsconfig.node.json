@@ -17,12 +17,11 @@
     "noEmit": true
   },
   "include": [
-    "electron.vite.config.ts",
+    "vite.renderer.config.ts",
     "vitest.config.ts",
     "src/core/**/*",
     "src/cli/**/*",
-    "src/main/**/*",
-    "src/preload/**/*",
+    "src/sidecar/**/*",
     "src/shared/**/*",
     "test/**/*"
   ]

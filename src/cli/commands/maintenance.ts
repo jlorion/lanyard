@@ -1,7 +1,6 @@
 /** Backups, config file utilities and launching the desktop app. */
 
 import fs from 'node:fs';
-import path from 'node:path';
 import * as out from '../utils/output';
 import { detached } from '../utils/system';
 import type { CommandModule } from '../types';
@@ -13,29 +12,14 @@ const NO_DESKTOP_APP =
   'Install the Lanyard desktop app to get the window and tray - every feature is also available as a command: `lanyard --help`.';
 
 /**
- * Open the desktop app. Three ways the CLI can be installed:
- *   - desktop app shim: runs inside the app binary, which tells us its path
- *   - source checkout: start Electron from node_modules against the built app
- *   - npm / npx package: CLI only, no window to open
+ * Open the desktop app. The CLI learns where the app lives from the shims the
+ * installer wrote (LANYARD_APP_EXE points at the desktop binary); without it
+ * there is no window to open.
  */
 export function launchGui(): void {
-  if (process.env.LANYARD_APP_EXE) {
-    detached(process.env.LANYARD_APP_EXE, [], { ELECTRON_RUN_AS_NODE: undefined });
-    return;
-  }
-  // This file is out/main/cli.js, so the project root is two levels up.
-  const root = path.resolve(__dirname, '..', '..');
-  if (!fs.existsSync(path.join(root, 'out', 'renderer', 'index.html'))) throw new Error(NO_DESKTOP_APP);
-  // Resolved at run time: the electron package exports the path of its binary.
-  let electronPath: unknown;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    electronPath = require('electron');
-  } catch {
-    throw new Error(NO_DESKTOP_APP);
-  }
-  if (typeof electronPath !== 'string') throw new Error(NO_DESKTOP_APP);
-  detached(electronPath, [root]);
+  const exe = process.env.LANYARD_APP_EXE;
+  if (!exe || !fs.existsSync(exe)) throw new Error(NO_DESKTOP_APP);
+  detached(exe, []);
 }
 
 export const register: CommandModule = (program, core) => {

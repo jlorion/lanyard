@@ -17,6 +17,7 @@ export * as agent from './agent/agent.service';
 export * as backups from './backups/backup.service';
 export * as git from './git/git.service';
 export * as terminal from './terminal/terminal';
+export { watch } from './state/watch';
 export { LanyardError } from './utils/exec';
 
 // Move ~/.sshm (pre-rename) to ~/.lanyard before anything reads state.

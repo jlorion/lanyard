@@ -7,7 +7,6 @@ import { renderShims, SHIM_MARKER, type ShimTarget } from '../src/core/cli/shims
 
 const root = path.resolve(__dirname, '..');
 const built = fs.existsSync(path.join(root, 'out', 'main', 'cli.js'));
-const electronExe = path.join(root, 'node_modules', 'electron', 'dist', 'electron.exe');
 
 /** Write the shims to a folder with a space in its name and run `lanyard --version` through cmd.exe. */
 function runShim(target: ShimTarget): string {
@@ -25,35 +24,32 @@ function runShim(target: ShimTarget): string {
 describe.skipIf(process.platform !== 'win32' || !built)('Windows shims actually run', () => {
   const script = path.join(root, 'bin', 'lanyard.js');
 
-  it('with node (source checkout)', () => {
-    expect(runShim({ exe: 'node', script, runAsNode: false })).toBe('1.0.0');
-  });
-
-  it.skipIf(!fs.existsSync(electronExe))('with the app binary in Node mode (installed app)', () => {
-    expect(runShim({ exe: electronExe, script, runAsNode: true })).toBe('1.0.0');
+  it('with node', () => {
+    expect(runShim({ exe: 'node', script })).toBe('1.0.0');
   });
 });
 
 describe('CLI launcher shims', () => {
-  it('runs the packaged app binary as Node on Windows', () => {
+  it('targets the bundled Node runtime on Windows', () => {
     const [lanyard, lny] = renderShims(
       {
-        exe: 'C:\\Program Files\\Lanyard\\Lanyard.exe',
-        script: 'C:\\Program Files\\Lanyard\\resources\\app.asar\\bin\\lanyard.js',
-        runAsNode: true,
+        exe: 'C:\\Program Files\\Lanyard\\node.exe',
+        script: 'C:\\Program Files\\Lanyard\\resources\\cli\\lanyard.js',
       },
       'win32',
     );
     expect(lanyard.fileName).toBe('lanyard.cmd');
     expect(lny.fileName).toBe('lny.cmd');
     expect(lanyard.content).toContain(SHIM_MARKER);
-    expect(lanyard.content).toContain('set "ELECTRON_RUN_AS_NODE=1"');
-    expect(lanyard.content).toContain('"%LANYARD_APP_EXE%" "C:\\Program Files\\Lanyard\\resources\\app.asar\\bin\\lanyard.js" %*');
+    expect(lanyard.content).toContain(
+      '"C:\\Program Files\\Lanyard\\node.exe" "C:\\Program Files\\Lanyard\\resources\\cli\\lanyard.js" %*',
+    );
     expect(lanyard.content).toMatch(/\r\n$/);
+    expect(lanyard.content).not.toContain('ELECTRON_RUN_AS_NODE');
   });
 
   it('uses node for a source checkout and quotes POSIX paths safely', () => {
-    const [shim] = renderShims({ exe: 'node', script: "/home/o'neil/lanyard/bin/lanyard.js", runAsNode: false }, 'linux');
+    const [shim] = renderShims({ exe: 'node', script: "/home/o'neil/lanyard/bin/lanyard.js" }, 'linux');
     expect(shim.fileName).toBe('lanyard');
     expect(shim.content.startsWith('#!/bin/sh\n')).toBe(true);
     expect(shim.content).toContain(`exec 'node' '/home/o'\\''neil/lanyard/bin/lanyard.js' "$@"`);

@@ -66,4 +66,4 @@ The desktop app, the tray and the `lanyard` command run the same code against th
 
 ## Security
 
-The app's window is sandboxed and can only ask the main process for the operations listed above. Passphrases are passed straight to `ssh-keygen` and never stored. See [SECURITY.md](https://github.com/riomar0001/lanyard/blob/main/SECURITY.md) for the threat model and the latest audit.
+The desktop app uses Tauri 2. Its Rust backend owns the window and system tray, handles native operations, and routes domain requests to a Node.js sidecar. The React renderer uses the typed app API and has no direct filesystem access. Passphrases are passed to the relevant OpenSSH tool and never stored. See [SECURITY.md](https://github.com/riomar0001/lanyard/blob/main/SECURITY.md) for the project's security notes.

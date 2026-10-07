@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MenuItemConstructorOptions } from 'electron';
-import { buildHostsMenu, type HostsMenuActions } from '../src/main/tray-hosts-menu';
+import { buildHostsMenu, type HostsMenuActions, type MenuItemSpec } from '../src/shared/tray-hosts-menu';
 import type { AccountView, HostEntry, KeyInfo, ProviderOverview } from '../src/shared/types';
 
 const host = (alias: string, extra: Partial<HostEntry> = {}): HostEntry => ({
@@ -60,8 +59,8 @@ const key = (name: string): KeyInfo => ({
 });
 
 const actions = (): HostsMenuActions => ({ connect: vi.fn(), test: vi.fn(), setKey: vi.fn(), useAccount: vi.fn(), addServer: vi.fn() });
-const labels = (items: MenuItemConstructorOptions[]) => items.map((i) => (i.type === 'separator' ? '---' : i.label));
-const sub = (item: MenuItemConstructorOptions) => item.submenu as MenuItemConstructorOptions[];
+const labels = (items: MenuItemSpec[]) => items.map((i) => (i.type === 'separator' ? '---' : i.label));
+const sub = (item: MenuItemSpec) => item.submenu as MenuItemSpec[];
 
 // The user's setup: GitHub Work (active) + Personal, Hugging Face Thesis, their own github.com and huggingface.co blocks.
 const github = provider('github', 'GitHub', [
