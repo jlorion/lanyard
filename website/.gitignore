@@ -1,0 +1,6 @@
+node_modules/
+dist/
+dist-ssr/
+public/images/
+public/icon.png
+src/generated/

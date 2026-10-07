@@ -26,7 +26,7 @@ const { default: prettier } = await import('eslint-config-prettier');
 const { default: globals } = await import('globals');
 
 export default tseslint.config(
-  { ignores: ['node_modules/', 'out/', 'dist/', 'release/', 'resources/'] },
+  { ignores: ['node_modules/', 'out/', 'dist/', 'release/', 'resources/', 'website/'] },
 
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
