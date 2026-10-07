@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration "installer": signs the NSIS installer
+  (the GitHub artifact windows-installer-unsigned), which is built from the
+  already signed app. Create it in SignPath with the slug "installer".
+
+  The installer's product version is the full release version (1.2.0-beta.1);
+  the release workflow passes it in.
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file path="Lanyard-Setup-${version}-x64.exe" product-name="Lanyard" product-version="${version}">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

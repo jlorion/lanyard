@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration "app": signs Lanyard.exe in the unpacked
+  Windows app (the GitHub artifact windows-app-unsigned) before the installer
+  is built from it. Create it in SignPath with the slug "app".
+
+  The product name and version are enforced, as SignPath Foundation requires.
+  electron-builder writes a numeric product version into Lanyard.exe
+  (1.2.0-beta.1 -> 1.2.0.0); the release workflow passes that value in.
+  Electron's own DLLs are upstream binaries and are left unsigned.
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="productVersion" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file path="Lanyard.exe" product-name="Lanyard" product-version="${productVersion}">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

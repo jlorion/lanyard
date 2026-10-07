@@ -37,6 +37,7 @@ jobs:
       version: ${{ steps.parse.outputs.version }}
       tag: ${{ steps.parse.outputs.tag }}
       prerelease: ${{ steps.parse.outputs.prerelease }}
+      numeric: ${{ steps.parse.outputs.numeric }}
     steps:
       - id: parse
         env:
@@ -54,6 +55,7 @@ jobs:
             echo "version=$version"
             echo "tag=v$version"
             echo "prerelease=$prerelease"
+            echo "numeric=${version%%-*}.0" # Windows file versions: 1.2.0-beta.1 -> 1.2.0.0
           } >> "$GITHUB_OUTPUT"
           echo "### Lanyard $version (tag v$version, prerelease: $prerelease)" >> "$GITHUB_STEP_SUMMARY"
 
@@ -66,7 +68,8 @@ jobs:
     name: Package (${{ matrix.name }})
     needs: [version, ci]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    # Windows signing can wait for an approval in SignPath.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -88,6 +91,9 @@ jobs:
             files: release/*.AppImage
     env:
       VERSION: ${{ needs.version.outputs.version }}
+      # Windows builds are code-signed through SignPath once the repository
+      # variable SIGNPATH_ORGANIZATION_ID is set (CONTRIBUTING.md -> Code signing).
+      SIGN_WINDOWS: ${{ matrix.name == 'windows' && vars.SIGNPATH_ORGANIZATION_ID != '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -98,8 +104,85 @@ jobs:
       - name: Set the app version to ${{ env.VERSION }}
         run: npm version "${{ env.VERSION }}" --no-git-tag-version --allow-same-version
       - run: npm run build
+
       - name: Build installers
+        if: matrix.name != 'windows'
         run: npx electron-builder --publish never
+
+      # Windows is built in two steps so both the app and its installer can be
+      # signed: SignPath signs files from GitHub Actions artifacts and can't
+      # sign inside an NSIS installer.
+      - name: Build the Windows app
+        if: matrix.name == 'windows'
+        run: npx electron-builder --win --dir --publish never
+      - name: Upload the unsigned app for signing
+        id: unsigned-app
+        if: env.SIGN_WINDOWS == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-app-unsigned
+          path: release/win-unpacked
+          retention-days: 1
+      - name: Sign the app (SignPath)
+        if: env.SIGN_WINDOWS == 'true'
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          connector-url: https://pipelineconnector.connectors.signpath.io/GitHub/GitHubCom
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'lanyard' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          artifact-configuration-slug: app
+          # Lanyard.exe carries a numeric product version: 1.2.0-beta.1 -> 1.2.0.0
+          parameters: |
+            productVersion: "${{ needs.version.outputs.numeric }}"
+          github-artifact-id: ${{ steps.unsigned-app.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: release/win-signed
+      - name: Use the signed app
+        if: env.SIGN_WINDOWS == 'true'
+        shell: bash
+        run: |
+          rm -rf release/win-unpacked
+          mv release/win-signed release/win-unpacked
+      - name: Build the Windows installer
+        if: matrix.name == 'windows'
+        run: npx electron-builder --win nsis --prepackaged release/win-unpacked --publish never
+      - name: Upload the unsigned installer for signing
+        id: unsigned-installer
+        if: env.SIGN_WINDOWS == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-installer-unsigned
+          path: release/*.exe
+          retention-days: 1
+      - name: Sign the installer (SignPath)
+        if: env.SIGN_WINDOWS == 'true'
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          connector-url: https://pipelineconnector.connectors.signpath.io/GitHub/GitHubCom
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'lanyard' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          artifact-configuration-slug: installer
+          parameters: |
+            version: "${{ env.VERSION }}"
+          github-artifact-id: ${{ steps.unsigned-installer.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: release/installer-signed
+      - name: Use the signed installer and check the signatures
+        if: env.SIGN_WINDOWS == 'true'
+        shell: pwsh
+        run: |
+          Move-Item -Force release/installer-signed/*.exe release/
+          foreach ($file in @('release/win-unpacked/Lanyard.exe') + (Get-ChildItem release/*.exe).FullName) {
+            $sig = Get-AuthenticodeSignature $file
+            "{0}: {1} ({2})" -f $file, $sig.Status, $sig.SignerCertificate.Subject
+            if ($sig.Status -ne 'Valid') { throw "$file is not validly signed" }
+          }
       # The installed lanyard command runs the app binary in Node mode on the
       # CLI inside app.asar; check that works with the fuses set, and that the
       # packaged app reports the release version.
@@ -158,12 +241,15 @@ jobs:
     permissions:
       contents: write # create the tag and the release
       actions: write # rebuild the website so its download links follow
+      id-token: write # sign the build attestations (Sigstore)
+      attestations: write
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       VERSION: ${{ needs.version.outputs.version }}
       TAG: ${{ needs.version.outputs.tag }}
       PRERELEASE: ${{ needs.version.outputs.prerelease }}
+      WINDOWS_SIGNED: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -175,6 +261,36 @@ jobs:
         run: |
           sha256sum -- * > SHA256SUMS.txt
           cat SHA256SUMS.txt
+      # One detached signature over the checksums covers every file. Skipped
+      # until the GPG_PRIVATE_KEY secret exists (CONTRIBUTING.md -> Code signing).
+      - name: Sign the checksums (GPG)
+        working-directory: dist
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          if [[ -z "$GPG_PRIVATE_KEY" ]]; then
+            echo "No GPG_PRIVATE_KEY secret; checksums are not signed."
+            exit 0
+          fi
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -m 700 -p "$GNUPGHOME"
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+            --armor --detach-sign --output SHA256SUMS.txt.asc SHA256SUMS.txt
+          gpg --batch --verify SHA256SUMS.txt.asc SHA256SUMS.txt
+          rm -rf "$GNUPGHOME"
+      # A Sigstore-signed statement for every file that it was built from this
+      # commit by this workflow. Check one with `gh attestation verify`.
+      - name: Attest the build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.tgz
+            dist/SHA256SUMS.txt
       - name: Release notes
         working-directory: dist
         run: |
@@ -191,10 +307,33 @@ jobs:
             row "Linux (\`chmod +x\`, then run it)" "*.AppImage"
             row "CLI only, Node.js 20+ (\`npm install -g <file>\`)" "*.tgz"
             echo
-            echo "These builds are not code-signed yet. On Windows, SmartScreen may ask you to confirm"
-            echo "(More info, then Run anyway). On macOS, right-click the app and choose Open the first time,"
+            if [[ "$WINDOWS_SIGNED" == true ]]; then
+              echo "The Windows app and installer are code-signed (free code signing provided by"
+              echo "[SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org))."
+              echo "Until the certificate builds up reputation, SmartScreen may still ask you to confirm (More info, then Run anyway)."
+            else
+              echo "The Windows build is not code-signed yet. SmartScreen may ask you to confirm (More info, then Run anyway)."
+            fi
+            echo "The macOS build is not notarized: right-click the app and choose Open the first time,"
             echo "or run \`xattr -dr com.apple.quarantine /Applications/Lanyard.app\`."
-            echo "\`SHA256SUMS.txt\` lists the checksum of every file."
+            echo
+            echo "## Verify"
+            echo
+            echo "Every file has a signed build attestation proving it was built from this repository by its release workflow:"
+            echo
+            echo '```bash'
+            echo "gh attestation verify <file> --repo $GH_REPO"
+            echo '```'
+            echo
+            echo "\`SHA256SUMS.txt\` lists the checksum of every file. See the"
+            echo "[code signing policy](https://github.com/$GH_REPO/blob/main/SECURITY.md#code-signing-policy)."
+            if [[ -e SHA256SUMS.txt.asc ]]; then
+              echo "It is GPG-signed (\`SHA256SUMS.txt.asc\`); the public key is in [\`KEYS\`](https://github.com/$GH_REPO/blob/main/KEYS):"
+              echo
+              echo '```bash'
+              echo "gpg --verify SHA256SUMS.txt.asc SHA256SUMS.txt && sha256sum --check --ignore-missing SHA256SUMS.txt"
+              echo '```'
+            fi
             echo
             # GitHub's changelog since the previous release.
             gh api "repos/$GH_REPO/releases/generate-notes" -f tag_name="$TAG" -f target_commitish="$GITHUB_SHA" --jq .body
