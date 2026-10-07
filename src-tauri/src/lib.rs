@@ -9,24 +9,46 @@ mod tray;
 
 use serde_json::Value;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Listener, Manager, WindowEvent};
 
 #[tauri::command]
-fn api_invoke(
+async fn api_invoke(
     app: AppHandle,
     namespace: String,
     method: String,
     args: Value,
 ) -> Result<Value, String> {
     if router::is_native(&namespace, &method) {
-        let app2 = app.clone();
-        let method2 = method.clone();
-        return tauri::async_runtime::block_on(native::app_call(&app2, &method2, args));
+        return native::app_call(&app, &method, args).await;
     }
-    let sidecar = app.state::<Arc<sidecar::Sidecar>>();
-    Ok(sidecar.call(&namespace, &method, args))
+    // The sidecar round-trip blocks on a channel recv; keep it off the main
+    // thread so slow domain calls never freeze the UI.
+    let sidecar = app.state::<Arc<sidecar::Sidecar>>().inner().clone();
+    let ns = namespace.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || sidecar.call(&ns, &method, args))
+        .await
+        .map_err(|e| format!("sidecar task failed: {e}"))?;
+    if namespace == "settings" {
+        cache_close_to_tray(&app, &result);
+    }
+    Ok(result)
+}
+
+/// Cache the close-to-tray setting so the window-event handler never blocks on
+/// the sidecar. Defaults to true while the setting is unknown.
+fn cache_close_to_tray(app: &AppHandle, response: &Value) {
+    if let Some(enabled) = response
+        .get("data")
+        .and_then(|d| d.get("closeToTray"))
+        .and_then(Value::as_bool)
+    {
+        if let Some(flag) = app.try_state::<AtomicBool>() {
+            flag.store(enabled, Ordering::Relaxed);
+        }
+    }
 }
 
 fn sidecar_script(app: &AppHandle) -> (String, String) {
@@ -135,6 +157,8 @@ pub fn run() {
             let (program, script) = sidecar_script(app.handle());
             let sidecar = sidecar::Sidecar::spawn(app.handle().clone(), &program, &script, &[])?;
             app.manage(sidecar);
+            // Close-to-tray cache; true = the safe default while unknown.
+            app.manage(AtomicBool::new(true));
 
             let menu = build_app_menu(app.handle())?;
             app.set_menu(menu)?;
@@ -158,17 +182,40 @@ pub fn run() {
                 })
                 .build(app)?;
 
+            // Warm the tray menu off the main thread: refresh_tray performs a
+            // blocking sidecar round-trip, which must never run in setup. The
+            // tray menu populates a moment after startup.
             let sidecar2 = app.state::<Arc<sidecar::Sidecar>>().inner().clone();
-            tray::refresh_tray(app.handle(), &tray, &sidecar2);
+            let handle2 = app.handle().clone();
             app.manage(tray);
+            tauri::async_runtime::spawn_blocking(move || {
+                let tray = handle2.state::<tauri::tray::TrayIcon>().inner().clone();
+                tray::refresh_tray(&handle2, &tray, &sidecar2);
+                // Also warm the close-to-tray cache off-thread so users with
+                // closeToTray=false are honoured even in the first moments.
+                let v = sidecar2.call("settings", "get", serde_json::json!([]));
+                cache_close_to_tray(&handle2, &v);
+            });
 
             // Refresh the tray whenever the sidecar reports file/state changes.
             let handle = app.handle().clone();
-            let handle2 = handle.clone();
-            handle.listen("lanyard:changed", move |_| {
-                let sidecar = handle2.state::<Arc<sidecar::Sidecar>>().inner().clone();
-                let tray = handle2.state::<tauri::tray::TrayIcon>().inner().clone();
-                tray::refresh_tray(&handle2, &tray, &sidecar);
+            let listener_handle = handle.clone();
+            listener_handle.listen("lanyard:changed", move |_| {
+                // This listener runs inline on the sidecar's stdout reader
+                // thread (sidecar.rs emits the event from there), so calling
+                // sidecar.call here would self-deadlock: the response can only
+                // be read by that same reader thread. Run the whole refresh —
+                // including its blocking sidecar.call — on a blocking thread.
+                let h = handle.clone();
+                tauri::async_runtime::spawn_blocking(move || {
+                    let sidecar = h.state::<Arc<sidecar::Sidecar>>().inner().clone();
+                    let tray = h.state::<tauri::tray::TrayIcon>().inner().clone();
+                    tray::refresh_tray(&h, &tray, &sidecar);
+                    // Re-read the close-to-tray setting so the cached flag
+                    // stays current.
+                    let v = sidecar.call("settings", "get", serde_json::json!([]));
+                    cache_close_to_tray(&h, &v);
+                });
             });
 
             // Start hidden with --hidden (login autostart).
@@ -185,17 +232,13 @@ pub fn run() {
                     let _ = window.emit("lanyard:window-state", maximized);
                 }
                 WindowEvent::CloseRequested { api, .. } => {
-                    // Close-to-tray: read the setting through the sidecar.
+                    // Close-to-tray: read the cached setting only — never block
+                    // the event loop on a sidecar round-trip here. Unknown
+                    // defaults to true.
                     let close_to_tray = window
                         .app_handle()
-                        .try_state::<Arc<sidecar::Sidecar>>()
-                        .map(|s| {
-                            let v = s.call("settings", "get", serde_json::json!([]));
-                            v.get("data")
-                                .and_then(|d| d.get("closeToTray"))
-                                .and_then(Value::as_bool)
-                                .unwrap_or(true)
-                        })
+                        .try_state::<AtomicBool>()
+                        .map(|flag| flag.load(Ordering::Relaxed))
                         .unwrap_or(true);
                     if close_to_tray {
                         api.prevent_close();

@@ -15,6 +15,40 @@ fn is_hex_color(s: &str) -> bool {
         && s[1..].chars().all(|c| c.is_ascii_hexdigit())
 }
 
+/// Await the non-blocking dialog APIs so pickers never run on the main
+/// thread (the blocking_* variants deadlock the event loop there).
+async fn pick_folder_async(app: &AppHandle) -> Option<tauri_plugin_dialog::FilePath> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    app.dialog().file().pick_folder(move |p| {
+        let _ = tx.send(p);
+    });
+    tauri::async_runtime::spawn_blocking(move || {
+        // Bound the wait so a never-firing dialog callback can't pin a pooled
+        // thread forever.
+        rx.recv_timeout(std::time::Duration::from_secs(300)).ok()
+    })
+    .await
+    .ok()
+    .flatten()
+    .flatten()
+}
+
+async fn pick_file_async(app: &AppHandle) -> Option<tauri_plugin_dialog::FilePath> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    app.dialog().file().pick_file(move |p| {
+        let _ = tx.send(p);
+    });
+    tauri::async_runtime::spawn_blocking(move || {
+        // Bound the wait so a never-firing dialog callback can't pin a pooled
+        // thread forever.
+        rx.recv_timeout(std::time::Duration::from_secs(300)).ok()
+    })
+    .await
+    .ok()
+    .flatten()
+    .flatten()
+}
+
 pub async fn app_call(app: &AppHandle, method: &str, args: Value) -> Result<Value, String> {
     let argv: Vec<Value> = args.as_array().cloned().unwrap_or_default();
     match method {
@@ -34,11 +68,11 @@ pub async fn app_call(app: &AppHandle, method: &str, args: Value) -> Result<Valu
             Ok(Value::Null)
         }
         "pickDirectory" => {
-            let path = app.dialog().file().blocking_pick_folder();
+            let path = pick_folder_async(app).await;
             Ok(path.map(|p| json!(p.to_string())).unwrap_or(Value::Null))
         }
         "pickFile" => {
-            let path = app.dialog().file().blocking_pick_file();
+            let path = pick_file_async(app).await;
             Ok(path.map(|p| json!(p.to_string())).unwrap_or(Value::Null))
         }
         "revealPath" => {
