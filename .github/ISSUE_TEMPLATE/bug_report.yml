@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in Lanyard doesn't work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please check [Troubleshooting](https://github.com/riomar0001/lanyard/wiki/Troubleshooting) first.
+        **Remove private details** (hostnames, usernames, emails, key fingerprints) from anything you paste.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Git accounts
+        2. Click …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Lanyard version
+      description: Settings → About, or `lanyard --version`.
+      placeholder: 1.0.0-beta.2
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where
+      multiple: true
+      options:
+        - Desktop app
+        - Tray menu
+        - CLI
+  - type: textarea
+    id: output
+    attributes:
+      label: Relevant output
+      description: Error messages, or the output of `ssh -vT <host>` for connection problems.
+      render: text
