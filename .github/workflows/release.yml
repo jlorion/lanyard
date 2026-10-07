@@ -1,0 +1,218 @@
+# Release from a build branch.
+#
+# Creating (or pushing to) a branch named build-v<version>, for example
+# build-v1.0.0-beta, builds Lanyard <version> for Windows, macOS and Linux and
+# publishes it as the GitHub release v<version>. Versions with a suffix
+# (1.0.0-beta, 2.1.0-rc.1) are marked as prereleases.
+#
+# Pushing to the branch again rebuilds the same version: the tag moves to the
+# new commit and the release files are replaced.
+
+name: Release
+
+on:
+  push:
+    branches: ['build-v*']
+  workflow_dispatch: # run it on a build-v* branch from the Actions tab
+
+concurrency:
+  group: release-${{ github.ref }}
+  # Never stop a run halfway through publishing; a newer push waits its turn.
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+  npm_config_fund: false
+  npm_config_update_notifier: false
+
+jobs:
+  version:
+    name: Version from branch name
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+      tag: ${{ steps.parse.outputs.tag }}
+      prerelease: ${{ steps.parse.outputs.prerelease }}
+    steps:
+      - id: parse
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          version="${BRANCH#build-v}"
+          semver='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+          if [[ "$BRANCH" != build-v* || ! "$version" =~ $semver ]]; then
+            echo "::error::Branch '$BRANCH' must be named build-v<version>, e.g. build-v1.2.0 or build-v1.2.0-beta.1"
+            exit 1
+          fi
+          prerelease=false
+          if [[ "$version" == *-* ]]; then prerelease=true; fi
+          {
+            echo "version=$version"
+            echo "tag=v$version"
+            echo "prerelease=$prerelease"
+          } >> "$GITHUB_OUTPUT"
+          echo "### Lanyard $version (tag v$version, prerelease: $prerelease)" >> "$GITHUB_STEP_SUMMARY"
+
+  ci:
+    name: CI
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  package:
+    name: Package (${{ matrix.name }})
+    needs: [version, ci]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-latest
+            exe: release/win-unpacked/Lanyard.exe
+            asar: release/win-unpacked/resources/app.asar
+            files: release/*.exe
+          - name: macos # builds both arm64 and x64; the runner can launch the arm64 one
+            os: macos-latest
+            exe: release/mac-arm64/Lanyard.app/Contents/MacOS/Lanyard
+            asar: release/mac-arm64/Lanyard.app/Contents/Resources/app.asar
+            files: release/*.dmg
+          - name: linux
+            os: ubuntu-latest
+            exe: release/linux-unpacked/lanyard
+            asar: release/linux-unpacked/resources/app.asar
+            files: release/*.AppImage
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Set the app version to ${{ env.VERSION }}
+        run: npm version "${{ env.VERSION }}" --no-git-tag-version --allow-same-version
+      - run: npm run build
+      - name: Build installers
+        run: npx electron-builder --publish never
+      # The installed lanyard command runs the app binary in Node mode on the
+      # CLI inside app.asar; check that works with the fuses set, and that the
+      # packaged app reports the release version.
+      - name: Smoke-test the packaged CLI
+        shell: bash
+        env:
+          APP_EXE: ${{ matrix.exe }}
+          APP_ASAR: ${{ matrix.asar }}
+        run: |
+          reported=$(LANYARD_SSH_DIR="$RUNNER_TEMP/ssh" LANYARD_HOME="$RUNNER_TEMP/home" ELECTRON_RUN_AS_NODE=1 \
+            "$APP_EXE" "$APP_ASAR/bin/lanyard.js" --version)
+          echo "packaged CLI reports $reported"
+          [[ "$reported" == "$VERSION" ]] || { echo "::error::expected version $VERSION, got $reported"; exit 1; }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lanyard-${{ matrix.name }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+          retention-days: 7
+
+  npm-package:
+    name: npm package
+    needs: [version, ci]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm version "$VERSION" --no-git-tag-version --allow-same-version
+      # prepack builds the CLI; the tarball is what `npm publish` would upload.
+      - run: npm pack
+      - name: Smoke-test the packed CLI
+        run: |
+          npm install --prefix "$RUNNER_TEMP/try" "./lanyard-ssh-$VERSION.tgz"
+          reported=$(LANYARD_SSH_DIR="$RUNNER_TEMP/ssh" LANYARD_HOME="$RUNNER_TEMP/home" \
+            "$RUNNER_TEMP/try/node_modules/.bin/lanyard" --version)
+          [[ "$reported" == "$VERSION" ]] || { echo "::error::expected version $VERSION, got $reported"; exit 1; }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lanyard-npm
+          path: lanyard-ssh-*.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Publish GitHub release
+    needs: [version, package, npm-package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the tag and the release
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ needs.version.outputs.version }}
+      TAG: ${{ needs.version.outputs.tag }}
+      PRERELEASE: ${{ needs.version.outputs.prerelease }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: lanyard-*
+          merge-multiple: true
+          path: dist
+      - name: Checksums
+        working-directory: dist
+        run: |
+          sha256sum -- * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Release notes
+        working-directory: dist
+        run: |
+          # One row per file this run built, so the table always matches the assets.
+          row() { for f in $2; do if [[ -e "$f" ]]; then echo "| $1 | \`$f\` |"; fi; done; }
+          {
+            echo "## Install"
+            echo
+            echo "| Platform | File |"
+            echo "| --- | --- |"
+            row "Windows" "*.exe"
+            row "macOS (Apple Silicon)" "*arm64.dmg"
+            row "macOS (Intel)" "*x64.dmg"
+            row "Linux (\`chmod +x\`, then run it)" "*.AppImage"
+            row "CLI only, Node.js 20+ (\`npm install -g <file>\`)" "*.tgz"
+            echo
+            echo "These builds are not code-signed yet. On Windows, SmartScreen may ask you to confirm"
+            echo "(More info, then Run anyway). On macOS, right-click the app and choose Open the first time,"
+            echo "or run \`xattr -dr com.apple.quarantine /Applications/Lanyard.app\`."
+            echo "\`SHA256SUMS.txt\` lists the checksum of every file."
+            echo
+            # GitHub's changelog since the previous release.
+            gh api "repos/$GH_REPO/releases/generate-notes" -f tag_name="$TAG" -f target_commitish="$GITHUB_SHA" --jq .body
+          } > ../notes.md
+          cat ../notes.md
+      - name: Create or update the release
+        working-directory: dist
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            # Rebuild of an existing version: move the tag to this commit and
+            # replace the release files, dropping any that this build didn't make.
+            gh api -X PATCH "repos/$GH_REPO/git/refs/tags/$TAG" -f sha="$GITHUB_SHA" -F force=true
+            gh release view "$TAG" --json assets --jq '.assets[].name' | while IFS= read -r name; do
+              [[ -e "$name" ]] || gh release delete-asset "$TAG" "$name" --yes
+            done
+            gh release upload "$TAG" --clobber ./*
+            gh release edit "$TAG" --title "Lanyard $VERSION" --notes-file ../notes.md --prerelease="$PRERELEASE"
+          else
+            gh release create "$TAG" ./* --target "$GITHUB_SHA" --title "Lanyard $VERSION" \
+              --notes-file ../notes.md --prerelease="$PRERELEASE"
+          fi
+          echo "Published https://github.com/$GH_REPO/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
