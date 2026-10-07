@@ -2,6 +2,7 @@ import type { AssetKey } from '../lib/assets';
 import { useOs, useRelease } from '../lib/hooks';
 import { CopyButton } from './controls';
 import { Icon } from './icons';
+import { GITHUB } from '../lib/site';
 
 /** Platform cards with direct links to the newest release's files. */
 export function DownloadCards() {
@@ -78,6 +79,10 @@ export function DownloadCards() {
           </p>
           <p>
             <strong>macOS:</strong> right-click Lanyard in Applications and choose Open.
+          </p>
+          <p>
+            Every file has a signed build attestation and a published checksum. See the{' '}
+            <a href={`${GITHUB}/blob/main/SECURITY.md#code-signing-policy`}>code signing policy</a> to verify a download.
           </p>
         </div>
       </div>

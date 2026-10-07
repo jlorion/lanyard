@@ -150,6 +150,10 @@ Switching accounts rewrites the `Host github.com` block. Nothing outside the mar
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**: how the code is organized.
 - **[SECURITY.md](SECURITY.md)**: threat model, the latest audit, and how to report a vulnerability.
 
+## Code signing policy
+
+Windows releases are signed with free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org), once the project is approved. Every release file also carries a signed build attestation. Roles, privacy policy and how to verify a download: [Code signing policy](SECURITY.md#code-signing-policy).
+
 ## License
 
 [MIT](LICENSE) © riomar

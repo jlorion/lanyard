@@ -12,6 +12,35 @@ Please report security problems privately via a
 on this repository, not as a public issue. Include steps to reproduce and the
 Lanyard version (Settings → About, or `lanyard --version`).
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+> **Status:** not yet approved by SignPath Foundation. Until then, Windows releases are not code-signed.
+
+- **What is signed:** the Windows app (`Lanyard.exe`) and its installer, only from release builds made by [`release.yml`](.github/workflows/release.yml) on GitHub-hosted runners from this repository's source. Bundled upstream binaries (Electron's own libraries) are not signed with this certificate.
+- **Committers and reviewers:** [riomar0001](https://github.com/riomar0001). Changes from anyone else arrive as pull requests and are reviewed before merging.
+- **Approvers:** [riomar0001](https://github.com/riomar0001) approves every signing request in SignPath.
+- **macOS** builds are not notarized yet, so macOS asks for confirmation on first launch.
+
+**Privacy policy:** This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. Lanyard connects only to the SSH servers and git hosts you ask it to (to connect, test a login or scan host keys) and runs no telemetry or update checks.
+
+### Verifying a download
+
+Whether or not a file is code-signed, every release file has a signed **build attestation** proving it was built from this repository by its release workflow:
+
+```bash
+gh attestation verify Lanyard-Setup-1.2.0-x64.exe --repo riomar0001/lanyard
+```
+
+Each release also lists every file's SHA-256 in `SHA256SUMS.txt`. When it is GPG-signed (`SHA256SUMS.txt.asc`), check it with the public key in [`KEYS`](KEYS):
+
+```bash
+gpg --import KEYS
+gpg --verify SHA256SUMS.txt.asc SHA256SUMS.txt
+sha256sum --check --ignore-missing SHA256SUMS.txt
+```
+
 ## Threat model
 
 - **Trusted:** the local user running Lanyard and the code bundled with the

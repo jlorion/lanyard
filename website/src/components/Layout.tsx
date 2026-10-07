@@ -100,6 +100,7 @@ function Footer() {
           <a href={GITHUB}>GitHub</a>
           <a href={RELEASES}>Releases</a>
           <a href={`${GITHUB}/security/policy`}>Security policy</a>
+          <a href={`${GITHUB}/blob/main/SECURITY.md#code-signing-policy`}>Code signing policy</a>
           <a href={`${GITHUB}/blob/main/LICENSE`}>MIT license</a>
         </nav>
       </div>

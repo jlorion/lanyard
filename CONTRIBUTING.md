@@ -96,6 +96,31 @@ git push origin main:build-v1.2.0
 
 A version with a suffix (`1.2.0-beta.1`) is published as a prerelease. Pushing to the same branch again rebuilds that version, moves its tag and replaces its files.
 
+### Code signing
+
+The policy users see is in [SECURITY.md](SECURITY.md#code-signing-policy). Three parts, each turned on separately:
+
+**Build attestations (on, nothing to set up).** The release job signs a provenance attestation for every file with GitHub's Sigstore integration. Anyone can check a file with `gh attestation verify <file> --repo riomar0001/lanyard`.
+
+**Windows: SignPath Foundation (free for open source).**
+
+1. Apply at [signpath.org/apply](https://signpath.org/apply). Turn on two-factor authentication for GitHub and SignPath first; the Foundation requires it.
+2. Once accepted, in SignPath create a project with the slug `lanyard`, using the predefined trusted build system **GitHub.com**.
+3. Add two artifact configurations, pasting the files from [`.signpath/artifact-configurations`](.signpath/artifact-configurations): slug `app` from `app.xml` and slug `installer` from `installer.xml`.
+4. Use the signing policy `release-signing`, with yourself as approver.
+5. Create a CI user with an API token. On GitHub, save it as the secret `SIGNPATH_API_TOKEN`, and save your SignPath organization ID as the repository variable `SIGNPATH_ORGANIZATION_ID`. If your slugs differ, set the variables `SIGNPATH_PROJECT_SLUG` and `SIGNPATH_SIGNING_POLICY_SLUG`.
+6. Remove the "not yet approved" status line from the policy in SECURITY.md.
+
+The next release then builds the Windows app, has SignPath sign `Lanyard.exe`, builds the installer from the signed app, has SignPath sign the installer, and checks both signatures. Each signing request waits for your approval in SignPath, for up to an hour. Signing only removes the SmartScreen warning once the certificate has built up reputation.
+
+**GPG signature over the checksums (free).**
+
+1. Create a signing key: `gpg --quick-generate-key "Lanyard releases <you@example.com>" ed25519 sign 2y`
+2. Save the private key (`gpg --armor --export-secret-keys <KEY-ID>`) as the secret `GPG_PRIVATE_KEY`, and its passphrase as `GPG_PASSPHRASE`.
+3. Commit the public key as `KEYS` at the repository root: `gpg --armor --export <KEY-ID> > KEYS`
+
+Releases then include `SHA256SUMS.txt.asc`, and their notes say how to verify it.
+
 ### npm
 
 Stable versions are published to npm as `latest`. Prereleases get a tag named after their label (`1.2.0-beta.1` → `beta`), so `npm install -g lanyard-ssh` keeps installing the stable version and testers use `npm install -g lanyard-ssh@beta`. npm never accepts the same version twice, so rebuilding a release skips npm.
