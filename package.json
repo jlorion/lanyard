@@ -2,7 +2,7 @@
   "name": "lanyard-ssh",
   "productName": "Lanyard",
   "version": "1.0.0",
-  "description": "Lanyard: switch git accounts (GitHub, GitLab, Hugging Face, ...) and manage SSH hosts, keys, ssh-agent and known_hosts, from the system tray or the command line.",
+  "description": "Wear the right identity everywhere: switch between GitHub, GitLab, Bitbucket and Hugging Face accounts in one click, and manage your remote SSH servers, keys, ssh-agent and known_hosts from a desktop app, the system tray or the command line.",
   "keywords": [
     "ssh",
     "ssh-config",
@@ -13,7 +13,10 @@
     "multiple-accounts",
     "ssh-keys",
     "cli",
-    "electron"
+    "electron",
+    "ssh-manager",
+    "remote-servers",
+    "ssh-client"
   ],
   "author": "riomar",
   "license": "MIT",
@@ -84,5 +87,13 @@
   },
   "overrides": {
     "typescript": "$typescript"
+  },
+  "homepage": "https://github.com/riomar0001/lanyard#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/riomar0001/lanyard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/riomar0001/lanyard/issues"
   }
 }

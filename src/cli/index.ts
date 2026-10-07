@@ -18,7 +18,7 @@ export function buildProgram(): Command {
   const program = new Command();
   program
     .name('lanyard')
-    .description('Lanyard - switch git provider accounts and manage SSH hosts, keys, agent and known_hosts')
+    .description('Lanyard - wear the right identity everywhere: switch git accounts, manage SSH hosts, keys, agent and known_hosts')
     .version(pkg.version)
     .option('--json', 'machine-readable output')
     .hook('preAction', (cmd) => out.setJson(!!cmd.optsWithGlobals().json));
@@ -29,8 +29,8 @@ export function buildProgram(): Command {
     'after',
     `
 Examples:
-  $ lanyard                             # open the desktop app
-  $ lanyard accounts add github work --generate --git-name "Jane Doe" --git-email jane@work.com --set-git-identity
+  $ lanyard                              # open the desktop app
+  $ lanyard accounts add github work     --generate --git-name "Jane Doe" --git-email jane@work.com --set-git-identity
   $ lanyard accounts add github personal --key ~/.ssh/id_ed25519 --git-name "Jane Doe" --git-email jane@personal.dev
   $ lanyard use github personal          # git@github.com:... now authenticates as "personal"
   $ lanyard test                         # verify every active account
