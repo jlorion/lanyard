@@ -8,10 +8,10 @@ mod sidecar;
 mod tray;
 
 use serde_json::Value;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter, Manager, WindowEvent};
+use tauri::{AppHandle, Emitter, Listener, Manager, WindowEvent};
 
 #[tauri::command]
 fn api_invoke(
@@ -46,7 +46,7 @@ fn sidecar_script(app: &AppHandle) -> (String, String) {
 
 fn build_app_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let nav = |label: &str, page: &str, accel: Option<&str>| {
-        MenuItem::with_id(app, format!("nav:{page}"), label, true, accel)
+        MenuItem::with_id(app, format!("nav:{page}"), label, true, accel).expect("menu item")
     };
     let pages = Submenu::new(app, "Go", true)?;
     for (i, (label, page)) in [
@@ -150,7 +150,7 @@ pub fn run() {
             let tray = TrayIconBuilder::with_id("main")
                 .tooltip("Lanyard")
                 .icon(app.default_window_icon().unwrap().clone())
-                .menu_on_left_click(false)
+                .show_menu_on_left_click(false)
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event {
                         tray::show_window(tray.app_handle(), None);
@@ -164,10 +164,11 @@ pub fn run() {
 
             // Refresh the tray whenever the sidecar reports file/state changes.
             let handle = app.handle().clone();
+            let handle2 = handle.clone();
             handle.listen("lanyard:changed", move |_| {
-                let sidecar = handle.state::<Arc<sidecar::Sidecar>>().inner().clone();
-                let tray = handle.state::<tauri::tray::TrayIcon>().inner().clone();
-                tray::refresh_tray(&handle, &tray, &sidecar);
+                let sidecar = handle2.state::<Arc<sidecar::Sidecar>>().inner().clone();
+                let tray = handle2.state::<tauri::tray::TrayIcon>().inner().clone();
+                tray::refresh_tray(&handle2, &tray, &sidecar);
             });
 
             // Start hidden with --hidden (login autostart).

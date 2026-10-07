@@ -81,7 +81,7 @@ pub async fn app_call(app: &AppHandle, method: &str, args: Value) -> Result<Valu
             let y = argv.get(1).and_then(Value::as_f64).unwrap_or(0.0);
             if let Some(w) = app.get_webview_window("main") {
                 if let Some(menu) = app.menu() {
-                    let _ = menu.popup_at(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)), &w);
+                    let _ = w.popup_menu_at(&menu, tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
                 }
             }
             Ok(Value::Null)

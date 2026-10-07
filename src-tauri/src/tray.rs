@@ -4,9 +4,9 @@
 
 use serde::Deserialize;
 use std::sync::Arc;
-use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
+use tauri::menu::{CheckMenuItem, Menu, MenuItem, MenuItemKind, PredefinedMenuItem, Submenu};
 use tauri::tray::TrayIcon;
-use tauri::{AppHandle, Emitter, Manager, Runtime};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::sidecar::Sidecar;
 
@@ -28,39 +28,39 @@ pub struct TraySpec {
     pub items: Vec<TrayMenuItemSpec>,
 }
 
-fn build_submenu<R: Runtime>(app: &AppHandle<R>, title: &str, items: &[TrayMenuItemSpec]) -> tauri::Result<Submenu<R>> {
-    let submenu = Submenu::with_id(app, format!("sub:{title}"), title, true)?;
-    for item in items {
-        append_item(app, &submenu, item)?;
-    }
-    Ok(submenu)
-}
-
-fn append_item<R: Runtime, M: Manager<R>>(app: &AppHandle<R>, menu: &M, item: &TrayMenuItemSpec) -> tauri::Result<()>
-where
-    M: tauri::menu::AddMenuItem<R>,
-{
+/// Turn a spec into a concrete menu item; `Menu::append`/`Submenu::append`
+/// both accept any `IsMenuItem`, and `MenuItemKind` boxes the variants.
+fn make_item(app: &AppHandle, item: &TrayMenuItemSpec) -> tauri::Result<MenuItemKind<tauri::Wry>> {
     if item.kind.as_deref() == Some("separator") {
-        menu.add_item(&PredefinedMenuItem::separator(app)?)?;
-        return Ok(());
+        return Ok(MenuItemKind::Predefined(PredefinedMenuItem::separator(app)?));
     }
     let label = item.label.clone().unwrap_or_default();
     let enabled = item.enabled.unwrap_or(true);
     if let Some(sub) = &item.submenu {
-        let submenu = build_submenu(app, &label, sub)?;
-        menu.add_item(&submenu)?;
-        return Ok(());
+        let submenu = Submenu::with_id(app, format!("sub:{label}"), &label, enabled)?;
+        for child in sub {
+            submenu.append(&make_item(app, child)?)?;
+        }
+        return Ok(MenuItemKind::Submenu(submenu));
     }
     let id = item.id.clone().unwrap_or_else(|| format!("noop:{label}"));
     match item.kind.as_deref() {
-        Some("radio") | Some("checkbox") => {
-            menu.add_item(&CheckMenuItem::with_id(app, &id, &label, enabled, item.checked.unwrap_or(false), None)?)?;
-        }
-        _ => {
-            menu.add_item(&MenuItem::with_id(app, &id, &label, enabled, None::<&str>)?)?;
-        }
+        Some("radio") | Some("checkbox") => Ok(MenuItemKind::Check(CheckMenuItem::with_id(
+            app,
+            &id,
+            &label,
+            enabled,
+            item.checked.unwrap_or(false),
+            None::<&str>,
+        )?)),
+        _ => Ok(MenuItemKind::MenuItem(MenuItem::with_id(
+            app,
+            &id,
+            &label,
+            enabled,
+            None::<&str>,
+        )?)),
     }
-    Ok(())
 }
 
 /// Rebuild the tray menu from the sidecar's current spec.
@@ -85,7 +85,7 @@ pub fn refresh_tray(app: &AppHandle, tray: &TrayIcon, sidecar: &Arc<Sidecar>) {
 fn build_menu(app: &AppHandle, items: &[TrayMenuItemSpec]) -> tauri::Result<Menu<tauri::Wry>> {
     let menu = Menu::new(app)?;
     for item in items {
-        append_item(app, &menu, item)?;
+        menu.append(&make_item(app, item)?)?;
     }
     Ok(menu)
 }
@@ -105,6 +105,7 @@ pub fn on_menu_event(app: &AppHandle, id: &str) {
             if let Some(sidecar) = app.try_state::<Arc<Sidecar>>() {
                 let sidecar = Arc::clone(sidecar.inner());
                 let app2 = app.clone();
+                let id = id.to_string();
                 std::thread::spawn(move || {
                     sidecar.call("menu", "act", serde_json::json!([id]));
                     refresh_from_state(&app2);
@@ -134,13 +135,13 @@ pub fn show_window(app: &AppHandle, nav: Option<(String, Option<String>)>) {
     }
 }
 
-fn toggle_autostart(app: &AppHandle) -> tauri::Result<()> {
+fn toggle_autostart(app: &AppHandle) -> Result<(), String> {
     use tauri_plugin_autostart::ManagerExt;
     let autostart = app.autolaunch();
-    if autostart.is_enabled().unwrap_or(false) {
-        autostart.disable()?;
+    if autostart.is_enabled().map_err(|e| e.to_string())? {
+        autostart.disable().map_err(|e| e.to_string())?;
     } else {
-        autostart.enable()?;
+        autostart.enable().map_err(|e| e.to_string())?;
     }
     Ok(())
 }
