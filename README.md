@@ -18,10 +18,10 @@
 </p>
 
 <p align="center">
-  <a href="https://riomar0001.github.io/lanyard/"><strong>Website</strong></a> ·
-  <a href="https://riomar0001.github.io/lanyard/download/"><strong>Download</strong></a> ·
-  <a href="https://riomar0001.github.io/lanyard/docs/"><strong>User guide</strong></a> ·
-  <a href="https://riomar0001.github.io/lanyard/docs/cli-reference/"><strong>CLI reference</strong></a>
+  <a href="https://lanyard.riomar.dev/"><strong>Website</strong></a> ·
+  <a href="https://lanyard.riomar.dev/download/"><strong>Download</strong></a> ·
+  <a href="https://lanyard.riomar.dev/docs/"><strong>User guide</strong></a> ·
+  <a href="https://lanyard.riomar.dev/docs/cli-reference/"><strong>CLI reference</strong></a>
 </p>
 
 <picture>

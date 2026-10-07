@@ -59,7 +59,7 @@ On Windows PowerShell: `$env:LANYARD_SSH_DIR = "$env:TEMP\lny\.ssh"` (and `LANYA
 
 - The user guide lives in [`docs/wiki`](docs/wiki) and is published to the [GitHub wiki](https://github.com/riomar0001/lanyard/wiki) by `.github/workflows/wiki.yml` on every push to `main`. Link pages as `Page.md` and images as `../images/x.png`; the workflow rewrites both for the wiki.
 - Screenshots live in [`docs/images`](docs/images), 1280×800. Take them from a sandboxed instance with demo data, never from a real setup.
-- The same pages also appear on the [website](https://riomar0001.github.io/lanyard/docs/), so one edit updates both.
+- The same pages also appear on the [website](https://lanyard.riomar.dev/docs/), so one edit updates both.
 
 ## Website
 
@@ -75,7 +75,7 @@ npm run preview    # serve the build
 
 - **Download buttons** link straight to the newest release's files. The build reads them from the GitHub API, and the page refreshes them in the browser, so they follow new releases even before the site is rebuilt.
 - **Deploys:** [`pages.yml`](.github/workflows/pages.yml) publishes to GitHub Pages on every push to `main` that touches the site or the docs, and after every release. It needs a one-time setting: **Settings → Pages → Source: GitHub Actions**.
-- **Custom domain:** point the domain at `riomar0001.github.io` (a CNAME record, set to DNS only on Cloudflare), add it under **Settings → Pages → Custom domain**, and set the repository variable `PAGES_DOMAIN` to it (for example `lanyard.example.com`). The next deploy then builds the site for the domain's root instead of `/lanyard/`. Old `github.io` links redirect to the domain.
+- **Custom domain:** point the domain at `riomar0001.github.io` (a CNAME record, set to DNS only on Cloudflare), and add it under **Settings → Pages → Custom domain**. Each deploy asks GitHub Pages for the site's address, so after changing the domain, run the **Website** workflow once to rebuild for it. The site is live at [lanyard.riomar.dev](https://lanyard.riomar.dev); old `github.io` links redirect there.
 
 ## Releases
 
