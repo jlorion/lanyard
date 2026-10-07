@@ -1,19 +1,18 @@
 /**
  * Launcher scripts that put `lanyard` and `lny` on the PATH. Each one runs
- * bin/lanyard.js either with the desktop app's own runtime (Electron in Node
- * mode, so no Node.js install is needed) or with `node` for a source checkout.
+ * bin/lanyard.js with Node: either the runtime bundled next to the desktop
+ * app (LANYARD_APP_EXE points at it when the shim is installed from the app)
+ * or the system `node` for a source checkout / npm install.
  */
 
 export const SHIM_MARKER = 'Installed by Lanyard';
 export const COMMAND_NAMES = ['lanyard', 'lny'] as const;
 
 export interface ShimTarget {
-  /** Lanyard executable (packaged app) or 'node' (source checkout). */
+  /** Node runtime to use: the bundled runtime's path (packaged) or 'node' (source). */
   exe: string;
-  /** Absolute path of bin/lanyard.js (inside app.asar when packaged). */
+  /** Absolute path of bin/lanyard.js. */
   script: string;
-  /** Run the app binary as Node (ELECTRON_RUN_AS_NODE). */
-  runAsNode: boolean;
 }
 
 export interface Shim {
@@ -24,21 +23,18 @@ export interface Shim {
 const shQuote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 
 function windowsShim(t: ShimTarget): string {
-  const lines = ['@echo off', `rem ${SHIM_MARKER} (Settings > Command line). Safe to delete.`, 'setlocal'];
-  if (t.runAsNode) {
-    lines.push(`set "LANYARD_APP_EXE=${t.exe}"`, 'set "ELECTRON_RUN_AS_NODE=1"', `"%LANYARD_APP_EXE%" "${t.script}" %*`);
-  } else {
-    lines.push(`"${t.exe}" "${t.script}" %*`);
-  }
-  lines.push('exit /b %ERRORLEVEL%');
-  return lines.join('\r\n') + '\r\n';
+  return (
+    [
+      '@echo off',
+      `rem ${SHIM_MARKER} (Settings > Command line). Safe to delete.`,
+      `"${t.exe}" "${t.script}" %*`,
+      'exit /b %ERRORLEVEL%',
+    ].join('\r\n') + '\r\n'
+  );
 }
 
 function posixShim(t: ShimTarget): string {
-  const run = t.runAsNode
-    ? `LANYARD_APP_EXE=${shQuote(t.exe)} ELECTRON_RUN_AS_NODE=1 exec ${shQuote(t.exe)} ${shQuote(t.script)} "$@"`
-    : `exec ${shQuote(t.exe)} ${shQuote(t.script)} "$@"`;
-  return ['#!/bin/sh', `# ${SHIM_MARKER} (Settings > Command line). Safe to delete.`, run, ''].join('\n');
+  return ['#!/bin/sh', `# ${SHIM_MARKER} (Settings > Command line). Safe to delete.`, `exec ${shQuote(t.exe)} ${shQuote(t.script)} "$@"`, ''].join('\n');
 }
 
 export function renderShims(target: ShimTarget, platform: NodeJS.Platform = process.platform): Shim[] {

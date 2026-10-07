@@ -71,7 +71,7 @@ export interface AboutInfo {
   version: string;
   description: string;
   license: string;
-  runtime: { electron: string; chrome: string; node: string };
+  runtime: { node: string; webview: string | null };
   os: string;
   tools: { ssh: string | null; git: string | null };
   packaged: boolean;

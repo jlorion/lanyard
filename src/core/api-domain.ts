@@ -1,47 +1,42 @@
 /**
- * Main-process implementation of the IPC contract. Domain calls are delegated
- * to the core; only desktop concerns (dialogs, clipboard, terminals, shell)
- * live here.
+ * Domain-only implementation of the LanyardApi contract: every namespace that
+ * is pure core delegation lives here, with no desktop-shell imports. The
+ * Tauri sidecar (src/sidecar) serves this object; desktop concerns (dialogs,
+ * clipboard, theme, native menus) are answered natively by the Rust backend.
+ *
+ * Extracted from the old Electron main-process src/main/ipc/api.ts.
  */
 
-import fs from 'node:fs';
 import os from 'node:os';
-import path from 'node:path';
-import { app, clipboard, dialog, Menu, nativeTheme, shell } from 'electron';
-import * as core from '../../core';
-import { toolVersions } from '../../core/utils/tool-versions';
-import pkg from '../../../package.json';
-import type { AboutInfo, AppInfo, LanyardApi } from '../../shared/ipc';
-import type { MainWindow } from '../window';
-import * as cliInstall from '../cli-install';
+import * as core from './index';
+import { toolVersions } from './utils/tool-versions';
+import pkg from '../../package.json';
+import type { AboutInfo, AppInfo, LanyardApi } from '../shared/ipc';
 
-export interface ApiContext {
-  window: MainWindow;
-  /** Called after settings change so OS integration (login item, tray) can follow. */
-  onSettingsChanged: () => void;
-}
-
-function cliHint(): string {
-  if (app.isPackaged) {
-    const shim = process.platform === 'win32' ? 'lanyard.cmd' : 'lanyard';
-    return `"${path.join(process.resourcesPath, 'cli', shim)}"`;
-  }
-  return `node "${path.join(app.getAppPath(), 'bin', 'lanyard.js')}"`;
+export interface DomainApiOptions {
+  /** App version string (from the shell; Tauri knows it, sidecar gets it injected). */
+  version: string;
+  /** Whether the app is running from an installed bundle. */
+  packaged: boolean;
+  /** Command that runs the CLI from this installation. */
+  cliHint: string;
+  /** Called after settings change so the shell can follow (tray, autostart). */
+  onSettingsChanged?: () => void;
 }
 
 export function openInTerminal(cmd: string, args: string[], title: string): void {
   core.terminal.openTerminal(cmd, args, { preference: core.settings.get().terminal, title });
 }
 
-export function createApi(ctx: ApiContext): LanyardApi {
-  const parent = () => ctx.window.browserWindow ?? undefined;
+type DomainApi = Omit<
+  LanyardApi,
+  'app'
+> & {
+  app: Pick<LanyardApi['app'], 'info' | 'about' | 'connect' | 'addKeyInTerminal'>;
+};
 
-  async function pick(properties: Electron.OpenDialogOptions['properties'], defaultPath?: string) {
-    const win = parent();
-    const options: Electron.OpenDialogOptions = { properties, defaultPath };
-    const r = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
-    return r.canceled || !r.filePaths.length ? null : r.filePaths[0];
-  }
+export function createDomainApi(opts: DomainApiOptions): DomainApi {
+  const onSettingsChanged = opts.onSettingsChanged ?? (() => {});
 
   return {
     accounts: {
@@ -102,25 +97,18 @@ export function createApi(ctx: ApiContext): LanyardApi {
       get: async () => core.settings.get(),
       update: async (patch) => {
         const next = core.settings.update(patch);
-        ctx.onSettingsChanged();
+        onSettingsChanged();
         return next;
       },
     },
     app: {
       info: async (): Promise<AppInfo> => ({
-        version: app.getVersion(),
+        version: opts.version,
         platform: process.platform,
         paths: core.describePaths(),
         terminalChoices: core.terminal.TERMINAL_CHOICES[process.platform] ?? ['auto'],
-        cliHint: cliHint(),
+        cliHint: opts.cliHint,
       }),
-      openExternal: async (url) => {
-        if (!/^https:\/\//.test(url)) throw new Error('Only https links can be opened.');
-        await shell.openExternal(url);
-      },
-      copy: async (text) => clipboard.writeText(text),
-      pickDirectory: () => pick(['openDirectory']),
-      pickFile: () => pick(['openFile', 'showHiddenFiles'], core.paths.sshDir),
       connect: async (alias) => {
         const provider = core.hosts.gitProviderFor(core.hosts.assertAlias(alias));
         if (provider)
@@ -136,30 +124,14 @@ export function createApi(ctx: ApiContext): LanyardApi {
       },
       about: async (): Promise<AboutInfo> => ({
         name: pkg.productName,
-        version: app.getVersion(),
+        version: opts.version,
         description: pkg.description,
         license: pkg.license,
-        runtime: { electron: process.versions.electron, chrome: process.versions.chrome, node: process.versions.node },
+        runtime: { node: process.versions.node, webview: null },
         os: `${os.type()} ${os.release()} (${os.arch()})`,
         tools: await toolVersions(),
-        packaged: app.isPackaged,
+        packaged: opts.packaged,
       }),
-      showAppMenu: async (x, y) => {
-        const win = ctx.window.browserWindow;
-        if (win) Menu.getApplicationMenu()?.popup({ window: win, x: Math.round(x), y: Math.round(y) });
-      },
-      cliStatus: () => cliInstall.status(),
-      setTheme: async (mode) => {
-        nativeTheme.themeSource = mode;
-      },
-      setTitleBarColors: async (color, symbolColor) => {
-        if (![color, symbolColor].every((c) => /^#[0-9a-f]{6}$/i.test(c))) throw new Error('Colours must be #rrggbb.');
-        ctx.window.setTitleBarColors(color, symbolColor);
-      },
-      revealPath: async (target) => {
-        if (!fs.existsSync(target)) throw new Error(`Not found: ${target}`);
-        shell.showItemInFolder(target);
-      },
     },
   };
 }

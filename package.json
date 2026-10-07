@@ -20,7 +20,6 @@
   ],
   "author": "riomar",
   "license": "MIT",
-  "main": "out/main/index.js",
   "bin": {
     "lanyard": "bin/lanyard.js",
     "lny": "bin/lanyard.js",
@@ -36,9 +35,6 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "electron-vite dev",
-    "build": "electron-vite build",
-    "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -48,24 +44,33 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "icons": "node scripts/make-icons.mjs",
-    "dist": "npm run typecheck && npm run build && electron-builder",
     "lanyard": "node bin/lanyard.js",
-    "prepack": "npm run build"
+    "prepack": "npm run build:cli",
+    "build:renderer": "vite build --config vite.renderer.config.ts",
+    "build:sidecar": "esbuild src/sidecar/index.ts --bundle --platform=node --format=cjs --target=node20 --outfile=out/sidecar/index.js",
+    "build:cli": "esbuild src/cli/index.ts --bundle --platform=node --format=cjs --target=node20 --outfile=out/main/cli.js --external:electron",
+    "build": "npm run build:renderer && npm run build:sidecar && npm run build:cli",
+    "tauri:dev": "npm run build && tauri dev",
+    "tauri:build": "npm run build && tauri build"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.12.1",
+    "@tauri-apps/plugin-autostart": "^2.7.0",
+    "@tauri-apps/plugin-clipboard-manager": "^2.4.1",
+    "@tauri-apps/plugin-dialog": "^2.8.1",
+    "@tauri-apps/plugin-shell": "^2.4.0",
     "commander": "^12.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@fontsource/lato": "^5.3.0",
+    "@tauri-apps/cli": "^2.12.1",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@typescript/typescript6": "^6.0.2",
     "@vitejs/plugin-react": "^5.2.0",
-    "electron": "^44.5.1",
-    "electron-builder": "^26.15.3",
-    "electron-vite": "^5.0.0",
+    "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -82,8 +87,7 @@
   },
   "allowScripts": {
     "esbuild@0.25.12": true,
-    "esbuild@0.28.2": true,
-    "electron-winstaller@5.4.0": true
+    "esbuild@0.28.2": true
   },
   "overrides": {
     "typescript": "$typescript"

@@ -5,8 +5,20 @@
  * own git blocks - in a stable order.
  */
 
-import type { MenuItemConstructorOptions } from 'electron';
-import type { HostEntry, KeyInfo, ProviderOverview } from '../shared/types';
+import type { HostEntry, KeyInfo, ProviderOverview } from './types';
+
+/**
+ * Shell-neutral menu description. The Rust tray builder maps this 1:1 onto
+ * tauri menu items; tests assert on it directly.
+ */
+export interface MenuItemSpec {
+  label?: string;
+  type?: 'normal' | 'separator' | 'radio';
+  checked?: boolean;
+  enabled?: boolean;
+  submenu?: MenuItemSpec[];
+  click?: (...args: unknown[]) => void;
+}
 
 export interface HostsMenuData {
   hosts: HostEntry[];
@@ -25,34 +37,34 @@ export interface HostsMenuActions {
   addServer: () => void;
 }
 
-function keyRadios(h: HostEntry, data: HostsMenuData, actions: HostsMenuActions): MenuItemConstructorOptions[] {
+function keyRadios(h: HostEntry, data: HostsMenuData, actions: HostsMenuActions): MenuItemSpec[] {
   const current = data.keys.find((k) => data.isKeyAt(k, h.identityFile));
   const missing = h.identityFile && !current ? h.identityFile.split(/[\\/]/).pop() : null;
   return [
     { label: 'SSH key', enabled: false },
-    ...data.keys.slice(0, 25).map((k): MenuItemConstructorOptions => ({
+    ...data.keys.slice(0, 25).map((k): MenuItemSpec => ({
       label: `${k.name}${k.encrypted ? '  🔒' : ''}`,
       type: 'radio',
       checked: k === current,
       click: () => actions.setKey(h.alias, k),
     })),
     ...(missing
-      ? [{ label: `${missing} (not in ~/.ssh)`, type: 'radio', checked: true, enabled: false } as MenuItemConstructorOptions]
+      ? [{ label: `${missing} (not in ~/.ssh)`, type: 'radio', checked: true, enabled: false } as MenuItemSpec]
       : []),
     { label: 'SSH default keys', type: 'radio', checked: !h.identityFile, click: () => actions.setKey(h.alias, null) },
   ];
 }
 
-export function buildHostsMenu(data: HostsMenuData, actions: HostsMenuActions): MenuItemConstructorOptions[] {
+export function buildHostsMenu(data: HostsMenuData, actions: HostsMenuActions): MenuItemSpec[] {
   const { hosts, providers } = data;
   const servers = hosts.filter((h) => !h.managed && !h.isPattern && !h.gitProvider);
   const ownGitBlocks = hosts.filter((h) => !h.managed && !h.isPattern && h.gitProvider);
   const managedAliases = new Set(hosts.filter((h) => h.managed).flatMap((h) => h.aliases));
 
-  const items: MenuItemConstructorOptions[] = [{ label: 'Servers', enabled: false }];
+  const items: MenuItemSpec[] = [{ label: 'Servers', enabled: false }];
   if (servers.length) {
     items.push(
-      ...servers.slice(0, 30).map((h): MenuItemConstructorOptions => ({
+      ...servers.slice(0, 30).map((h): MenuItemSpec => ({
         label: h.hostName ? `${h.alias}  →  ${h.hostName}` : h.alias,
         submenu: [
           { label: `Connect to ${h.hostName || h.alias}`, click: () => actions.connect(h.alias) },
@@ -68,7 +80,7 @@ export function buildHostsMenu(data: HostsMenuData, actions: HostsMenuActions): 
 
   // Provider order, then the order accounts were added: switching never reorders entries.
   const accountItems = providers.flatMap((p) =>
-    p.accounts.map((a): MenuItemConstructorOptions => ({
+    p.accounts.map((a): MenuItemSpec => ({
       label: `${a.alias}${a.active ? '  ·  active' : ''}`,
       submenu: [
         { label: 'Test (ssh -T)', click: () => actions.test(a.alias) },
@@ -78,7 +90,7 @@ export function buildHostsMenu(data: HostsMenuData, actions: HostsMenuActions): 
       ],
     })),
   );
-  const ownItems = ownGitBlocks.map((h): MenuItemConstructorOptions => ({
+  const ownItems = ownGitBlocks.map((h): MenuItemSpec => ({
     label: `${h.alias}${h.aliases.some((x) => managedAliases.has(x)) ? '  ·  overridden' : ''}`,
     submenu: [{ label: 'Test (ssh -T)', click: () => actions.test(h.alias) }, { type: 'separator' }, ...keyRadios(h, data, actions)],
   }));

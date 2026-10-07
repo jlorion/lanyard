@@ -1,11 +1,14 @@
 /**
  * Watches ~/.ssh and ~/.lanyard so changes made by the CLI, an editor or another
  * tool show up in the window and tray without a manual refresh.
+ *
+ * Lives in core (not the desktop shell) so both the sidecar and any future
+ * frontend can reuse it. Extracted from the old Electron main watcher.
  */
 
 import fs from 'node:fs';
-import { paths } from '../core';
-import type { ChangeTopic } from '../shared/ipc';
+import { paths } from '../config/paths';
+import type { ChangeTopic } from '../../shared/ipc';
 
 const DEBOUNCE_MS = 250;
 
@@ -17,7 +20,7 @@ function topicFor(dir: 'ssh' | 'data', file: string | null): ChangeTopic | null 
   return 'keys';
 }
 
-export function watchFiles(onChange: (topics: ChangeTopic[]) => void): () => void {
+export function watch(onChange: (topics: ChangeTopic[]) => void): () => void {
   const pending = new Set<ChangeTopic>();
   let timer: NodeJS.Timeout | null = null;
   const flush = () => {
