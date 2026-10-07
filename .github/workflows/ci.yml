@@ -1,0 +1,65 @@
+# Checks and tests. Runs on every pull request and push to main, and is called
+# by release.yml so a release is only built from a commit that passes.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  # Called from release.yml this inherits the caller's group, so prefix it.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+  # Keep the logs free of npm's funding / update notices.
+  npm_config_fund: false
+  npm_config_update_notifier: false
+
+jobs:
+  checks:
+    name: Format, lint, typecheck, audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      # Runtime dependencies must stay clean; see SECURITY.md for the
+      # build-tool advisory that is accepted.
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=low
+
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The tests drive the real ssh / ssh-keygen, which every runner image ships.
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # Built output lets the CLI shim tests run the real compiled CLI.
+      - run: npm run build
+      - run: npm test

@@ -63,15 +63,19 @@ npm publish        # CLI-only npm package `lanyard-ssh` (prepack builds it first
 
 Set `LANYARD_SSH_DIR` and `LANYARD_HOME` to point the app and the CLI at a sandbox instead of `~/.ssh` and `~/.lanyard`.
 
-### CI
+### CI and releases
 
-[`.github/workflows/build.yml`](.github/workflows/build.yml) runs on the `build` branch. A pull request into `build` runs the
-checks (format, lint, typecheck, runtime-dependency audit) and the tests on Windows, macOS and Linux. A push to `build`, or
-a manual run, then also builds unsigned installers for all three platforms and the npm tarball, smoke-tests the CLI in
-each, and uploads them as workflow artifacts. To build a release, merge into `build`:
+[`ci.yml`](.github/workflows/ci.yml) runs the checks (format, lint, typecheck, runtime-dependency audit) and the tests on
+Windows, macOS and Linux for every pull request and every push to `main`.
+
+[`release.yml`](.github/workflows/release.yml) publishes a release from a branch named `build-v<version>`. Creating one,
+for example `build-v1.0.0-beta`, runs CI, sets the app version to `1.0.0-beta`, builds installers for Windows, macOS
+(Apple Silicon and Intel) and Linux plus the npm tarball, smoke-tests the CLI in each, and publishes them as the GitHub
+release `v1.0.0-beta` with checksums and generated notes. A version with a suffix (`-beta`, `-rc.1`) is marked as a
+prerelease. Pushing to the branch again rebuilds that version, moves the tag and replaces the release files.
 
 ```bash
-git push origin main:build
+git push origin main:build-v1.0.0-beta
 ```
 
 Security notes and the latest audit are in [SECURITY.md](SECURITY.md).
