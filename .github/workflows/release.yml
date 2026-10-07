@@ -223,3 +223,53 @@ jobs:
       - name: Rebuild the website
         continue-on-error: true
         run: gh workflow run pages.yml --ref main
+
+  npm-publish:
+    name: Publish to npm
+    # Off until npm publishing is set up (CONTRIBUTING.md -> Releases), then
+    # turned on with the repository variable NPM_PUBLISH=true.
+    if: vars.NPM_PUBLISH == 'true'
+    needs: [version, release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing and provenance
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      PRERELEASE: ${{ needs.version.outputs.prerelease }}
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@v8
+        with:
+          name: lanyard-npm
+          path: npm
+      - name: Publish lanyard-ssh@${{ needs.version.outputs.version }}
+        env:
+          # Empty when npm trusted publishing is used instead of a token.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # npm never allows publishing the same version twice, so a rebuild
+          # of an existing release leaves the registry alone.
+          if npm view "lanyard-ssh@$VERSION" version > /dev/null 2>&1; then
+            echo "lanyard-ssh@$VERSION is already on npm; nothing to publish." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Stable versions become `latest`. Prereleases get a tag named after
+          # their label (1.2.0-beta.1 -> beta, 2.0.0-rc.1 -> rc), so a plain
+          # `npm install -g lanyard-ssh` keeps installing the stable release.
+          tag=latest
+          if [[ "$PRERELEASE" == true ]]; then
+            tag="${VERSION#*-}"
+            tag="${tag%%.*}"
+            if [[ ! "$tag" =~ ^[A-Za-z][A-Za-z0-9-]*$ ]]; then tag=next; fi
+          fi
+          npm publish "npm/lanyard-ssh-$VERSION.tgz" --access public --tag "$tag" --provenance
+          {
+            echo "Published [lanyard-ssh@$VERSION](https://www.npmjs.com/package/lanyard-ssh/v/$VERSION) to npm with the \`$tag\` tag."
+            echo
+            echo "    npm install -g lanyard-ssh@$tag"
+          } >> "$GITHUB_STEP_SUMMARY"

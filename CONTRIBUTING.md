@@ -91,8 +91,22 @@ git push origin main:build-v1.2.0
 2. runs CI;
 3. sets that version in the app;
 4. builds the Windows installer, the macOS dmgs (Apple Silicon and Intel), the Linux AppImage and the npm tarball, and checks that each one's CLI reports the version;
-5. publishes the GitHub release `v1.2.0` with the files, `SHA256SUMS.txt` and generated notes.
+5. publishes the GitHub release `v1.2.0` with the files, `SHA256SUMS.txt` and generated notes;
+6. publishes `lanyard-ssh@1.2.0` to npm (once set up, see below) and rebuilds the website.
 
 A version with a suffix (`1.2.0-beta.1`) is published as a prerelease. Pushing to the same branch again rebuilds that version, moves its tag and replaces its files.
+
+### npm
+
+Stable versions are published to npm as `latest`. Prereleases get a tag named after their label (`1.2.0-beta.1` → `beta`), so `npm install -g lanyard-ssh` keeps installing the stable version and testers use `npm install -g lanyard-ssh@beta`. npm never accepts the same version twice, so rebuilding a release skips npm.
+
+Publishing is off until it is set up. Pick one way to authenticate:
+
+- **Trusted publishing (recommended, no token to leak or rotate):** on npmjs.com, open `lanyard-ssh` → **Settings → Trusted publishing**, add GitHub Actions with repository `riomar0001/lanyard` and workflow `release.yml`.
+- **Or a token:** create a granular access token on npmjs.com with read and write access to `lanyard-ssh`, and save it as the repository secret `NPM_TOKEN`.
+
+Then turn it on: **Settings → Secrets and variables → Actions → Variables**, add `NPM_PUBLISH` = `true`.
+
+Versions on npm follow semver order, so a prerelease of a version that is already stable on npm (for example `1.0.0-beta.3` after `1.0.0`) counts as older. Release the next version (`1.0.1`, or `1.1.0-beta.1`) instead.
 
 Before releasing, move the **Unreleased** entries in [CHANGELOG.md](CHANGELOG.md) under the new version.
