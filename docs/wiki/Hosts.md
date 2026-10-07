@@ -35,6 +35,45 @@ lanyard hosts add prod-web -H 203.0.113.10 -u deploy -k ~/.ssh/id_ed25519_server
 lanyard hosts add db-primary -H 10.0.4.12 -u postgres -J bastion --comment "Primary database"
 ```
 
+## Jump hosts and proxies
+
+Some servers can only be reached through another machine, such as a bastion in front of a private network. SSH has two ways to do this, and Lanyard supports both.
+
+### ProxyJump (recommended)
+
+Use this when the middle machine is another SSH server. Set **ProxyJump** in the host form to the alias of the jump host:
+
+1. Add the jump host itself first (for example `bastion`), with its own user and key.
+2. Edit the private server and set **ProxyJump** to `bastion`.
+3. Connect as usual. SSH logs in to `bastion` first, then hops to the server.
+
+Chain several jumps with commas: `bastion,inner-bastion`.
+
+```bash
+lanyard hosts add db-primary -H 10.0.4.12 -u postgres -J bastion
+```
+
+### ProxyCommand
+
+Use this when the connection needs a custom command: an older OpenSSH without ProxyJump, a jump with extra `ssh` options, or a non-SSH proxy (`nc`, `corkscrew`, `cloudflared`, an SSM tunnel, …).
+
+1. In the host form, under **Other options**, click **Add option**.
+2. Name: `ProxyCommand`. Value: the command, with `%h` and `%p` for the target's host and port, for example:
+
+```
+ssh -W %h:%p bastion
+```
+
+3. Save. Lanyard writes the value exactly as typed, on one line, and OpenSSH validates it.
+
+```bash
+lanyard hosts add db-primary -H 10.0.4.12 -o "ProxyCommand=ssh -W %h:%p bastion"
+```
+
+> Set **either** ProxyJump **or** ProxyCommand on a host, not both. SSH uses whichever appears first and silently ignores the other.
+
+To check what SSH will actually use, open the host's **⋯** menu → **Effective config** and look for `proxyjump` or `proxycommand`.
+
 ## Switch the key a server uses
 
 Use the **SSH key** dropdown on the server's row. Picking a key sets `IdentityFile` and `IdentitiesOnly yes`, so SSH offers only that key. Picking **Default SSH keys** removes both again.
