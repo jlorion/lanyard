@@ -27,6 +27,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: read # configure-pages reads the site's address
     defaults:
       run:
         working-directory: website
@@ -38,14 +41,22 @@ jobs:
           cache: npm
           cache-dependency-path: website/package-lock.json
       - run: npm ci
+      # Ask GitHub Pages where the site lives: the root of a custom domain
+      # (https://lanyard.riomar.dev, base path "") or the project path
+      # (https://riomar0001.github.io/lanyard). Pull requests can't read the
+      # Pages settings, so their test build uses the project path.
+      - name: Read the Pages address
+        id: pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v6
       - run: npm run build
         env:
           # Avoids GitHub API rate limits when looking up the newest release.
           GITHUB_TOKEN: ${{ github.token }}
-          # On a custom domain (repository variable PAGES_DOMAIN, e.g.
-          # lanyard.example.com) the site lives at the root instead of /lanyard/.
-          SITE_BASE: ${{ vars.PAGES_DOMAIN && '/' || '/lanyard/' }}
-          VITE_SITE_URL: ${{ vars.PAGES_DOMAIN && format('https://{0}', vars.PAGES_DOMAIN) || 'https://riomar0001.github.io' }}
+          SITE_BASE: ${{ steps.pages.outcome == 'success' && format('{0}/', steps.pages.outputs.base_path) || '/lanyard/' }}
+          VITE_SITE_URL: ${{ steps.pages.outputs.origin || 'https://riomar0001.github.io' }}
+      - name: Show the address it was built for
+        run: echo "Built for ${{ steps.pages.outputs.base_url || 'https://riomar0001.github.io/lanyard' }}" >> "$GITHUB_STEP_SUMMARY"
       - if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
