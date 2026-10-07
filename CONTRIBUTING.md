@@ -75,7 +75,7 @@ npm run preview    # serve the build
 
 - **Download buttons** link straight to the newest release's files. The build reads them from the GitHub API, and the page refreshes them in the browser, so they follow new releases even before the site is rebuilt.
 - **Deploys:** [`pages.yml`](.github/workflows/pages.yml) publishes to GitHub Pages on every push to `main` that touches the site or the docs, and after every release. It needs a one-time setting: **Settings → Pages → Source: GitHub Actions**.
-- **Custom domain:** build with `SITE_BASE=/` and add the domain in the Pages settings.
+- **Custom domain:** point the domain at `riomar0001.github.io` (a CNAME record, set to DNS only on Cloudflare), add it under **Settings → Pages → Custom domain**, and set the repository variable `PAGES_DOMAIN` to it (for example `lanyard.example.com`). The next deploy then builds the site for the domain's root instead of `/lanyard/`. Old `github.io` links redirect to the domain.
 
 ## Releases
 

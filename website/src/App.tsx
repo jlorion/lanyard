@@ -9,7 +9,9 @@ import { DownloadPage } from './pages/Download';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 
-const SITE_URL = 'https://riomar0001.github.io';
+// The site's origin, for canonical and social-preview URLs. pages.yml sets it
+// to https://<domain> when the repository variable PAGES_DOMAIN is set.
+const SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined) ?? 'https://riomar0001.github.io';
 const DESCRIPTION =
   'Switch between GitHub, GitLab, Bitbucket and Hugging Face accounts in one click, and manage your remote SSH servers, keys, ssh-agent and known_hosts. Desktop app, tray and CLI.';
 
