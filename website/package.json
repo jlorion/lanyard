@@ -1,0 +1,30 @@
+{
+  "name": "lanyard-website",
+  "private": true,
+  "type": "module",
+  "description": "Lanyard's website: landing page, downloads, docs (from docs/wiki) and changelog.",
+  "scripts": {
+    "sync": "node scripts/sync-assets.mjs",
+    "release": "node scripts/fetch-release.mjs",
+    "dev": "npm run sync && npm run release && vite",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run sync && npm run release && tsc --noEmit && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/lato": "^5.3.0",
+    "github-slugger": "^2.0.0",
+    "marked": "^18.1.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router": "^8.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3"
+  }
+}
