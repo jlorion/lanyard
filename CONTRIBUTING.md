@@ -59,6 +59,23 @@ On Windows PowerShell: `$env:LANYARD_SSH_DIR = "$env:TEMP\lny\.ssh"` (and `LANYA
 
 - The user guide lives in [`docs/wiki`](docs/wiki) and is published to the [GitHub wiki](https://github.com/riomar0001/lanyard/wiki) by `.github/workflows/wiki.yml` on every push to `main`. Link pages as `Page.md` and images as `../images/x.png`; the workflow rewrites both for the wiki.
 - Screenshots live in [`docs/images`](docs/images), 1280×800. Take them from a sandboxed instance with demo data, never from a real setup.
+- The same pages also appear on the [website](https://riomar0001.github.io/lanyard/docs/), so one edit updates both.
+
+## Website
+
+The site in [`website/`](website) is a Vite + React app. Each page is pre-rendered to static HTML at build time and hydrated in the browser. It shows the landing page, the downloads, the user guide (rendered from `docs/wiki`) and the changelog (from `CHANGELOG.md`).
+
+```bash
+cd website
+npm ci
+npm run dev        # http://localhost:5173/lanyard/
+npm run build      # static site in website/dist
+npm run preview    # serve the build
+```
+
+- **Download buttons** link straight to the newest release's files. The build reads them from the GitHub API, and the page refreshes them in the browser, so they follow new releases even before the site is rebuilt.
+- **Deploys:** [`pages.yml`](.github/workflows/pages.yml) publishes to GitHub Pages on every push to `main` that touches the site or the docs, and after every release. It needs a one-time setting: **Settings → Pages → Source: GitHub Actions**.
+- **Custom domain:** build with `SITE_BASE=/` and add the domain in the Pages settings.
 
 ## Releases
 
