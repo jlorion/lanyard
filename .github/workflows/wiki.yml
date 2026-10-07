@@ -1,0 +1,62 @@
+# Publish docs/wiki (and the screenshots in docs/images) to the GitHub wiki.
+#
+# The pages are written to work when browsed in the repository: they link to
+# each other as Page.md and to images as ../images/x.png. This rewrites those
+# to the wiki's forms (Page, images/x.png) and pushes the result.
+#
+# GitHub creates the wiki's git repository only after its first page is saved
+# in the web UI, so do that once (any content) before this can run.
+
+name: Wiki
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/wiki/**', 'docs/images/**', '.github/workflows/wiki.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push to the wiki repository
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Clone the wiki
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki; then
+            echo "::error::The wiki repository doesn't exist yet. Open the repository's Wiki tab, save any first page, then re-run this workflow."
+            exit 1
+          fi
+      - name: Copy and rewrite the pages
+        run: |
+          # Replace the wiki's content entirely, so renamed or deleted pages go away.
+          find wiki -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp docs/wiki/*.md wiki/
+          mkdir -p wiki/images
+          cp docs/images/* wiki/images/
+          # ../images/x.png -> images/x.png ; (Page.md) / (Page.md#anchor) -> (Page) / (Page#anchor)
+          sed -i -E \
+            -e 's#\]\(\.\./images/#](images/#g' \
+            -e 's#\]\(([A-Za-z0-9_-]+)\.md(\#[^)]*)?\)#](\1\2)#g' \
+            wiki/*.md
+      - name: Push
+        working-directory: wiki
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki already up to date."
+            exit 0
+          fi
+          git commit -m "Update from ${GITHUB_REPOSITORY}@${GITHUB_SHA::7}"
+          git push
