@@ -1,6 +1,7 @@
 import { useEffect, useState, type MouseEvent } from 'react';
 import { Link, NavLink, useNavigate, useParams } from 'react-router';
 import { Icon } from '../components/icons';
+import { copyText } from '../lib/hooks';
 import { docPath, pageForSlug, wikiNav, wikiPage } from '../lib/markdown';
 import { GITHUB, withBase } from '../lib/site';
 import { NotFound } from './NotFound';
@@ -16,10 +17,15 @@ export function Prose({ html }: { html: string }) {
     const target = e.target as HTMLElement;
     const copyButton = target.closest<HTMLButtonElement>('[data-copy-code]');
     if (copyButton) {
-      const text = copyButton.parentElement?.querySelector('pre')?.textContent ?? '';
-      void navigator.clipboard.writeText(text).then(() => {
+      const text = copyButton.closest('.code-block')?.querySelector('pre')?.textContent ?? '';
+      void copyText(text).then((ok) => {
+        if (!ok) return;
         copyButton.textContent = 'Copied';
-        window.setTimeout(() => (copyButton.textContent = 'Copy'), 1600);
+        copyButton.classList.add('is-copied');
+        window.setTimeout(() => {
+          copyButton.textContent = 'Copy';
+          copyButton.classList.remove('is-copied');
+        }, 1600);
       });
       return;
     }

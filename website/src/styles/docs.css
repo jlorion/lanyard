@@ -244,47 +244,37 @@
 }
 
 .code-block {
-  position: relative;
   margin: 0 0 20px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--code-bg);
+  overflow: hidden;
 }
-.code-block pre {
-  margin: 0;
-  padding: 16px 18px;
-  overflow-x: auto;
-  font-size: 14px;
-  line-height: 1.6;
-}
-.code-block pre code {
-  padding: 0;
-  border: 0;
-  background: none;
-  font-size: inherit;
+.code-head {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 6px 0 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
 .code-lang {
-  position: absolute;
-  top: 10px;
-  right: 76px;
   font:
-    700 11px Consolas,
+    700 12px Consolas,
     Menlo,
     Monaco,
     monospace;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--muted);
 }
 .code-copy {
-  position: absolute;
-  top: 6px;
-  right: 6px;
+  flex: none;
   height: 28px;
   padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--surface);
+  background: var(--bg);
   color: var(--text);
   font:
     700 12px Lato,
@@ -293,6 +283,25 @@
 }
 .code-copy:hover {
   border-color: var(--border-strong);
+}
+.code-copy.is-copied {
+  color: var(--success-text);
+  border-color: var(--success-text);
+}
+.code-block pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.code-block pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  white-space: pre;
 }
 
 .table-wrap {

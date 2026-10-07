@@ -102,6 +102,32 @@ export function useTheme(): ThemeMode {
 
 // ------------------------------------------------------------------- copy
 
+/**
+ * Copy text to the clipboard. Falls back to a hidden textarea where the
+ * Clipboard API is missing or blocked (plain http, older browsers, some
+ * embedded webviews). Resolves to whether the copy worked.
+ */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.append(area);
+    area.select();
+    try {
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      area.remove();
+    }
+  }
+}
+
 /** Copy text; `copied` is true for 1.6 s afterwards. */
 export function useCopy(): [boolean, (text: string) => void] {
   const [copied, setCopied] = useState(false);
@@ -111,10 +137,7 @@ export function useCopy(): [boolean, (text: string) => void] {
     return () => window.clearTimeout(t);
   }, [copied]);
   const copy = (text: string) => {
-    navigator.clipboard.writeText(text).then(
-      () => setCopied(true),
-      () => {},
-    );
+    void copyText(text).then((ok) => ok && setCopied(true));
   };
   return [copied, copy];
 }

@@ -39,6 +39,18 @@ export interface Rendered {
   headings: Heading[];
 }
 
+/** How fenced-code languages are named in the code block header. */
+const CODE_LABELS: Record<string, string> = {
+  bash: 'Terminal',
+  sh: 'Terminal',
+  powershell: 'PowerShell',
+  sshconfig: '~/.ssh/config',
+  xml: 'XML',
+  yaml: 'YAML',
+  json: 'JSON',
+  '': 'Text',
+};
+
 const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const plain = (html: string) =>
   html
@@ -76,8 +88,10 @@ export function renderMarkdown(source: string, from: 'wiki' | 'repo'): Rendered 
         return `<div class="table-wrap"><table><thead>${head}</thead><tbody>${rows}</tbody></table></div>\n`;
       },
       code({ text, lang }: Tokens.Code) {
-        const label = lang ? `<span class="code-lang">${escapeHtml(lang)}</span>` : '';
-        return `<div class="code-block">${label}<button type="button" class="code-copy" data-copy-code aria-label="Copy code">Copy</button><pre><code>${escapeHtml(text)}</code></pre></div>\n`;
+        // A header bar (language, Copy) above the code, so nothing covers it.
+        const label = escapeHtml(CODE_LABELS[lang ?? ''] ?? lang ?? '');
+        const head = `<div class="code-head"><span class="code-lang">${label}</span><button type="button" class="code-copy" data-copy-code aria-label="Copy code">Copy</button></div>`;
+        return `<div class="code-block">${head}<pre><code>${escapeHtml(text)}</code></pre></div>\n`;
       },
       image({ href, text }: Tokens.Image) {
         return `<img src="${href}" alt="${escapeHtml(text)}" loading="lazy" width="1280" height="800">`;
