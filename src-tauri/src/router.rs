@@ -11,6 +11,10 @@ pub const NATIVE_APP_METHODS: &[&str] = &[
     "setTheme",
     "setTitleBarColors",
     "showAppMenu",
+    "isMaximized",
+    "minimizeWindow",
+    "toggleMaximize",
+    "closeWindow",
     "cliStatus",
 ];
 

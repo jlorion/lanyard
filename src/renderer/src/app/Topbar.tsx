@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Menu, Search } from 'lucide-react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { listen } from '@tauri-apps/api/event';
+import { ArrowLeft, ArrowRight, Copy, Menu, Minus, Search, Square, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { useWorkspace } from './workspace';
 import { useNavigation } from './navigation';
@@ -20,6 +21,22 @@ export function Topbar({ onSearch }: { onSearch: (query?: string) => void }) {
   const { navigate, back, forward, canGoBack, canGoForward } = useNavigation();
   const active = providers.filter((p) => p.active);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const [maximized, setMaximized] = useState(false);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    let disposed = false;
+
+    void api.app.isMaximized().then(setMaximized);
+    void listen<boolean>('lanyard:window-state', (event) => setMaximized(event.payload)).then((stop) => {
+      if (!disposed) unlisten = stop;
+      else stop();
+    });
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
+  }, []);
 
   // With a single account there is nothing to switch to, so open the accounts page instead.
   const open = (p: ProviderOverview) => (p.accounts.length > 1 ? onSearch(`${p.name}: use`) : navigate('accounts'));
@@ -128,6 +145,25 @@ export function Topbar({ onSearch }: { onSearch: (query?: string) => void }) {
           <span className="identity-chip identity-more">+{active.length}</span>
         </div>
       </div>
+
+      {!isMac && (
+        <div className="window-controls" aria-label="Window controls">
+          <button type="button" title="Minimize" aria-label="Minimize window" onClick={() => void api.app.minimizeWindow()}>
+            <Minus size={15} />
+          </button>
+          <button
+            type="button"
+            title={maximized ? 'Restore' : 'Maximize'}
+            aria-label={maximized ? 'Restore window' : 'Maximize window'}
+            onClick={() => void api.app.toggleMaximize().then(setMaximized)}
+          >
+            {maximized ? <Copy size={13} /> : <Square size={13} />}
+          </button>
+          <button type="button" className="window-close" title="Close" aria-label="Close window" onClick={() => void api.app.closeWindow()}>
+            <X size={15} />
+          </button>
+        </div>
+      )}
     </header>
   );
 }

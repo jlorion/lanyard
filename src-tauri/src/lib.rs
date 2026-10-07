@@ -179,23 +179,30 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                // Close-to-tray: read the setting through the sidecar.
-                let close_to_tray = window
-                    .app_handle()
-                    .try_state::<Arc<sidecar::Sidecar>>()
-                    .map(|s| {
-                        let v = s.call("settings", "get", serde_json::json!([]));
-                        v.get("data")
-                            .and_then(|d| d.get("closeToTray"))
-                            .and_then(Value::as_bool)
-                            .unwrap_or(true)
-                    })
-                    .unwrap_or(true);
-                if close_to_tray {
-                    api.prevent_close();
-                    let _ = window.hide();
+            match event {
+                WindowEvent::Resized(_) => {
+                    let maximized = window.is_maximized().unwrap_or(false);
+                    let _ = window.emit("lanyard:window-state", maximized);
                 }
+                WindowEvent::CloseRequested { api, .. } => {
+                    // Close-to-tray: read the setting through the sidecar.
+                    let close_to_tray = window
+                        .app_handle()
+                        .try_state::<Arc<sidecar::Sidecar>>()
+                        .map(|s| {
+                            let v = s.call("settings", "get", serde_json::json!([]));
+                            v.get("data")
+                                .and_then(|d| d.get("closeToTray"))
+                                .and_then(Value::as_bool)
+                                .unwrap_or(true)
+                        })
+                        .unwrap_or(true);
+                    if close_to_tray {
+                        api.prevent_close();
+                        let _ = window.hide();
+                    }
+                }
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![api_invoke])

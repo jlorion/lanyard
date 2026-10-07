@@ -86,6 +86,29 @@ pub async fn app_call(app: &AppHandle, method: &str, args: Value) -> Result<Valu
             }
             Ok(Value::Null)
         }
+        "isMaximized" => {
+            let w = app.get_webview_window("main").ok_or("Main window is unavailable")?;
+            Ok(json!(w.is_maximized().map_err(|e| e.to_string())?))
+        }
+        "minimizeWindow" => {
+            let w = app.get_webview_window("main").ok_or("Main window is unavailable")?;
+            w.minimize().map_err(|e| e.to_string())?;
+            Ok(Value::Null)
+        }
+        "toggleMaximize" => {
+            let w = app.get_webview_window("main").ok_or("Main window is unavailable")?;
+            if w.is_maximized().map_err(|e| e.to_string())? {
+                w.unmaximize().map_err(|e| e.to_string())?;
+            } else {
+                w.maximize().map_err(|e| e.to_string())?;
+            }
+            Ok(json!(w.is_maximized().map_err(|e| e.to_string())?))
+        }
+        "closeWindow" => {
+            let w = app.get_webview_window("main").ok_or("Main window is unavailable")?;
+            w.close().map_err(|e| e.to_string())?;
+            Ok(Value::Null)
+        }
         "cliStatus" => {
             // The Tauri installer no longer manages PATH shims; the npm
             // package is the CLI delivery path. Report honestly.

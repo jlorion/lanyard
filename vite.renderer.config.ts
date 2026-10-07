@@ -9,6 +9,11 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   root: resolve(__dirname, 'src/renderer'),
   plugins: [react()],
+  server: {
+    host: 'localhost',
+    port: 1420,
+    strictPort: true,
+  },
   build: {
     outDir: resolve(__dirname, 'out/renderer'),
     emptyOutDir: true,

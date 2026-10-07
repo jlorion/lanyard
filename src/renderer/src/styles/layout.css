@@ -161,6 +161,7 @@
  * the window; room for native window buttons is padding inside the right column.
  */
 .topbar {
+  position: relative;
   display: grid;
   flex-shrink: 0;
   grid-template-columns: 1fr minmax(0, 560px) 1fr;
@@ -210,6 +211,38 @@
 .topbar input,
 .topbar a {
   -webkit-app-region: no-drag;
+}
+
+.window-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  display: flex;
+  height: var(--topbar-height);
+  -webkit-app-region: no-drag;
+}
+
+.window-controls button {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.window-controls button:hover {
+  background: var(--sidebar-hover);
+  color: var(--text);
+}
+
+.window-controls .window-close:hover {
+  background: #c42b1c;
+  color: #fff;
 }
 
 /* Windows / Linux draw native window buttons over the top-right corner. */

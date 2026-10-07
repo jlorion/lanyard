@@ -26,4 +26,4 @@ Settings are stored in `~/.lanyard/state.json` and shared with the `lanyard` CLI
 
 - **Command line:** whether the `lanyard` and `lny` commands are on your PATH, with examples. On macOS and Linux this shows the one-time install command.
 - **Files:** every path Lanyard uses, each with a button to open it.
-- **About:** version, licence, and the versions of Electron, Node.js, OpenSSH and git Lanyard found.
+- **About:** version and licence, plus the Tauri, WebView, Node.js, OpenSSH and Git versions Lanyard found.

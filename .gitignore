@@ -9,3 +9,4 @@ Thumbs.db
 out/
 *.tsbuildinfo
 src-tauri/target/
+.hermes/

@@ -177,6 +177,10 @@ export interface LanyardApi {
     cliStatus(): Promise<CliInstallStatus>;
     /** Pop up the application menu (File, Edit, View, ...) at a point in the window. */
     showAppMenu(x: number, y: number): Promise<void>;
+    isMaximized(): Promise<boolean>;
+    minimizeWindow(): Promise<void>;
+    toggleMaximize(): Promise<boolean>;
+    closeWindow(): Promise<void>;
     /** Colour the native window buttons drawn over the custom title bar. */
     setTitleBarColors(color: string, symbolColor: string): Promise<void>;
   };
